@@ -1,18 +1,25 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -I$(BUILD_DIR)
 
-all: calc
+SRC_DIR = src
+BUILD_DIR = build
+TARGET = compiler
 
-calc: parser.tab.c lex.yy.c
-	$(CC) $(CFLAGS) -o calc parser.tab.c lex.yy.c -lm
+all: $(TARGET)
 
-parser.tab.c parser.tab.h: parser.y
-	bison -d parser.y
+$(TARGET): $(BUILD_DIR)/parser.tab.c $(BUILD_DIR)/lex.yy.c
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
-lex.yy.c: lexer.l parser.tab.h
-	flex lexer.l
+$(BUILD_DIR)/parser.tab.c $(BUILD_DIR)/parser.tab.h: $(SRC_DIR)/parser.y | $(BUILD_DIR)
+	bison -d $< -o $(BUILD_DIR)/parser.tab.c
+
+$(BUILD_DIR)/lex.yy.c: $(SRC_DIR)/lexer.l $(BUILD_DIR)/parser.tab.h | $(BUILD_DIR)
+	flex -o $@ $<
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 clean:
-	rm -f calc parser.tab.c parser.tab.h lex.yy.c
+	rm -rf $(BUILD_DIR) $(TARGET)
 
 .PHONY: all clean
