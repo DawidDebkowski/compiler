@@ -18,6 +18,8 @@ int yylex();
 "IS"                    { return IS; }
 "IN"                    { return IN; }
 "END"                   { return END; }
+"ENDFOR"                { return ENDFOR; }
+"ENDWHILE"              { return ENDWHILE; }
 "PROGRAM"               { return PROGRAM; }
 "IF"                    { return IF; }
 "THEN"                  { return THEN; }
