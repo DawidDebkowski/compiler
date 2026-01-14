@@ -21,10 +21,15 @@ void yyerror(const char *s);
 
 %}
 
+%code requires {
+    #include "types.hpp"
+}
+
 %union {
     char* str;
     long long num;
     struct Location* loc; 
+    struct Operand operand;
 }
 
 %token <str> PROCEDURE IS IN END PROGRAM IF THEN ELSE ENDIF WHILE DO ENDWHILE REPEAT UNTIL FOR FROM TO DOWNTO READ WRITE
@@ -36,6 +41,7 @@ void yyerror(const char *s);
 %token <num> num
 %token <str> ENDFOR
 
+%type <operand> value
 %type <loc> identifier
 %type <str> type
 
@@ -43,12 +49,22 @@ void yyerror(const char *s);
 
 program_all : { 
      emit("JUMP", 0); // JUMP to Main
-     generate_mul();
-     generate_div();
-     generate_mod();
    } procedures main {
       code[0].arg = symbol_table["main_start"].address; 
       emit("HALT");
+
+      if (!calls_mul.empty()) {
+          generate_mul();
+          for(long long idx : calls_mul) code[idx].arg = addr_mul;
+      }
+      if (!calls_div.empty() || !calls_mod.empty()) {
+          if (addr_div == -1) generate_div();
+          for(long long idx : calls_div) code[idx].arg = addr_div;
+      }
+      if (!calls_mod.empty()) {
+          generate_mod();
+          for(long long idx : calls_mod) code[idx].arg = addr_mod;
+      }
    }
    ;
 
@@ -395,9 +411,118 @@ argument : pidentifier {
 expression : value
     | value { emit("SWP", 1); } PLUS value { emit("ADD", 1); }
     | value { emit("SWP", 1); } MINUS value { emit("SWP", 1); emit("SUB", 1); }
-    | value { emit("SWP", 1); } MULT value { emit("SWP", 2); emit("CALL", addr_mul); emit("SWP", 1); }
-    | value { emit("SWP", 1); } DIV value { emit("SWP", 2); emit("CALL", addr_div); emit("SWP", 1); }
-    | value { emit("SWP", 1); } MOD value { emit("SWP", 2); emit("CALL", addr_mod); emit("SWP", 1); } 
+    | value { emit("SWP", 1); } MULT value { 
+        bool optimized = false;
+        // Case 1: Right operand is constant power of 2 (Var * Const)
+        if ($4.is_const && $4.val > 0) {
+            long long v = $4.val;
+            if ((v & (v - 1)) == 0) { // Power of 2
+                // Remove constant load
+                for(int k=0; k<$4.instructions_count; k++) code.pop_back();
+                
+                // r1 contains first operand. r0 is now free/unknown.
+                // Apply shifts to r1
+                int shifts = 0;
+                while (v > 1) { v >>= 1; shifts++; }
+                for(int k=0; k<shifts; k++) emit("SHL", 1);
+                
+                // Move result to r0 (expected output register)
+                emit("SWP", 1);
+                
+                optimized = true;
+            }
+        }
+        
+        // Case 2: Left operand is constant power of 2 (Const * Var)
+        if (!optimized && $1.is_const && $1.val > 0) {
+             long long v = $1.val;
+             if ((v & (v - 1)) == 0) {
+                 // The Var is in r0 (a). The Const is in r1 (b) (put there by SWP 1).
+                 // We want Var * Const.
+                 // Just shift r0.
+                 int shifts = 0;
+                 while (v > 1) { v >>= 1; shifts++; }
+                 for(int k=0; k<shifts; k++) emit("SHL", 0);
+                 
+                 optimized = true;
+             }
+        }
+        
+        if (!optimized) {
+            emit("SWP", 2); emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 1); 
+        }
+    }
+    | value { emit("SWP", 1); } DIV value { 
+        bool optimized = false;
+        if ($4.is_const && $4.val > 0) {
+            long long v = $4.val;
+            if ((v & (v - 1)) == 0) { // Power of 2
+                // Remove constant load
+                for(int k=0; k<$4.instructions_count; k++) code.pop_back();
+                
+                // r1 contains first operand. r0 is now free/unknown.
+                // Apply shifts to r1
+                int shifts = 0;
+                while (v > 1) { v >>= 1; shifts++; }
+                for(int k=0; k<shifts; k++) emit("SHR", 1);
+                
+                // Move result to r0
+                emit("SWP", 1);
+                
+                optimized = true;
+            }
+        }
+        
+        if (!optimized) {
+            emit("SWP", 2); emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 1); 
+        }
+    }
+    | value { emit("SWP", 1); } MOD value { 
+        bool optimized = false;
+        if ($4.is_const && $4.val > 0) {
+            long long v = $4.val;
+            if ((v & (v - 1)) == 0) { // Power of 2
+                // Remove constant load
+                for(int k=0; k<$4.instructions_count; k++) code.pop_back();
+                
+                // x % 2^k  ==  x - ((x >> k) << k)
+                // r1 has x.
+                
+                int shifts = 0;
+                while (v > 1) { v >>= 1; shifts++; }
+                
+                // Save x to proper register to preserve it?
+                // Logic:
+                // r1 = x
+                // r2 = x (copy) -- Need instruction COPY or logic
+                // No COPY in VM? 
+                // We have r0..r7.
+                // SWP 2 (r2 <-> r0). r0 is trash.
+                // r1 has x. emit("SWP", 2); -> r1 trash, r2 = x ?? No SWP x swaps r0 and rx.
+                // SWP x: r0 <-> rx.
+                
+                emit("SWP", 1); // r0 = x, r1 = trash
+                emit("SWP", 2); // r2 = x, r0 = trash/r2_old
+                emit("RST", 0); emit("ADD", 2); // r0 = x
+                
+                // Calculate (x >> k) << k
+                 for(int k=0; k<shifts; k++) emit("SHR", 0);
+                 for(int k=0; k<shifts; k++) emit("SHL", 0);
+                 
+                 // Subtract from original x (in r2)
+                 // r0 = (x>>k)<<k
+                 // r2 = x
+                 emit("SWP", 2); // r0 = x, r2 = (x>>k)<<k
+                 emit("SUB", 2); // r0 = x - ...
+                 
+                 optimized = true;
+            }
+        }
+    
+        if (!optimized) {
+            emit("SWP", 2); emit("CALL", 0); calls_mod.push_back(code.size()-1); emit("SWP", 1); 
+        }
+    } 
     ;
 
 condition : value { emit("SWP", 1); } EQ value {
@@ -437,12 +562,19 @@ condition : value { emit("SWP", 1); } EQ value {
     }
     ;
 
-value : num { gen_const(0, $1); }
+value : num { 
+        long long start = code.size();
+        gen_const(0, $1); /* Generates code into r0 */
+        $$.is_const = true;
+        $$.val = $1;
+        $$.instructions_count = code.size() - start;
+    }
     | identifier {
         if (!$1->sym->is_initialized) yyerror("Usage of uninitialized variable");
         if ($1->reg != -1) emit("RLOAD", $1->reg);
         else emit("LOAD", $1->address);
         delete $1;
+        $$.is_const = false;
     }
     ;
 
@@ -469,8 +601,8 @@ identifier : pidentifier {
          if (s->is_param) {
              emit("LOAD", s->address); 
              long long offset = $3 - s->start;
-             gen_const(1, offset);
-             emit("ADD", 1);
+             gen_const(2, offset);
+             emit("ADD", 2);
              emit("SWP", 7);
              $$->reg = 7;
              $$->address = -1;
@@ -493,15 +625,15 @@ identifier : pidentifier {
              emit("LOAD", idx->address);
          }
          
-         if (arr->start > 0) { gen_const(1, arr->start); emit("SUB", 1); }
+         if (arr->start > 0) { gen_const(2, arr->start); emit("SUB", 2); }
          
          if (arr->is_param) {
-             emit("SWP", 1); 
+             emit("SWP", 2); 
              emit("LOAD", arr->address); 
-             emit("ADD", 1); 
+             emit("ADD", 2); 
          } else {
-             gen_const(1, arr->address); 
-             emit("ADD", 1);
+             gen_const(2, arr->address); 
+             emit("ADD", 2);
          }
          
          emit("SWP", 7);
@@ -532,7 +664,7 @@ int main(int argc, char* argv[]) {
 
     if (yyparse() == 0) {
         // lets NOT OPTIMIZE CODE NOW
-        /* optimize_code(); */
+        optimize_code();
         
         FILE* out = stdout;
         if (argc > 2) {
@@ -545,7 +677,22 @@ int main(int argc, char* argv[]) {
 
         for (const auto& instr : code) {
             fprintf(out, "%s", instr.opcode.c_str());
-            if (instr.has_arg) fprintf(out, " %lld", instr.arg);
+            if (instr.has_arg) {
+                if (instr.opcode == "RST" || instr.opcode == "INC" || instr.opcode == "DEC" || 
+                    instr.opcode == "SHL" || instr.opcode == "SHR" || instr.opcode == "SWP" || 
+                    instr.opcode == "ADD" || instr.opcode == "SUB" || instr.opcode == "COPY" ||
+                    instr.opcode == "RLOAD" || instr.opcode == "RSTORE") {
+                    
+                    if (instr.arg >= 0 && instr.arg < 26) {
+                        char reg = 'a' + (char)instr.arg;
+                        fprintf(out, " %c", reg);
+                    } else {
+                        fprintf(out, " %lld", instr.arg);
+                    }
+                } else {
+                    fprintf(out, " %lld", instr.arg);
+                }
+            }
             fprintf(out, "\n");
         }
 

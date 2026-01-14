@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wall -I$(SRC_DIR) -I$(BUILD_DIR) -std=c++17
+CXXFLAGS = -g -Wall -I$(SRC_DIR) -I$(BUILD_DIR) -std=c++17
 
 SRC_DIR = src
 BUILD_DIR = build
@@ -100,6 +100,8 @@ test:
 		fi; \
 		vm_status=$$?; \
 		cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep -vE "^Czytanie kodu|^Skończono czytanie|^Uruchamianie programu|^Skończono program \(koszt:" > $$out_file; \
+		cost=$$(cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono program (koszt:" | sed -E 's/.*koszt:[[:space:]]*([^;]+);.*/\1/'); \
+		instr=$$(cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono czytanie kodu (liczba rozkazów:" | sed -E 's/.*liczba rozkazów: ([0-9 ]+).*/\1/'); \
 		rm $$out_file.tmp; \
 		if [ $$vm_status -ne 0 ]; then \
 			echo "FAIL (runtime error)"; \
@@ -115,7 +117,7 @@ test:
 			continue; \
 		fi; \
 		if diff -q $$out_file $$ans_file > /dev/null 2>&1; then \
-			echo "PASS"; \
+			echo "PASS (Cost: $$cost, Instructions: $$instr)"; \
 			passed=$$((passed + 1)); \
 		else \
 			echo "FAIL (output mismatch)"; \

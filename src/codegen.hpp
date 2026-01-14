@@ -17,6 +17,10 @@ extern long long addr_mul;
 extern long long addr_div;
 extern long long addr_mod;
 
+extern vector<long long> calls_mul;
+extern vector<long long> calls_div;
+extern vector<long long> calls_mod;
+
 void emit(string opcode);
 void emit(string opcode, long long arg);
 void gen_const(int reg, long long value);

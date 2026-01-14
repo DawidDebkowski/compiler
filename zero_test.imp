@@ -1,1 +1,0 @@
-PROGRAM IS a, c IN a:=0; c:=a*5; WRITE c; END

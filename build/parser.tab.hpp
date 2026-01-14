@@ -44,6 +44,12 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 24 "src/parser.y"
+
+    #include "types.hpp"
+
+#line 53 "build/parser.tab.hpp"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -107,13 +113,14 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 24 "src/parser.y"
+#line 28 "src/parser.y"
 
     char* str;
     long long num;
     struct Location* loc; 
+    struct Operand operand;
 
-#line 117 "build/parser.tab.hpp"
+#line 124 "build/parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

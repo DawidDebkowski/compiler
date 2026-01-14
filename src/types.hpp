@@ -21,6 +21,12 @@ struct Symbol {
     bool is_initialized = false;
 };
 
+struct Operand {
+     bool is_const;
+     long long val;
+     int instructions_count;
+};
+
 struct ProcedureInfo {
     long long address;
     long long ra_address; // Return address storage location
