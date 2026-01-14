@@ -350,7 +350,7 @@ expression : value
     | value { emit("SWP", 1); } MINUS value { emit("SWP", 1); emit("SUB", 1); }
     | value { emit("SWP", 1); } MULT value { emit("SWP", 2); emit("CALL", addr_mul); emit("SWP", 1); }
     | value { emit("SWP", 1); } DIV value { emit("SWP", 2); emit("CALL", addr_div); emit("SWP", 1); }
-    | value { emit("SWP", 1); } MOD value { emit("SWP", 2); emit("CALL", addr_mod); } 
+    | value { emit("SWP", 1); } MOD value { emit("SWP", 2); emit("CALL", addr_mod); emit("SWP", 1); } 
     ;
 
 condition : value { emit("SWP", 1); } EQ value {

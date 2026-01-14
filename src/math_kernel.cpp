@@ -30,8 +30,9 @@ void generate_mul() {
     
     // Verify odd parity of rc
     // rf = rc
-    emit("RST", 5); // rf
-    emit("ADD", 2); // rf = rc
+    emit("RST", 0); 
+    emit("ADD", 2); 
+    emit("SWP", 5); // rf = rc
     emit("SHR", 5); // rf = rc / 2
     emit("SHL", 5); // rf = (rc / 2) * 2
     
@@ -60,6 +61,7 @@ void generate_mul() {
     emit("JUMP", loop_start);
     
     // Backpatch jump_is_zero
+
     code[jump_is_zero].arg = code.size();
     
     // Move result re to ra
@@ -181,12 +183,12 @@ void generate_div() {
 
 void generate_mod() {
     addr_mod = code.size();
-    emit("SWP", 3);
+    emit("SWP", 7); // Save RA to rh (7) as div uses rd (3)
     emit("CALL", addr_div);
     emit("RST", 0);
     emit("ADD", 2); 
     emit("SWP", 1); 
     emit("RST", 0);
-    emit("ADD", 3); 
+    emit("ADD", 7); // Restore RA from rh
     emit("RTRN");
 }

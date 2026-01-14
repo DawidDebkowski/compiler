@@ -94,11 +94,14 @@ test:
 			continue; \
 		fi; \
 		if [ -f "$$in_file" ]; then \
-			$(VM) $$mr_file < $$in_file > $$out_file; \
+			$(VM) $$mr_file < $$in_file > $$out_file.tmp 2>&1; \
 		else \
-			$(VM) $$mr_file > $$out_file; \
+			$(VM) $$mr_file > $$out_file.tmp 2>&1; \
 		fi; \
-		if [ $$? -ne 0 ]; then \
+		vm_status=$$?; \
+		cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep -vE "^Czytanie kodu|^Skończono czytanie|^Uruchamianie programu|^Skończono program \(koszt:" > $$out_file; \
+		rm $$out_file.tmp; \
+		if [ $$vm_status -ne 0 ]; then \
 			echo "FAIL (runtime error)"; \
 			failed=$$((failed + 1)); \
 			if [ "$(FAIL_FAST)" = "1" ]; then \

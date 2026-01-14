@@ -1,0 +1,1 @@
+PROGRAM IS a, c IN a:=3; c:=a*2; WRITE c; END

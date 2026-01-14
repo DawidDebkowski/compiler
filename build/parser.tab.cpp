@@ -1836,7 +1836,7 @@ yyreduce:
 
   case 59: /* expression: value $@20 MOD value  */
 #line 353 "src/parser.y"
-                                          { emit("SWP", 2); emit("CALL", addr_mod); }
+                                          { emit("SWP", 2); emit("CALL", addr_mod); emit("SWP", 1); }
 #line 1841 "build/parser.tab.cpp"
     break;
 
