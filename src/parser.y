@@ -54,13 +54,29 @@ program_all : {
 
 procedures : procedures PROCEDURE proc_head IS declarations IN {
         procedures_map[current_procedure].address = code.size();
+        
+        // Save Return Address
+        long long ra_addr = memory_offset++;
+        procedures_map[current_procedure].ra_address = ra_addr;
+        emit("STORE", ra_addr);
+        
     } commands END {
+        // Restore Return Address
+        long long ra_addr = procedures_map[current_procedure].ra_address;
+        emit("LOAD", ra_addr);
         emit("RTRN");
         current_procedure = "";
     }
     | procedures PROCEDURE proc_head IS IN {
         procedures_map[current_procedure].address = code.size();
+        
+        long long ra_addr = memory_offset++;
+        procedures_map[current_procedure].ra_address = ra_addr;
+        emit("STORE", ra_addr);
+        
     } commands END {
+        long long ra_addr = procedures_map[current_procedure].ra_address;
+        emit("LOAD", ra_addr);
         emit("RTRN");
         current_procedure = "";
     }
@@ -100,13 +116,27 @@ commands : commands command
     | command
     ;
 
-command : identifier ASSIGN expression SEMICOLON {
+command : identifier {
+        // Save LHS address if it is in a register (because RHS calculation might clobber it)
+        if ($1->reg != -1) {
+             emit("SWP", $1->reg); // Move Addr to r[0]
+             emit("STORE", lhs_hold_addr);
+             emit("SWP", $1->reg); // Move back (optional but safest state)
+        }
+    } ASSIGN expression SEMICOLON {
         if ($1->sym->is_iterator) yyerror("Cannot modify loop iterator");
         if ($1->sym->mod == "I") yyerror("Cannot modify initialized parameter (I)");
         
         $1->sym->is_initialized = true;
         
-        if ($1->reg != -1) emit("RSTORE", $1->reg);
+        if ($1->reg != -1) {
+             // Restore Address from lhs_hold_addr
+             emit("SWP", 1); // Save Expression Result to rb
+             emit("LOAD", lhs_hold_addr); // Load Addr to ra
+             emit("SWP", $1->reg); // Move Addr to reg (e.g. r[7])
+             emit("SWP", 1); // Restore Expression Result to ra
+             emit("RSTORE", $1->reg);
+        }
         else emit("STORE", $1->address);
         delete $1;
     }
@@ -127,7 +157,9 @@ command : identifier ASSIGN expression SEMICOLON {
         if_stack.pop_back();
         code[false_jump_idx].arg = code.size();
     }
-    | WHILE condition DO commands ENDWHILE {
+    | WHILE {
+        loop_stack.push_back(code.size());
+    } condition DO commands ENDWHILE {
          long long jump_out = if_stack.back();
          if_stack.pop_back();
          long long start = loop_stack.back();
@@ -146,6 +178,11 @@ command : identifier ASSIGN expression SEMICOLON {
     }
     | FOR pidentifier FROM value {
           Symbol* iter = get_variable(string($2));
+          if (!iter) {
+              // Implicit declaration of iterator
+              add_symbol(string($2), false, false, "", 0, 0);
+              iter = get_variable(string($2));
+          }
           if (iter->is_iterator) yyerror("Nested loop with same iterator");
           if (iter->is_param) yyerror("Iterator must be local variable");
           
@@ -277,10 +314,14 @@ declarations : declarations COMMA pidentifier {
     ;
 
 args_decl : args_decl COMMA type pidentifier {
-       add_symbol(string($4), false, true, string($3), 0, 0); free($3);
+       string m = string($3);
+       bool is_arr = (m == "T");
+       add_symbol(string($4), is_arr, true, m, 0, 0); free($3);
     }
     | type pidentifier {
-       add_symbol(string($2), false, true, string($1), 0, 0); free($1);
+       string m = string($1);
+       bool is_arr = (m == "T");
+       add_symbol(string($2), is_arr, true, m, 0, 0); free($1);
     }
     ;
 
@@ -290,15 +331,18 @@ type : T { $$ = strdup("T"); }
      | /* empty */ { $$ = strdup(""); }
      ;
 
-args : args COMMA pidentifier {
-        Symbol* s = get_variable(string($3));
-        if (!s) yyerror(("Undefined variable " + string($3)).c_str());
+args : args COMMA argument 
+    | argument 
+    ;
+
+argument : pidentifier {
+        Symbol* s = get_variable(string($1));
+        if (!s) yyerror(("Undefined variable " + string($1)).c_str());
         
         ProcedureInfo& info = procedures_map[current_call_proc];
         if (current_arg_idx >= (int)info.param_addresses.size()) yyerror("Too many arguments for procedure call");
         
         long long param_addr = info.param_addresses[current_arg_idx];
-        // string p_mod = info.param_mods[current_arg_idx];
         bool p_array = info.param_is_array[current_arg_idx];
         
         if (p_array && !s->is_array) yyerror(("Expected array for parameter " + to_string(current_arg_idx+1)).c_str());
@@ -319,30 +363,28 @@ args : args COMMA pidentifier {
             }
         }
     }
-    | pidentifier {
-        Symbol* s = get_variable(string($1));
-        if (!s) yyerror(("Undefined variable " + string($1)).c_str());
-        
+    | num {
         ProcedureInfo& info = procedures_map[current_call_proc];
         if (current_arg_idx >= (int)info.param_addresses.size()) yyerror("Too many arguments for procedure call");
         
         long long param_addr = info.param_addresses[current_arg_idx];
-        // string p_mod = info.param_mods[current_arg_idx];
         bool p_array = info.param_is_array[current_arg_idx];
         
-        if (p_array && !s->is_array) yyerror(("Expected array for parameter " + to_string(current_arg_idx+1)).c_str());
-        if (!p_array && s->is_array) yyerror(("Expected scalar for parameter " + to_string(current_arg_idx+1)).c_str());
-
+        if (p_array) yyerror(("Expected array for parameter " + to_string(current_arg_idx+1) + " but got number").c_str());
+        
         current_arg_idx++;
 
-        if (s->is_param) {
-            emit("LOAD", s->address); 
-            emit("STORE", param_addr);
-        } else {
-            gen_const(0, s->address);
-            emit("STORE", param_addr);
-        }
+        // Store constant in temporary memory
+        long long temp_addr = memory_offset++;
+        gen_const(0, $1);
+        emit("STORE", temp_addr);
+        
+        // Pass address of temp
+        gen_const(0, temp_addr);
+        emit("STORE", param_addr);
     }
+    ;
+
     ;
 
 expression : value

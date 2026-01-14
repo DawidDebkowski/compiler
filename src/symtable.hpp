@@ -13,6 +13,7 @@ extern map<string, Symbol> symbol_table;
 extern map<string, ProcedureInfo> procedures_map;
 
 extern long long memory_offset;
+extern long long lhs_hold_addr;
 extern string current_procedure; 
 extern string current_call_proc;
 extern int current_arg_idx;

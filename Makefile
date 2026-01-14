@@ -136,4 +136,21 @@ test:
 		exit 1; \
 	fi
 
-.PHONY: all clean test
+# Run a single program
+# Usage: make run FILE=<path/to/program.imp>
+run: $(TARGET)
+	@if [ -z "$(FILE)" ]; then \
+		echo "Error: FILE not specified"; \
+		echo "Usage: make run FILE=<path/to/program.imp>"; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(FILE)" ]; then \
+		echo "Error: File '$(FILE)' not found"; \
+		exit 1; \
+	fi
+	@echo "Compiling $(FILE)..."
+	@./$(TARGET) $(FILE) output.mr
+	@echo "Running output.mr..."
+	@$(VM) output.mr
+
+.PHONY: all clean test run

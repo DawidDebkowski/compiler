@@ -1,0 +1,8 @@
+PROGRAM IS
+    tab[10:15]
+IN
+    tab[10] := 100;
+    tab[15] := 150;
+    WRITE tab[10];
+    WRITE tab[15];
+END

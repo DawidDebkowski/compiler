@@ -5,7 +5,9 @@
 map<string, Symbol> symbol_table;
 map<string, ProcedureInfo> procedures_map;
 
-long long memory_offset = 1000;
+long long memory_offset = 2; // Start at 2. 0 unused. 1 reserved for LHS hold.
+long long lhs_hold_addr = 1;
+
 string current_procedure = ""; 
 string current_call_proc = "";
 int current_arg_idx = 0;

@@ -23,6 +23,7 @@ struct Symbol {
 
 struct ProcedureInfo {
     long long address;
+    long long ra_address; // Return address storage location
     vector<long long> param_addresses;
     vector<string> param_mods;     // "T", "I", "O", ""
     vector<bool> param_is_array;

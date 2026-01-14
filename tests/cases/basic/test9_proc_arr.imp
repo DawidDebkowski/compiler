@@ -1,0 +1,13 @@
+PROCEDURE set(T arr, idx, val) IS
+IN
+    arr[idx] := val;
+END
+
+PROGRAM IS
+    tab[0:5]
+IN
+    set(tab, 0, 111);
+    set(tab, 5, 222);
+    WRITE tab[0];
+    WRITE tab[5];
+END

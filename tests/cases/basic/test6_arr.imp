@@ -1,0 +1,8 @@
+PROGRAM IS
+    tab[0:5]
+IN
+    tab[0] := 5;
+    tab[5] := 10;
+    WRITE tab[0];
+    WRITE tab[5];
+END
