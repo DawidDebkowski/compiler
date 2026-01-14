@@ -1,14 +1,22 @@
 CXX = g++
-CXXFLAGS = -Wall -I$(BUILD_DIR) -std=c++17
+CXXFLAGS = -Wall -I$(SRC_DIR) -I$(BUILD_DIR) -std=c++17
 
 SRC_DIR = src
 BUILD_DIR = build
 TARGET = compiler
 
+# List of source files (excluding generated ones)
+SRCS = $(SRC_DIR)/codegen.cpp $(SRC_DIR)/symtable.cpp $(SRC_DIR)/math_kernel.cpp
+OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
+
 all: $(TARGET)
 
-$(TARGET): $(BUILD_DIR)/parser.tab.cpp $(BUILD_DIR)/lex.yy.c
+$(TARGET): $(BUILD_DIR)/parser.tab.cpp $(BUILD_DIR)/lex.yy.c $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ -lm
+
+# Compile C++ source files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/parser.tab.cpp $(BUILD_DIR)/parser.tab.hpp: $(SRC_DIR)/parser.y | $(BUILD_DIR)
 	bison -d $< -o $(BUILD_DIR)/parser.tab.cpp
@@ -27,7 +35,7 @@ clean:
 # CATEGORY - test category name (required, e.g., example, labor4, custom, standard)
 # FAIL_FAST - if set to 1, stops on first failed test (optional, default: 0)
 
-VM ?= maszyna-wirtualna-cln
+VM ?= ./mw2025/maszyna-wirtualna
 TESTS_DIR = tests
 CASES_DIR = $(TESTS_DIR)/cases
 IN_DIR = $(TESTS_DIR)/in
@@ -86,9 +94,9 @@ test:
 			continue; \
 		fi; \
 		if [ -f "$$in_file" ]; then \
-			$(VM) $$mr_file < $$in_file > $$out_file 2>&1; \
+			$(VM) $$mr_file < $$in_file > $$out_file; \
 		else \
-			$(VM) $$mr_file > $$out_file 2>&1; \
+			$(VM) $$mr_file > $$out_file; \
 		fi; \
 		if [ $$? -ne 0 ]; then \
 			echo "FAIL (runtime error)"; \

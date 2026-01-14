@@ -97,21 +97,83 @@ void generate_mul() {
 
 void generate_div() {
     addr_div = code.size();
-    // rb / rc -> rb (Quotient), rc (Remainder)
-    emit("SWP", 3); // Save ret addr in rd
+    // Input: rb (dividend), rc (divisor)
+    // Output: rb (quotient), rc (remainder)
+    // Clobbers: ra, re, rf, rg
     
-    // Check divide by zero (rc=0) -> result 0?
-    emit("RST", 0);
-    emit("ADD", 2);
-    emit("JZERO", code.size() + 2); 
-    long long jmp_zero = code.size() - 1;
+    emit("SWP", 3); // Save Return Addr (ra) -> rd. 
     
-    // Stub: rb=0, rc=0
+    // Check Divide by Zero
+    emit("RST", 0); emit("ADD", 2); // ra = rc
+    emit("JZERO", 0); // If rc==0 Jump to Stub
+    long long jump_zero = code.size() - 1;
+    
+    // Init registers
+    emit("RST", 6); // rg = 0 (Quotient)
+    emit("RST", 5); emit("INC", 5); // rf = 1 (Multiple)
+    
+    // re = rc (Divisor Copy)
+    emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc, ra = 0
+    
+    // SHIFT UP LOOP
+    long long shift_loop_start = code.size();
+    
+    // Check if re > rb (Stop shifting)
+    emit("RST", 0); emit("ADD", 4); // ra = re
+    emit("SUB", 1); // ra = re - rb
+    
+    // If result > 0 (re > rb), stop.
+    emit("JPOS", 0); 
+    long long jump_end_shift = code.size() - 1;
+    
+    // Shift Up
+    emit("SHL", 4); // re << 1
+    emit("SHL", 5); // rf << 1
+    emit("JUMP", shift_loop_start);
+    
+    code[jump_end_shift].arg = code.size();
+    
+    // Shift back once
+    emit("SHR", 4);
+    emit("SHR", 5);
+    
+    // SUBTRACT LOOP
+    long long sub_loop_start = code.size();
+    
+    // If rf == 0, finished.
+    emit("RST", 0); emit("ADD", 5); 
+    emit("JZERO", 0); // End
+    long long jump_end_sub = code.size() - 1;
+    
+    // if re > rb, skip subtract (Check re - rb > 0)
+    emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
+    emit("JPOS", 0); 
+    long long jump_skip_sub = code.size() - 1;
+    
+    // rb -= re
+    emit("RST", 0); emit("ADD", 1); emit("SUB", 4); emit("SWP", 1); 
+    // rg += rf
+    emit("RST", 0); emit("ADD", 6); emit("ADD", 5); emit("SWP", 6); 
+    
+    code[jump_skip_sub].arg = code.size();
+    
+    emit("SHR", 4); // re >> 1
+    emit("SHR", 5); // rf >> 1
+    emit("JUMP", sub_loop_start);
+    
+    code[jump_end_sub].arg = code.size();
+    
+    // Finalize:
+    emit("RST", 0); emit("ADD", 1); emit("SWP", 2); // rc = rb (Rem)
+    emit("RST", 0); emit("ADD", 6); emit("SWP", 1); // rb = rg (Quot)
+    
+    // Return
+    emit("RST", 0); emit("ADD", 3); emit("RTRN");
+
+    // STUB: Div by zero => rb=0, rc=0
+    code[jump_zero].arg = code.size();
     emit("RST", 1);
     emit("RST", 2);
-
-    // End stub
-    code[jmp_zero].arg = code.size();
     emit("RST", 0);
     emit("ADD", 3);
     emit("RTRN");

@@ -2239,14 +2239,37 @@ void yyerror(const char *s) {
     exit(1);
 }
 
-int main() {
-    if (yyparse() == 0) {
-        optimize_code();
-        for (const auto& instr : code) {
-            cout << instr.opcode;
-            if (instr.has_arg) cout << " " << instr.arg;
-            cout << endl;
+extern FILE *yyin;
+
+int main(int argc, char* argv[]) {
+    if (argc > 1) {
+        yyin = fopen(argv[1], "r");
+        if (!yyin) {
+            cerr << "Cannot open input file: " << argv[1] << endl;
+            return 1;
         }
+    }
+
+    if (yyparse() == 0) {
+        // lets NOT OPTIMIZE CODE NOW
+        /* optimize_code(); */
+        
+        FILE* out = stdout;
+        if (argc > 2) {
+            out = fopen(argv[2], "w");
+            if (!out) {
+                cerr << "Cannot open output file: " << argv[2] << endl;
+                return 1;
+            }
+        }
+
+        for (const auto& instr : code) {
+            fprintf(out, "%s", instr.opcode.c_str());
+            if (instr.has_arg) fprintf(out, " %lld", instr.arg);
+            fprintf(out, "\n");
+        }
+
+        if (out != stdout) fclose(out);
     }
     return 0;
 }
