@@ -231,6 +231,11 @@ command : identifier {
     }
     | FOR pidentifier FROM value {
           Symbol* iter = get_variable(string($2));
+          if (!iter) {
+              // Implicit declaration of iterator
+              add_symbol(string($2), false, false, "", 0, 0);
+              iter = get_variable(string($2));
+          }
           if (iter->is_iterator) yyerror("Nested loop with same iterator");
           if (iter->is_param) yyerror("Iterator must be local variable");
           iter->is_iterator = true;

@@ -603,13 +603,13 @@ static const yytype_int16 yyrline[] =
 {
        0,    44,    44,    44,    55,    55,    70,    70,    83,    86,
       86,    99,   103,    99,   106,   110,   106,   115,   116,   119,
-     119,   143,   143,   155,   160,   160,   170,   170,   179,   188,
-     179,   227,   235,   227,   273,   274,   284,   289,   289,   297,
-     300,   303,   306,   311,   316,   323,   324,   325,   326,   329,
-     330,   333,   361,   385,   386,   386,   387,   387,   388,   388,
-     389,   389,   390,   390,   393,   393,   400,   400,   407,   407,
-     412,   412,   417,   417,   422,   422,   430,   431,   439,   454,
-     472
+     119,   143,   143,   155,   160,   160,   170,   170,   179,   193,
+     179,   232,   245,   232,   283,   284,   294,   299,   299,   307,
+     310,   313,   316,   321,   326,   333,   334,   335,   336,   339,
+     340,   343,   371,   395,   396,   396,   397,   397,   398,   398,
+     399,   399,   400,   400,   403,   403,   410,   410,   417,   417,
+     422,   422,   427,   427,   432,   432,   440,   441,   449,   464,
+     482
 };
 #endif
 
@@ -1543,6 +1543,11 @@ yyreduce:
 #line 179 "src/parser.y"
                                  {
           Symbol* iter = get_variable(string((yyvsp[-2].str)));
+          if (!iter) {
+              // Implicit declaration of iterator
+              add_symbol(string((yyvsp[-2].str)), false, false, "", 0, 0);
+              iter = get_variable(string((yyvsp[-2].str)));
+          }
           if (iter->is_iterator) yyerror("Nested loop with same iterator");
           if (iter->is_param) yyerror("Iterator must be local variable");
           
@@ -1551,11 +1556,11 @@ yyreduce:
           
           emit("STORE", iter->address);
     }
-#line 1555 "build/parser.tab.cpp"
+#line 1560 "build/parser.tab.cpp"
     break;
 
   case 29: /* $@14: %empty  */
-#line 188 "src/parser.y"
+#line 193 "src/parser.y"
                {
           emit("SWP", 1); 
           Symbol* iter = get_variable(string((yyvsp[-5].str)));
@@ -1577,11 +1582,11 @@ yyreduce:
           loop_stack.push_back(jump_out);
           loop_stack.push_back(count_addr);
     }
-#line 1581 "build/parser.tab.cpp"
+#line 1586 "build/parser.tab.cpp"
     break;
 
   case 30: /* command: FOR pidentifier FROM value $@13 TO value $@14 DO commands ENDFOR  */
-#line 208 "src/parser.y"
+#line 213 "src/parser.y"
                          {
           long long count_addr = loop_stack.back(); loop_stack.pop_back();
           long long jump_out = loop_stack.back(); loop_stack.pop_back();
@@ -1601,13 +1606,18 @@ yyreduce:
           
           iter->is_iterator = false;
     }
-#line 1605 "build/parser.tab.cpp"
+#line 1610 "build/parser.tab.cpp"
     break;
 
   case 31: /* $@15: %empty  */
-#line 227 "src/parser.y"
+#line 232 "src/parser.y"
                                  {
           Symbol* iter = get_variable(string((yyvsp[-2].str)));
+          if (!iter) {
+              // Implicit declaration of iterator
+              add_symbol(string((yyvsp[-2].str)), false, false, "", 0, 0);
+              iter = get_variable(string((yyvsp[-2].str)));
+          }
           if (iter->is_iterator) yyerror("Nested loop with same iterator");
           if (iter->is_param) yyerror("Iterator must be local variable");
           iter->is_iterator = true;
@@ -1615,11 +1625,11 @@ yyreduce:
 
           emit("STORE", iter->address); 
     }
-#line 1619 "build/parser.tab.cpp"
+#line 1629 "build/parser.tab.cpp"
     break;
 
   case 32: /* $@16: %empty  */
-#line 235 "src/parser.y"
+#line 245 "src/parser.y"
                    {
           emit("SWP", 1); 
           Symbol* iter = get_variable(string((yyvsp[-5].str)));
@@ -1640,11 +1650,11 @@ yyreduce:
           loop_stack.push_back(jump_out);
           loop_stack.push_back(count_addr);
     }
-#line 1644 "build/parser.tab.cpp"
+#line 1654 "build/parser.tab.cpp"
     break;
 
   case 33: /* command: FOR pidentifier FROM value $@15 DOWNTO value $@16 DO commands ENDFOR  */
-#line 254 "src/parser.y"
+#line 264 "src/parser.y"
                          {
           long long count_addr = loop_stack.back(); loop_stack.pop_back();
           long long jump_out = loop_stack.back(); loop_stack.pop_back();
@@ -1664,11 +1674,11 @@ yyreduce:
           
           iter->is_iterator = false;
     }
-#line 1668 "build/parser.tab.cpp"
+#line 1678 "build/parser.tab.cpp"
     break;
 
   case 35: /* command: READ identifier SEMICOLON  */
-#line 274 "src/parser.y"
+#line 284 "src/parser.y"
                                 {
         if ((yyvsp[-1].loc)->sym->is_iterator) yyerror("Cannot read into loop iterator");
         if ((yyvsp[-1].loc)->sym->mod == "I") yyerror("Cannot read into I parameter");
@@ -1679,79 +1689,69 @@ yyreduce:
         else emit("STORE", (yyvsp[-1].loc)->address);
         delete (yyvsp[-1].loc);
     }
-#line 1683 "build/parser.tab.cpp"
+#line 1693 "build/parser.tab.cpp"
     break;
 
   case 36: /* command: WRITE value SEMICOLON  */
-#line 284 "src/parser.y"
+#line 294 "src/parser.y"
                             {
         emit("WRITE");
     }
-#line 1691 "build/parser.tab.cpp"
+#line 1701 "build/parser.tab.cpp"
     break;
 
   case 37: /* $@17: %empty  */
-#line 289 "src/parser.y"
+#line 299 "src/parser.y"
                                { 
         current_call_proc = string((yyvsp[-1].str));
         current_arg_idx = 0;
     }
-#line 1700 "build/parser.tab.cpp"
+#line 1710 "build/parser.tab.cpp"
     break;
 
   case 38: /* proc_call: pidentifier LPAREN $@17 args RPAREN  */
-#line 292 "src/parser.y"
+#line 302 "src/parser.y"
                   {
         emit("CALL", procedures_map[(yyvsp[-4].str)].address);
     }
-#line 1708 "build/parser.tab.cpp"
+#line 1718 "build/parser.tab.cpp"
     break;
 
   case 39: /* declarations: declarations COMMA pidentifier  */
-#line 297 "src/parser.y"
+#line 307 "src/parser.y"
                                               {
         add_symbol(string((yyvsp[0].str)), false, false, "", 0, 0);
     }
-#line 1716 "build/parser.tab.cpp"
+#line 1726 "build/parser.tab.cpp"
     break;
 
   case 40: /* declarations: declarations COMMA pidentifier LBRACKET num COLON num RBRACKET  */
-#line 300 "src/parser.y"
+#line 310 "src/parser.y"
                                                                      {
         add_symbol(string((yyvsp[-5].str)), true, false, "", (yyvsp[-3].num), (yyvsp[-1].num));
     }
-#line 1724 "build/parser.tab.cpp"
+#line 1734 "build/parser.tab.cpp"
     break;
 
   case 41: /* declarations: pidentifier  */
-#line 303 "src/parser.y"
+#line 313 "src/parser.y"
                   {
         add_symbol(string((yyvsp[0].str)), false, false, "", 0, 0);
     }
-#line 1732 "build/parser.tab.cpp"
+#line 1742 "build/parser.tab.cpp"
     break;
 
   case 42: /* declarations: pidentifier LBRACKET num COLON num RBRACKET  */
-#line 306 "src/parser.y"
+#line 316 "src/parser.y"
                                                   {
         add_symbol(string((yyvsp[-5].str)), true, false, "", (yyvsp[-3].num), (yyvsp[-1].num));
-    }
-#line 1740 "build/parser.tab.cpp"
-    break;
-
-  case 43: /* args_decl: args_decl COMMA type pidentifier  */
-#line 311 "src/parser.y"
-                                             {
-       string m = string((yyvsp[-1].str));
-       bool is_arr = (m == "T");
-       add_symbol(string((yyvsp[0].str)), is_arr, true, m, 0, 0); free((yyvsp[-1].str));
     }
 #line 1750 "build/parser.tab.cpp"
     break;
 
-  case 44: /* args_decl: type pidentifier  */
-#line 316 "src/parser.y"
-                       {
+  case 43: /* args_decl: args_decl COMMA type pidentifier  */
+#line 321 "src/parser.y"
+                                             {
        string m = string((yyvsp[-1].str));
        bool is_arr = (m == "T");
        add_symbol(string((yyvsp[0].str)), is_arr, true, m, 0, 0); free((yyvsp[-1].str));
@@ -1759,32 +1759,42 @@ yyreduce:
 #line 1760 "build/parser.tab.cpp"
     break;
 
+  case 44: /* args_decl: type pidentifier  */
+#line 326 "src/parser.y"
+                       {
+       string m = string((yyvsp[-1].str));
+       bool is_arr = (m == "T");
+       add_symbol(string((yyvsp[0].str)), is_arr, true, m, 0, 0); free((yyvsp[-1].str));
+    }
+#line 1770 "build/parser.tab.cpp"
+    break;
+
   case 45: /* type: T  */
-#line 323 "src/parser.y"
+#line 333 "src/parser.y"
          { (yyval.str) = strdup("T"); }
-#line 1766 "build/parser.tab.cpp"
+#line 1776 "build/parser.tab.cpp"
     break;
 
   case 46: /* type: I  */
-#line 324 "src/parser.y"
+#line 334 "src/parser.y"
          { (yyval.str) = strdup("I"); }
-#line 1772 "build/parser.tab.cpp"
+#line 1782 "build/parser.tab.cpp"
     break;
 
   case 47: /* type: O  */
-#line 325 "src/parser.y"
+#line 335 "src/parser.y"
          { (yyval.str) = strdup("O"); }
-#line 1778 "build/parser.tab.cpp"
+#line 1788 "build/parser.tab.cpp"
     break;
 
   case 48: /* type: %empty  */
-#line 326 "src/parser.y"
+#line 336 "src/parser.y"
                    { (yyval.str) = strdup(""); }
-#line 1784 "build/parser.tab.cpp"
+#line 1794 "build/parser.tab.cpp"
     break;
 
   case 51: /* argument: pidentifier  */
-#line 333 "src/parser.y"
+#line 343 "src/parser.y"
                        {
         Symbol* s = get_variable(string((yyvsp[0].str)));
         if (!s) yyerror(("Undefined variable " + string((yyvsp[0].str))).c_str());
@@ -1813,11 +1823,11 @@ yyreduce:
             }
         }
     }
-#line 1817 "build/parser.tab.cpp"
+#line 1827 "build/parser.tab.cpp"
     break;
 
   case 52: /* argument: num  */
-#line 361 "src/parser.y"
+#line 371 "src/parser.y"
           {
         ProcedureInfo& info = procedures_map[current_call_proc];
         if (current_arg_idx >= (int)info.param_addresses.size()) yyerror("Too many arguments for procedure call");
@@ -1838,77 +1848,77 @@ yyreduce:
         gen_const(0, temp_addr);
         emit("STORE", param_addr);
     }
-#line 1842 "build/parser.tab.cpp"
+#line 1852 "build/parser.tab.cpp"
     break;
 
   case 54: /* $@18: %empty  */
-#line 386 "src/parser.y"
+#line 396 "src/parser.y"
             { emit("SWP", 1); }
-#line 1848 "build/parser.tab.cpp"
+#line 1858 "build/parser.tab.cpp"
     break;
 
   case 55: /* expression: value $@18 PLUS value  */
-#line 386 "src/parser.y"
+#line 396 "src/parser.y"
                                            { emit("ADD", 1); }
-#line 1854 "build/parser.tab.cpp"
+#line 1864 "build/parser.tab.cpp"
     break;
 
   case 56: /* $@19: %empty  */
-#line 387 "src/parser.y"
+#line 397 "src/parser.y"
             { emit("SWP", 1); }
-#line 1860 "build/parser.tab.cpp"
+#line 1870 "build/parser.tab.cpp"
     break;
 
   case 57: /* expression: value $@19 MINUS value  */
-#line 387 "src/parser.y"
+#line 397 "src/parser.y"
                                             { emit("SWP", 1); emit("SUB", 1); }
-#line 1866 "build/parser.tab.cpp"
+#line 1876 "build/parser.tab.cpp"
     break;
 
   case 58: /* $@20: %empty  */
-#line 388 "src/parser.y"
+#line 398 "src/parser.y"
             { emit("SWP", 1); }
-#line 1872 "build/parser.tab.cpp"
+#line 1882 "build/parser.tab.cpp"
     break;
 
   case 59: /* expression: value $@20 MULT value  */
-#line 388 "src/parser.y"
+#line 398 "src/parser.y"
                                            { emit("SWP", 2); emit("CALL", addr_mul); emit("SWP", 1); }
-#line 1878 "build/parser.tab.cpp"
+#line 1888 "build/parser.tab.cpp"
     break;
 
   case 60: /* $@21: %empty  */
-#line 389 "src/parser.y"
+#line 399 "src/parser.y"
             { emit("SWP", 1); }
-#line 1884 "build/parser.tab.cpp"
+#line 1894 "build/parser.tab.cpp"
     break;
 
   case 61: /* expression: value $@21 DIV value  */
-#line 389 "src/parser.y"
+#line 399 "src/parser.y"
                                           { emit("SWP", 2); emit("CALL", addr_div); emit("SWP", 1); }
-#line 1890 "build/parser.tab.cpp"
+#line 1900 "build/parser.tab.cpp"
     break;
 
   case 62: /* $@22: %empty  */
-#line 390 "src/parser.y"
+#line 400 "src/parser.y"
             { emit("SWP", 1); }
-#line 1896 "build/parser.tab.cpp"
+#line 1906 "build/parser.tab.cpp"
     break;
 
   case 63: /* expression: value $@22 MOD value  */
-#line 390 "src/parser.y"
+#line 400 "src/parser.y"
                                           { emit("SWP", 2); emit("CALL", addr_mod); emit("SWP", 1); }
-#line 1902 "build/parser.tab.cpp"
+#line 1912 "build/parser.tab.cpp"
     break;
 
   case 64: /* $@23: %empty  */
-#line 393 "src/parser.y"
+#line 403 "src/parser.y"
                   { emit("SWP", 1); }
-#line 1908 "build/parser.tab.cpp"
+#line 1918 "build/parser.tab.cpp"
     break;
 
   case 65: /* condition: value $@23 EQ value  */
-#line 393 "src/parser.y"
+#line 403 "src/parser.y"
                                                {
         emit("SWP", 2); 
         emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3);
@@ -1916,17 +1926,17 @@ yyreduce:
         emit("JPOS", 0); 
         if_stack.push_back(code.size()-1); 
     }
-#line 1920 "build/parser.tab.cpp"
+#line 1930 "build/parser.tab.cpp"
     break;
 
   case 66: /* $@24: %empty  */
-#line 400 "src/parser.y"
+#line 410 "src/parser.y"
             { emit("SWP", 1); }
-#line 1926 "build/parser.tab.cpp"
+#line 1936 "build/parser.tab.cpp"
     break;
 
   case 67: /* condition: value $@24 NEQ value  */
-#line 400 "src/parser.y"
+#line 410 "src/parser.y"
                                           {
         emit("SWP", 2); 
         emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3);
@@ -1934,93 +1944,93 @@ yyreduce:
         emit("JZERO", 0); 
         if_stack.push_back(code.size()-1); 
     }
-#line 1938 "build/parser.tab.cpp"
+#line 1948 "build/parser.tab.cpp"
     break;
 
   case 68: /* $@25: %empty  */
-#line 407 "src/parser.y"
+#line 417 "src/parser.y"
             { emit("SWP", 1); }
-#line 1944 "build/parser.tab.cpp"
+#line 1954 "build/parser.tab.cpp"
     break;
 
   case 69: /* condition: value $@25 GT value  */
-#line 407 "src/parser.y"
+#line 417 "src/parser.y"
                                          { 
         emit("SWP", 1); emit("SUB", 1); 
         emit("JZERO", 0); 
         if_stack.push_back(code.size()-1); 
     }
-#line 1954 "build/parser.tab.cpp"
+#line 1964 "build/parser.tab.cpp"
     break;
 
   case 70: /* $@26: %empty  */
-#line 412 "src/parser.y"
+#line 422 "src/parser.y"
             { emit("SWP", 1); }
-#line 1960 "build/parser.tab.cpp"
+#line 1970 "build/parser.tab.cpp"
     break;
 
   case 71: /* condition: value $@26 LT value  */
-#line 412 "src/parser.y"
+#line 422 "src/parser.y"
                                          { 
         emit("SUB", 1); 
         emit("JZERO", 0); 
         if_stack.push_back(code.size()-1); 
     }
-#line 1970 "build/parser.tab.cpp"
+#line 1980 "build/parser.tab.cpp"
     break;
 
   case 72: /* $@27: %empty  */
-#line 417 "src/parser.y"
+#line 427 "src/parser.y"
             { emit("SWP", 1); }
-#line 1976 "build/parser.tab.cpp"
+#line 1986 "build/parser.tab.cpp"
     break;
 
   case 73: /* condition: value $@27 GEQ value  */
-#line 417 "src/parser.y"
+#line 427 "src/parser.y"
                                           { 
         emit("SUB", 1);
         emit("JPOS", 0);
         if_stack.push_back(code.size()-1);
     }
-#line 1986 "build/parser.tab.cpp"
+#line 1996 "build/parser.tab.cpp"
     break;
 
   case 74: /* $@28: %empty  */
-#line 422 "src/parser.y"
+#line 432 "src/parser.y"
             { emit("SWP", 1); }
-#line 1992 "build/parser.tab.cpp"
+#line 2002 "build/parser.tab.cpp"
     break;
 
   case 75: /* condition: value $@28 LEQ value  */
-#line 422 "src/parser.y"
+#line 432 "src/parser.y"
                                           { 
         emit("SWP", 1); 
         emit("SUB", 1); 
         emit("JPOS", 0);
         if_stack.push_back(code.size()-1);
     }
-#line 2003 "build/parser.tab.cpp"
+#line 2013 "build/parser.tab.cpp"
     break;
 
   case 76: /* value: num  */
-#line 430 "src/parser.y"
+#line 440 "src/parser.y"
             { gen_const(0, (yyvsp[0].num)); }
-#line 2009 "build/parser.tab.cpp"
+#line 2019 "build/parser.tab.cpp"
     break;
 
   case 77: /* value: identifier  */
-#line 431 "src/parser.y"
+#line 441 "src/parser.y"
                  {
         if (!(yyvsp[0].loc)->sym->is_initialized) yyerror("Usage of uninitialized variable");
         if ((yyvsp[0].loc)->reg != -1) emit("RLOAD", (yyvsp[0].loc)->reg);
         else emit("LOAD", (yyvsp[0].loc)->address);
         delete (yyvsp[0].loc);
     }
-#line 2020 "build/parser.tab.cpp"
+#line 2030 "build/parser.tab.cpp"
     break;
 
   case 78: /* identifier: pidentifier  */
-#line 439 "src/parser.y"
+#line 449 "src/parser.y"
                          {
          Symbol* s = get_variable(string((yyvsp[0].str)));
          if (!s) yyerror(("Undefined identifier " + string((yyvsp[0].str))).c_str());
@@ -2036,11 +2046,11 @@ yyreduce:
              (yyval.loc)->reg = -1;
          }
     }
-#line 2040 "build/parser.tab.cpp"
+#line 2050 "build/parser.tab.cpp"
     break;
 
   case 79: /* identifier: pidentifier LBRACKET num RBRACKET  */
-#line 454 "src/parser.y"
+#line 464 "src/parser.y"
                                         {
          Symbol* s = get_variable(string((yyvsp[-3].str)));
          if (!s) yyerror(("Undefined identifier " + string((yyvsp[-3].str))).c_str());
@@ -2059,11 +2069,11 @@ yyreduce:
             (yyval.loc)->reg = -1;
          }
     }
-#line 2063 "build/parser.tab.cpp"
+#line 2073 "build/parser.tab.cpp"
     break;
 
   case 80: /* identifier: pidentifier LBRACKET pidentifier RBRACKET  */
-#line 472 "src/parser.y"
+#line 482 "src/parser.y"
                                                 {
          Symbol* arr = get_variable(string((yyvsp[-3].str)));
          Symbol* idx = get_variable(string((yyvsp[-1].str)));
@@ -2095,11 +2105,11 @@ yyreduce:
          (yyval.loc)->reg = 7;
          (yyval.loc)->sym = arr;
     }
-#line 2099 "build/parser.tab.cpp"
+#line 2109 "build/parser.tab.cpp"
     break;
 
 
-#line 2103 "build/parser.tab.cpp"
+#line 2113 "build/parser.tab.cpp"
 
       default: break;
     }
@@ -2292,7 +2302,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 505 "src/parser.y"
+#line 515 "src/parser.y"
 
 
 void yyerror(const char *s) {

@@ -66,9 +66,9 @@ test:
 	for test_file in $(CASES_DIR)/$(CATEGORY)/*.imp; do \
 		test_name=$$(basename $$test_file .imp); \
 		mr_file=$(MR_DIR)/$(CATEGORY)/$$test_name.mr; \
-		in_file=$(IN_DIR)/$$test_name.in; \
-		out_file=$(OUT_DIR)/$$test_name.out; \
-		ans_file=$(ANS_DIR)/$$test_name.ans; \
+		in_file=$(IN_DIR)/$(CATEGORY)/$$test_name.in; \
+		out_file=$(OUT_DIR)/$(CATEGORY)/$$test_name.out; \
+		ans_file=$(ANS_DIR)/$(CATEGORY)/$$test_name.ans; \
 		echo -n "Testing $$test_name... "; \
 		if [ ! -f "$$test_file" ]; then \
 			echo "SKIP (source not found)"; \
