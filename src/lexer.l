@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include "parser.tab.h"
+#include "parser.tab.hpp"
 
 int yylex();
 %}
@@ -27,7 +27,6 @@ int yylex();
 "ENDIF"                 { return ENDIF; }
 "WHILE"                 { return WHILE; }
 "DO"                    { return DO; }
-"ENDWHILE"              { return ENDWHILE; }
 "REPEAT"                { return REPEAT; }
 "UNTIL"                 { return UNTIL; }
 "FOR"                   { return FOR; }
@@ -61,8 +60,8 @@ int yylex();
 "["                     { return LBRACKET; }
 "]"                     { return RBRACKET; }
 
-[_a-z]+                 { return pidentifier; }
-[0-9]+                  { return num; }
+[_a-z]+                 { yylval.str = strdup(yytext); return pidentifier; }
+[0-9]+                  { yylval.num = atoll(yytext); return num; }
 
 .                       { return yytext[0]; }
 
