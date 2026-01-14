@@ -1,0 +1,6 @@
+PROGRAM IS
+ x
+IN
+ x := 1 * 1;
+ WRITE x;
+END

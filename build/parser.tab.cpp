@@ -82,6 +82,7 @@
 #include "codegen.hpp"
 #include "symtable.hpp"
 #include "math_kernel.hpp"
+#include <algorithm>
 
 using namespace std;
 
@@ -89,8 +90,68 @@ extern int yylineno;
 int yylex();
 void yyerror(const char *s);
 
+// Global Analysis State
+bool analyze_mode = false;
+int loop_depth = 0;
+map<string, long long> var_usage_counts;
+map<string, int> var_register_assignments;
+extern Symbol* reg_descriptors[8]; // Track which variable is in which register (0-7)
 
-#line 94 "build/parser.tab.cpp"
+void reset_parser_state() {
+    code.clear();
+    symbol_table.clear();
+    procedures_map.clear();
+    memory_offset = 1000;
+    current_procedure = "";
+    calls_mul.clear(); calls_div.clear(); calls_mod.clear();
+    loop_stack.clear(); if_stack.clear();
+    loop_depth = 0;
+    addr_mul = -1; addr_div = -1; addr_mod = -1;
+    for(int i=0; i<8; i++) reg_descriptors[i] = nullptr;
+}
+
+void check_reg_assignment(char* name) {
+    if (analyze_mode) return;
+    string sname = (current_procedure == "") ? string(name) : current_procedure + "_" + string(name);
+    if (var_register_assignments.count(sname)) {
+         Symbol* s = get_variable(string(name));
+         if (s) {
+             s->cache_reg = var_register_assignments[sname];
+             reg_descriptors[s->cache_reg] = s;
+         }
+    }
+}
+
+void spill_registers(int max_reg) {
+    for(int i=4; i<=max_reg; i++) {
+        if(reg_descriptors[i]) {
+            emit("SWP", i);
+            emit("STORE", reg_descriptors[i]->address);
+            emit("SWP", i);
+        }
+    }
+}
+
+void restore_registers(int max_reg) {
+    bool needed = false;
+    for(int i=4; i<=max_reg; i++) if(reg_descriptors[i]) needed = true;
+    if(!needed) return;
+    
+    long long temp = memory_offset++;
+    emit("STORE", temp); 
+    
+    for(int i=4; i<=max_reg; i++) {
+        if(reg_descriptors[i]) {
+            emit("LOAD", reg_descriptors[i]->address); 
+            emit("SWP", i); 
+        }
+    }
+    
+    emit("LOAD", temp); 
+}
+
+
+#line 155 "build/parser.tab.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -601,15 +662,15 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    50,    50,    50,    71,    71,    86,    86,    99,   102,
-     102,   115,   119,   115,   122,   126,   122,   131,   132,   135,
-     135,   159,   159,   171,   176,   176,   186,   186,   195,   209,
-     195,   248,   261,   248,   299,   300,   310,   315,   315,   323,
-     326,   329,   332,   337,   342,   349,   350,   351,   352,   355,
-     356,   359,   387,   411,   412,   412,   413,   413,   414,   414,
-     455,   455,   480,   480,   528,   528,   535,   535,   542,   542,
-     547,   547,   552,   552,   557,   557,   565,   572,   581,   596,
-     614
+       0,   111,   111,   111,   134,   134,   149,   149,   162,   165,
+     165,   178,   182,   178,   185,   189,   185,   194,   195,   198,
+     198,   228,   228,   240,   245,   245,   257,   257,   268,   290,
+     268,   342,   363,   342,   414,   415,   431,   436,   436,   446,
+     450,   454,   458,   464,   469,   476,   477,   478,   479,   482,
+     483,   486,   527,   551,   552,   552,   553,   553,   554,   554,
+     597,   597,   624,   624,   674,   674,   681,   681,   688,   688,
+     693,   693,   698,   698,   703,   703,   711,   718,   735,   764,
+     782
 };
 #endif
 
@@ -1303,37 +1364,39 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* $@1: %empty  */
-#line 50 "src/parser.y"
+#line 111 "src/parser.y"
               { 
      emit("JUMP", 0); // JUMP to Main
    }
-#line 1311 "build/parser.tab.cpp"
+#line 1372 "build/parser.tab.cpp"
     break;
 
   case 3: /* program_all: $@1 procedures main  */
-#line 52 "src/parser.y"
+#line 113 "src/parser.y"
                      {
-      code[0].arg = symbol_table["main_start"].address; 
-      emit("HALT");
+      if (!analyze_mode) {
+          code[0].arg = symbol_table["main_start"].address; 
+          emit("HALT");
 
-      if (!calls_mul.empty()) {
-          generate_mul();
-          for(long long idx : calls_mul) code[idx].arg = addr_mul;
-      }
-      if (!calls_div.empty() || !calls_mod.empty()) {
-          if (addr_div == -1) generate_div();
-          for(long long idx : calls_div) code[idx].arg = addr_div;
-      }
-      if (!calls_mod.empty()) {
-          generate_mod();
-          for(long long idx : calls_mod) code[idx].arg = addr_mod;
+          if (!calls_mul.empty()) {
+              generate_mul();
+              for(long long idx : calls_mul) code[idx].arg = addr_mul;
+          }
+          if (!calls_div.empty() || !calls_mod.empty()) {
+              if (addr_div == -1) generate_div();
+              for(long long idx : calls_div) code[idx].arg = addr_div;
+          }
+          if (!calls_mod.empty()) {
+              generate_mod();
+              for(long long idx : calls_mod) code[idx].arg = addr_mod;
+          }
       }
    }
-#line 1333 "build/parser.tab.cpp"
+#line 1396 "build/parser.tab.cpp"
     break;
 
   case 4: /* $@2: %empty  */
-#line 71 "src/parser.y"
+#line 134 "src/parser.y"
                                                                {
         procedures_map[current_procedure].address = code.size();
         
@@ -1343,11 +1406,11 @@ yyreduce:
         emit("STORE", ra_addr);
         
     }
-#line 1347 "build/parser.tab.cpp"
+#line 1410 "build/parser.tab.cpp"
     break;
 
   case 5: /* procedures: procedures PROCEDURE proc_head IS declarations IN $@2 commands END  */
-#line 79 "src/parser.y"
+#line 142 "src/parser.y"
                    {
         // Restore Return Address
         long long ra_addr = procedures_map[current_procedure].ra_address;
@@ -1355,11 +1418,11 @@ yyreduce:
         emit("RTRN");
         current_procedure = "";
     }
-#line 1359 "build/parser.tab.cpp"
+#line 1422 "build/parser.tab.cpp"
     break;
 
   case 6: /* $@3: %empty  */
-#line 86 "src/parser.y"
+#line 149 "src/parser.y"
                                            {
         procedures_map[current_procedure].address = code.size();
         
@@ -1368,22 +1431,22 @@ yyreduce:
         emit("STORE", ra_addr);
         
     }
-#line 1372 "build/parser.tab.cpp"
+#line 1435 "build/parser.tab.cpp"
     break;
 
   case 7: /* procedures: procedures PROCEDURE proc_head IS IN $@3 commands END  */
-#line 93 "src/parser.y"
+#line 156 "src/parser.y"
                    {
         long long ra_addr = procedures_map[current_procedure].ra_address;
         emit("LOAD", ra_addr);
         emit("RTRN");
         current_procedure = "";
     }
-#line 1383 "build/parser.tab.cpp"
+#line 1446 "build/parser.tab.cpp"
     break;
 
   case 9: /* $@4: %empty  */
-#line 102 "src/parser.y"
+#line 165 "src/parser.y"
                                { 
         current_procedure = string((yyvsp[-1].str));
         if (procedures_map.count(current_procedure)) {
@@ -1394,54 +1457,54 @@ yyreduce:
         info.address = -1; 
         procedures_map[current_procedure] = info;
     }
-#line 1398 "build/parser.tab.cpp"
+#line 1461 "build/parser.tab.cpp"
     break;
 
   case 10: /* proc_head: pidentifier LPAREN $@4 args_decl RPAREN  */
-#line 111 "src/parser.y"
+#line 174 "src/parser.y"
                        {
     }
-#line 1405 "build/parser.tab.cpp"
+#line 1468 "build/parser.tab.cpp"
     break;
 
   case 11: /* $@5: %empty  */
-#line 115 "src/parser.y"
+#line 178 "src/parser.y"
                   { 
          current_procedure = "main"; 
          Symbol s; s.address = code.size();
          symbol_table["main_start"] = s; 
        }
-#line 1415 "build/parser.tab.cpp"
+#line 1478 "build/parser.tab.cpp"
     break;
 
   case 12: /* $@6: %empty  */
-#line 119 "src/parser.y"
+#line 182 "src/parser.y"
                          {
          symbol_table["main_start"].address = code.size();
        }
-#line 1423 "build/parser.tab.cpp"
+#line 1486 "build/parser.tab.cpp"
     break;
 
   case 14: /* $@7: %empty  */
-#line 122 "src/parser.y"
+#line 185 "src/parser.y"
                  { 
          current_procedure = "main"; 
          Symbol s; s.address = code.size(); 
          symbol_table["main_start"] = s;
        }
-#line 1433 "build/parser.tab.cpp"
+#line 1496 "build/parser.tab.cpp"
     break;
 
   case 15: /* $@8: %empty  */
-#line 126 "src/parser.y"
+#line 189 "src/parser.y"
             {
          symbol_table["main_start"].address = code.size();
        }
-#line 1441 "build/parser.tab.cpp"
+#line 1504 "build/parser.tab.cpp"
     break;
 
   case 19: /* $@9: %empty  */
-#line 135 "src/parser.y"
+#line 198 "src/parser.y"
                      {
         // Save LHS address if it is in a register (because RHS calculation might clobber it)
         if ((yyvsp[0].loc)->reg != -1) {
@@ -1450,11 +1513,11 @@ yyreduce:
              emit("SWP", (yyvsp[0].loc)->reg); // Move back (optional but safest state)
         }
     }
-#line 1454 "build/parser.tab.cpp"
+#line 1517 "build/parser.tab.cpp"
     break;
 
   case 20: /* command: identifier $@9 ASSIGN expression SEMICOLON  */
-#line 142 "src/parser.y"
+#line 205 "src/parser.y"
                                   {
         if ((yyvsp[-4].loc)->sym->is_iterator) yyerror("Cannot modify loop iterator");
         if ((yyvsp[-4].loc)->sym->mod == "I") yyerror("Cannot modify initialized parameter (I)");
@@ -1469,92 +1532,101 @@ yyreduce:
              emit("SWP", 1); // Restore Expression Result to ra
              emit("RSTORE", (yyvsp[-4].loc)->reg);
         }
-        else emit("STORE", (yyvsp[-4].loc)->address);
+        else {
+             if ((yyvsp[-4].loc)->sym->cache_reg != -1) {
+                 emit("SWP", (yyvsp[-4].loc)->sym->cache_reg); 
+             } else {
+                 emit("STORE", (yyvsp[-4].loc)->address);
+             }
+        }
         delete (yyvsp[-4].loc);
     }
-#line 1476 "build/parser.tab.cpp"
+#line 1545 "build/parser.tab.cpp"
     break;
 
   case 21: /* $@10: %empty  */
-#line 159 "src/parser.y"
+#line 228 "src/parser.y"
                                       {
         long long jump_over_else = code.size();
         emit("JUMP", 0); 
         long long false_jump_idx = if_stack.back();
         if_stack.pop_back();
-        code[false_jump_idx].arg = code.size();
+        if (!analyze_mode) code[false_jump_idx].arg = code.size();
         if_stack.push_back(jump_over_else);
     }
-#line 1489 "build/parser.tab.cpp"
+#line 1558 "build/parser.tab.cpp"
     break;
 
   case 22: /* command: IF condition THEN commands ELSE $@10 commands ENDIF  */
-#line 166 "src/parser.y"
+#line 235 "src/parser.y"
                      {
         long long jump_over_else = if_stack.back();
         if_stack.pop_back();
-        code[jump_over_else].arg = code.size();
+        if (!analyze_mode) code[jump_over_else].arg = code.size();
     }
-#line 1499 "build/parser.tab.cpp"
+#line 1568 "build/parser.tab.cpp"
     break;
 
   case 23: /* command: IF condition THEN commands ENDIF  */
-#line 171 "src/parser.y"
+#line 240 "src/parser.y"
                                        {
         long long false_jump_idx = if_stack.back();
         if_stack.pop_back();
-        code[false_jump_idx].arg = code.size();
+        if (!analyze_mode) code[false_jump_idx].arg = code.size();
     }
-#line 1509 "build/parser.tab.cpp"
+#line 1578 "build/parser.tab.cpp"
     break;
 
   case 24: /* $@11: %empty  */
-#line 176 "src/parser.y"
+#line 245 "src/parser.y"
             {
         loop_stack.push_back(code.size());
+        loop_depth++;
     }
-#line 1517 "build/parser.tab.cpp"
+#line 1587 "build/parser.tab.cpp"
     break;
 
   case 25: /* command: WHILE $@11 condition DO commands ENDWHILE  */
-#line 178 "src/parser.y"
+#line 248 "src/parser.y"
                                      {
+         loop_depth--;
          long long jump_out = if_stack.back();
          if_stack.pop_back();
          long long start = loop_stack.back();
          loop_stack.pop_back();
          emit("JUMP", start);
-         code[jump_out].arg = code.size();
+         if (!analyze_mode) code[jump_out].arg = code.size();
     }
-#line 1530 "build/parser.tab.cpp"
+#line 1601 "build/parser.tab.cpp"
     break;
 
   case 26: /* $@12: %empty  */
-#line 186 "src/parser.y"
+#line 257 "src/parser.y"
              {
+        loop_depth++;
         loop_stack.push_back(code.size());
     }
-#line 1538 "build/parser.tab.cpp"
+#line 1610 "build/parser.tab.cpp"
     break;
 
   case 27: /* command: REPEAT $@12 commands UNTIL condition SEMICOLON  */
-#line 188 "src/parser.y"
+#line 260 "src/parser.y"
                                          {
-         long long jump_if_false = if_stack.back(); 
+         loop_depth--;
+         long long jump = if_stack.back(); 
          if_stack.pop_back();
          long long start = loop_stack.back();
          loop_stack.pop_back();
-         code[jump_if_false].arg = start;
+         if (!analyze_mode) code[jump].arg = start;
     }
-#line 1550 "build/parser.tab.cpp"
+#line 1623 "build/parser.tab.cpp"
     break;
 
   case 28: /* $@13: %empty  */
-#line 195 "src/parser.y"
+#line 268 "src/parser.y"
                                  {
           Symbol* iter = get_variable(string((yyvsp[-2].str)));
           if (!iter) {
-              // Implicit declaration of iterator
               add_symbol(string((yyvsp[-2].str)), false, false, "", 0, 0);
               iter = get_variable(string((yyvsp[-2].str)));
           }
@@ -1564,21 +1636,36 @@ yyreduce:
           iter->is_iterator = true;
           iter->is_initialized = true;
           
-          emit("STORE", iter->address);
+          string scoped_name = (current_procedure == "") ? string((yyvsp[-2].str)) : current_procedure + "_" + string((yyvsp[-2].str));
+          if (analyze_mode) {
+               var_usage_counts[scoped_name] += (pow(10, loop_depth) * 10);
+          } else {
+               if (var_register_assignments.count(scoped_name)) 
+                   iter->cache_reg = var_register_assignments[scoped_name];
+          }
+
+          if (iter->cache_reg != -1) emit("SWP", iter->cache_reg);
+          else emit("STORE", iter->address);
     }
-#line 1570 "build/parser.tab.cpp"
+#line 1651 "build/parser.tab.cpp"
     break;
 
   case 29: /* $@14: %empty  */
-#line 209 "src/parser.y"
+#line 290 "src/parser.y"
                {
           emit("SWP", 1); 
           Symbol* iter = get_variable(string((yyvsp[-5].str)));
-          emit("LOAD", iter->address);
           
-          emit("SWP", 1); 
-          emit("SUB", 1); 
-          emit("INC", 0); 
+          if (iter->cache_reg != -1) {
+              emit("RST", 0); emit("ADD", 1);
+              emit("SUB", iter->cache_reg);
+              emit("INC", 0);
+          } else {
+              emit("LOAD", iter->address);
+              emit("SWP", 1); 
+              emit("SUB", 1); 
+              emit("INC", 0); 
+          }
           
           long long count_addr = memory_offset++;
           emit("STORE", count_addr);
@@ -1591,13 +1678,15 @@ yyreduce:
           loop_stack.push_back(start_loop);
           loop_stack.push_back(jump_out);
           loop_stack.push_back(count_addr);
+          loop_depth++;
     }
-#line 1596 "build/parser.tab.cpp"
+#line 1684 "build/parser.tab.cpp"
     break;
 
   case 30: /* command: FOR pidentifier FROM value $@13 TO value $@14 DO commands ENDFOR  */
-#line 229 "src/parser.y"
+#line 317 "src/parser.y"
                          {
+          loop_depth--;
           long long count_addr = loop_stack.back(); loop_stack.pop_back();
           long long jump_out = loop_stack.back(); loop_stack.pop_back();
           long long start_loop = loop_stack.back(); loop_stack.pop_back();
@@ -1605,26 +1694,30 @@ yyreduce:
           emit("LOAD", count_addr);
           emit("DEC", 0);
           emit("STORE", count_addr);
+          // FOR TO END
           
           Symbol* iter = get_variable(string((yyvsp[-9].str)));
-          emit("LOAD", iter->address);
-          emit("INC", 0);
-          emit("STORE", iter->address);
+          if (iter->cache_reg != -1) {
+              emit("INC", iter->cache_reg);
+          } else {
+              emit("LOAD", iter->address);
+              emit("INC", 0);
+              emit("STORE", iter->address);
+          }
           
           emit("JUMP", start_loop);
-          code[jump_out].arg = code.size();
+          if (!analyze_mode) code[jump_out].arg = code.size();
           
           iter->is_iterator = false;
     }
-#line 1620 "build/parser.tab.cpp"
+#line 1714 "build/parser.tab.cpp"
     break;
 
   case 31: /* $@15: %empty  */
-#line 248 "src/parser.y"
+#line 342 "src/parser.y"
                                  {
           Symbol* iter = get_variable(string((yyvsp[-2].str)));
           if (!iter) {
-              // Implicit declaration of iterator
               add_symbol(string((yyvsp[-2].str)), false, false, "", 0, 0);
               iter = get_variable(string((yyvsp[-2].str)));
           }
@@ -1633,20 +1726,35 @@ yyreduce:
           iter->is_iterator = true;
           iter->is_initialized = true;
 
-          emit("STORE", iter->address); 
+          string scoped_name = (current_procedure == "") ? string((yyvsp[-2].str)) : current_procedure + "_" + string((yyvsp[-2].str));
+          if (analyze_mode) {
+               var_usage_counts[scoped_name] += (pow(10, loop_depth) * 10);
+          } else {
+               if (var_register_assignments.count(scoped_name)) 
+                   iter->cache_reg = var_register_assignments[scoped_name];
+          }
+
+          if (iter->cache_reg != -1) emit("SWP", iter->cache_reg);
+          else emit("STORE", iter->address);
     }
-#line 1639 "build/parser.tab.cpp"
+#line 1741 "build/parser.tab.cpp"
     break;
 
   case 32: /* $@16: %empty  */
-#line 261 "src/parser.y"
+#line 363 "src/parser.y"
                    {
           emit("SWP", 1); 
           Symbol* iter = get_variable(string((yyvsp[-5].str)));
-          emit("LOAD", iter->address);
           
-          emit("SUB", 1); 
-          emit("INC", 0); 
+          if (iter->cache_reg != -1) {
+              emit("RST", 0); emit("ADD", iter->cache_reg);
+              emit("SUB", 1);
+              emit("INC", 0);
+          } else {
+              emit("LOAD", iter->address);
+              emit("SUB", 1); 
+              emit("INC", 0); 
+          }
           
           long long count_addr = memory_offset++;
           emit("STORE", count_addr);
@@ -1659,13 +1767,15 @@ yyreduce:
           loop_stack.push_back(start_loop);
           loop_stack.push_back(jump_out);
           loop_stack.push_back(count_addr);
+          loop_depth++;
     }
-#line 1664 "build/parser.tab.cpp"
+#line 1773 "build/parser.tab.cpp"
     break;
 
   case 33: /* command: FOR pidentifier FROM value $@15 DOWNTO value $@16 DO commands ENDFOR  */
-#line 280 "src/parser.y"
+#line 389 "src/parser.y"
                          {
+          loop_depth--;
           long long count_addr = loop_stack.back(); loop_stack.pop_back();
           long long jump_out = loop_stack.back(); loop_stack.pop_back();
           long long start_loop = loop_stack.back(); loop_stack.pop_back();
@@ -1673,141 +1783,166 @@ yyreduce:
           emit("LOAD", count_addr);
           emit("DEC", 0);
           emit("STORE", count_addr);
+          // FOR DOWNTO END
           
           Symbol* iter = get_variable(string((yyvsp[-9].str)));
-          emit("LOAD", iter->address);
-          emit("DEC", 0);
-          emit("STORE", iter->address);
+          if (iter->cache_reg != -1) {
+              emit("DEC", iter->cache_reg);
+          } else {
+              emit("LOAD", iter->address);
+              emit("DEC", 0);
+              emit("STORE", iter->address);
+          }
           
           emit("JUMP", start_loop);
-          code[jump_out].arg = code.size();
+          if (!analyze_mode) code[jump_out].arg = code.size();
           
           iter->is_iterator = false;
     }
-#line 1688 "build/parser.tab.cpp"
+#line 1803 "build/parser.tab.cpp"
     break;
 
   case 35: /* command: READ identifier SEMICOLON  */
-#line 300 "src/parser.y"
+#line 415 "src/parser.y"
                                 {
         if ((yyvsp[-1].loc)->sym->is_iterator) yyerror("Cannot read into loop iterator");
         if ((yyvsp[-1].loc)->sym->mod == "I") yyerror("Cannot read into I parameter");
         (yyvsp[-1].loc)->sym->is_initialized = true;
 
         emit("READ");
-        if ((yyvsp[-1].loc)->reg != -1) emit("RSTORE", (yyvsp[-1].loc)->reg);
-        else emit("STORE", (yyvsp[-1].loc)->address);
+        
+        if ((yyvsp[-1].loc)->sym->cache_reg != -1) {
+             emit("SWP", (yyvsp[-1].loc)->sym->cache_reg);
+        } else if ((yyvsp[-1].loc)->reg != -1) {
+             emit("RSTORE", (yyvsp[-1].loc)->reg);
+        } else {
+             emit("STORE", (yyvsp[-1].loc)->address);
+        }
         delete (yyvsp[-1].loc);
     }
-#line 1703 "build/parser.tab.cpp"
+#line 1824 "build/parser.tab.cpp"
     break;
 
   case 36: /* command: WRITE value SEMICOLON  */
-#line 310 "src/parser.y"
+#line 431 "src/parser.y"
                             {
         emit("WRITE");
     }
-#line 1711 "build/parser.tab.cpp"
+#line 1832 "build/parser.tab.cpp"
     break;
 
   case 37: /* $@17: %empty  */
-#line 315 "src/parser.y"
+#line 436 "src/parser.y"
                                { 
         current_call_proc = string((yyvsp[-1].str));
         current_arg_idx = 0;
+        spill_registers(7);
     }
-#line 1720 "build/parser.tab.cpp"
+#line 1842 "build/parser.tab.cpp"
     break;
 
   case 38: /* proc_call: pidentifier LPAREN $@17 args RPAREN  */
-#line 318 "src/parser.y"
+#line 440 "src/parser.y"
                   {
         emit("CALL", procedures_map[(yyvsp[-4].str)].address);
+        restore_registers(7);
     }
-#line 1728 "build/parser.tab.cpp"
+#line 1851 "build/parser.tab.cpp"
     break;
 
   case 39: /* declarations: declarations COMMA pidentifier  */
-#line 323 "src/parser.y"
+#line 446 "src/parser.y"
                                               {
         add_symbol(string((yyvsp[0].str)), false, false, "", 0, 0);
+        check_reg_assignment((yyvsp[0].str));
     }
-#line 1736 "build/parser.tab.cpp"
+#line 1860 "build/parser.tab.cpp"
     break;
 
   case 40: /* declarations: declarations COMMA pidentifier LBRACKET num COLON num RBRACKET  */
-#line 326 "src/parser.y"
+#line 450 "src/parser.y"
                                                                      {
         add_symbol(string((yyvsp[-5].str)), true, false, "", (yyvsp[-3].num), (yyvsp[-1].num));
+        check_reg_assignment((yyvsp[-5].str));
     }
-#line 1744 "build/parser.tab.cpp"
+#line 1869 "build/parser.tab.cpp"
     break;
 
   case 41: /* declarations: pidentifier  */
-#line 329 "src/parser.y"
+#line 454 "src/parser.y"
                   {
         add_symbol(string((yyvsp[0].str)), false, false, "", 0, 0);
+        check_reg_assignment((yyvsp[0].str));
     }
-#line 1752 "build/parser.tab.cpp"
+#line 1878 "build/parser.tab.cpp"
     break;
 
   case 42: /* declarations: pidentifier LBRACKET num COLON num RBRACKET  */
-#line 332 "src/parser.y"
+#line 458 "src/parser.y"
                                                   {
         add_symbol(string((yyvsp[-5].str)), true, false, "", (yyvsp[-3].num), (yyvsp[-1].num));
+        check_reg_assignment((yyvsp[-5].str));
     }
-#line 1760 "build/parser.tab.cpp"
+#line 1887 "build/parser.tab.cpp"
     break;
 
   case 43: /* args_decl: args_decl COMMA type pidentifier  */
-#line 337 "src/parser.y"
+#line 464 "src/parser.y"
                                              {
        string m = string((yyvsp[-1].str));
        bool is_arr = (m == "T");
        add_symbol(string((yyvsp[0].str)), is_arr, true, m, 0, 0); free((yyvsp[-1].str));
     }
-#line 1770 "build/parser.tab.cpp"
+#line 1897 "build/parser.tab.cpp"
     break;
 
   case 44: /* args_decl: type pidentifier  */
-#line 342 "src/parser.y"
+#line 469 "src/parser.y"
                        {
        string m = string((yyvsp[-1].str));
        bool is_arr = (m == "T");
        add_symbol(string((yyvsp[0].str)), is_arr, true, m, 0, 0); free((yyvsp[-1].str));
     }
-#line 1780 "build/parser.tab.cpp"
+#line 1907 "build/parser.tab.cpp"
     break;
 
   case 45: /* type: T  */
-#line 349 "src/parser.y"
+#line 476 "src/parser.y"
          { (yyval.str) = strdup("T"); }
-#line 1786 "build/parser.tab.cpp"
+#line 1913 "build/parser.tab.cpp"
     break;
 
   case 46: /* type: I  */
-#line 350 "src/parser.y"
+#line 477 "src/parser.y"
          { (yyval.str) = strdup("I"); }
-#line 1792 "build/parser.tab.cpp"
+#line 1919 "build/parser.tab.cpp"
     break;
 
   case 47: /* type: O  */
-#line 351 "src/parser.y"
+#line 478 "src/parser.y"
          { (yyval.str) = strdup("O"); }
-#line 1798 "build/parser.tab.cpp"
+#line 1925 "build/parser.tab.cpp"
     break;
 
   case 48: /* type: %empty  */
-#line 352 "src/parser.y"
+#line 479 "src/parser.y"
                    { (yyval.str) = strdup(""); }
-#line 1804 "build/parser.tab.cpp"
+#line 1931 "build/parser.tab.cpp"
     break;
 
   case 51: /* argument: pidentifier  */
-#line 359 "src/parser.y"
+#line 486 "src/parser.y"
                        {
         Symbol* s = get_variable(string((yyvsp[0].str)));
         if (!s) yyerror(("Undefined variable " + string((yyvsp[0].str))).c_str());
+        
+        // Usage Analysis
+        string scoped_name = (current_procedure == "") ? string((yyvsp[0].str)) : current_procedure + "_" + string((yyvsp[0].str));
+        if (analyze_mode) {
+             long long weight = 1;
+             for(int k=0; k<loop_depth; k++) weight *= 10;
+             var_usage_counts[scoped_name] += weight; // Params getting passed have cost
+        }
         
         ProcedureInfo& info = procedures_map[current_call_proc];
         if (current_arg_idx >= (int)info.param_addresses.size()) yyerror("Too many arguments for procedure call");
@@ -1824,6 +1959,11 @@ yyreduce:
             emit("LOAD", s->address); 
             emit("STORE", param_addr); 
         } else {
+            if (s->cache_reg != -1) {
+                 emit("SWP", s->cache_reg); 
+                 emit("STORE", s->address);
+                 emit("SWP", s->cache_reg);
+            }
             if (s->is_array) {
                 gen_const(0, s->address); 
                 emit("STORE", param_addr);
@@ -1833,11 +1973,11 @@ yyreduce:
             }
         }
     }
-#line 1837 "build/parser.tab.cpp"
+#line 1977 "build/parser.tab.cpp"
     break;
 
   case 52: /* argument: num  */
-#line 387 "src/parser.y"
+#line 527 "src/parser.y"
           {
         ProcedureInfo& info = procedures_map[current_call_proc];
         if (current_arg_idx >= (int)info.param_addresses.size()) yyerror("Too many arguments for procedure call");
@@ -1858,41 +1998,41 @@ yyreduce:
         gen_const(0, temp_addr);
         emit("STORE", param_addr);
     }
-#line 1862 "build/parser.tab.cpp"
+#line 2002 "build/parser.tab.cpp"
     break;
 
   case 54: /* $@18: %empty  */
-#line 412 "src/parser.y"
+#line 552 "src/parser.y"
             { emit("SWP", 1); }
-#line 1868 "build/parser.tab.cpp"
+#line 2008 "build/parser.tab.cpp"
     break;
 
   case 55: /* expression: value $@18 PLUS value  */
-#line 412 "src/parser.y"
+#line 552 "src/parser.y"
                                            { emit("ADD", 1); }
-#line 1874 "build/parser.tab.cpp"
+#line 2014 "build/parser.tab.cpp"
     break;
 
   case 56: /* $@19: %empty  */
-#line 413 "src/parser.y"
+#line 553 "src/parser.y"
             { emit("SWP", 1); }
-#line 1880 "build/parser.tab.cpp"
+#line 2020 "build/parser.tab.cpp"
     break;
 
   case 57: /* expression: value $@19 MINUS value  */
-#line 413 "src/parser.y"
+#line 553 "src/parser.y"
                                             { emit("SWP", 1); emit("SUB", 1); }
-#line 1886 "build/parser.tab.cpp"
+#line 2026 "build/parser.tab.cpp"
     break;
 
   case 58: /* $@20: %empty  */
-#line 414 "src/parser.y"
+#line 554 "src/parser.y"
             { emit("SWP", 1); }
-#line 1892 "build/parser.tab.cpp"
+#line 2032 "build/parser.tab.cpp"
     break;
 
   case 59: /* expression: value $@20 MULT value  */
-#line 414 "src/parser.y"
+#line 554 "src/parser.y"
                                            { 
         bool optimized = false;
         // Case 1: Right operand is constant power of 2 (Var * Const)
@@ -1931,20 +2071,22 @@ yyreduce:
         }
         
         if (!optimized) {
+            spill_registers(5);
             emit("SWP", 2); emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 1); 
+            restore_registers(5);
         }
     }
-#line 1938 "build/parser.tab.cpp"
+#line 2080 "build/parser.tab.cpp"
     break;
 
   case 60: /* $@21: %empty  */
-#line 455 "src/parser.y"
+#line 597 "src/parser.y"
             { emit("SWP", 1); }
-#line 1944 "build/parser.tab.cpp"
+#line 2086 "build/parser.tab.cpp"
     break;
 
   case 61: /* expression: value $@21 DIV value  */
-#line 455 "src/parser.y"
+#line 597 "src/parser.y"
                                           { 
         bool optimized = false;
         if ((yyvsp[0].operand).is_const && (yyvsp[0].operand).val > 0) {
@@ -1967,20 +2109,22 @@ yyreduce:
         }
         
         if (!optimized) {
+            spill_registers(6);
             emit("SWP", 2); emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 1); 
+            restore_registers(6);
         }
     }
-#line 1974 "build/parser.tab.cpp"
+#line 2118 "build/parser.tab.cpp"
     break;
 
   case 62: /* $@22: %empty  */
-#line 480 "src/parser.y"
+#line 624 "src/parser.y"
             { emit("SWP", 1); }
-#line 1980 "build/parser.tab.cpp"
+#line 2124 "build/parser.tab.cpp"
     break;
 
   case 63: /* expression: value $@22 MOD value  */
-#line 480 "src/parser.y"
+#line 624 "src/parser.y"
                                           { 
         bool optimized = false;
         if ((yyvsp[0].operand).is_const && (yyvsp[0].operand).val > 0) {
@@ -2024,20 +2168,22 @@ yyreduce:
         }
     
         if (!optimized) {
+            spill_registers(6);
             emit("SWP", 2); emit("CALL", 0); calls_mod.push_back(code.size()-1); emit("SWP", 1); 
+            restore_registers(6);
         }
     }
-#line 2031 "build/parser.tab.cpp"
+#line 2177 "build/parser.tab.cpp"
     break;
 
   case 64: /* $@23: %empty  */
-#line 528 "src/parser.y"
+#line 674 "src/parser.y"
                   { emit("SWP", 1); }
-#line 2037 "build/parser.tab.cpp"
+#line 2183 "build/parser.tab.cpp"
     break;
 
   case 65: /* condition: value $@23 EQ value  */
-#line 528 "src/parser.y"
+#line 674 "src/parser.y"
                                                {
         emit("SWP", 2); 
         emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3);
@@ -2045,17 +2191,17 @@ yyreduce:
         emit("JPOS", 0); 
         if_stack.push_back(code.size()-1); 
     }
-#line 2049 "build/parser.tab.cpp"
+#line 2195 "build/parser.tab.cpp"
     break;
 
   case 66: /* $@24: %empty  */
-#line 535 "src/parser.y"
+#line 681 "src/parser.y"
             { emit("SWP", 1); }
-#line 2055 "build/parser.tab.cpp"
+#line 2201 "build/parser.tab.cpp"
     break;
 
   case 67: /* condition: value $@24 NEQ value  */
-#line 535 "src/parser.y"
+#line 681 "src/parser.y"
                                           {
         emit("SWP", 2); 
         emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3);
@@ -2063,76 +2209,76 @@ yyreduce:
         emit("JZERO", 0); 
         if_stack.push_back(code.size()-1); 
     }
-#line 2067 "build/parser.tab.cpp"
+#line 2213 "build/parser.tab.cpp"
     break;
 
   case 68: /* $@25: %empty  */
-#line 542 "src/parser.y"
+#line 688 "src/parser.y"
             { emit("SWP", 1); }
-#line 2073 "build/parser.tab.cpp"
+#line 2219 "build/parser.tab.cpp"
     break;
 
   case 69: /* condition: value $@25 GT value  */
-#line 542 "src/parser.y"
+#line 688 "src/parser.y"
                                          { 
         emit("SWP", 1); emit("SUB", 1); 
         emit("JZERO", 0); 
         if_stack.push_back(code.size()-1); 
     }
-#line 2083 "build/parser.tab.cpp"
+#line 2229 "build/parser.tab.cpp"
     break;
 
   case 70: /* $@26: %empty  */
-#line 547 "src/parser.y"
+#line 693 "src/parser.y"
             { emit("SWP", 1); }
-#line 2089 "build/parser.tab.cpp"
+#line 2235 "build/parser.tab.cpp"
     break;
 
   case 71: /* condition: value $@26 LT value  */
-#line 547 "src/parser.y"
+#line 693 "src/parser.y"
                                          { 
         emit("SUB", 1); 
         emit("JZERO", 0); 
         if_stack.push_back(code.size()-1); 
     }
-#line 2099 "build/parser.tab.cpp"
+#line 2245 "build/parser.tab.cpp"
     break;
 
   case 72: /* $@27: %empty  */
-#line 552 "src/parser.y"
+#line 698 "src/parser.y"
             { emit("SWP", 1); }
-#line 2105 "build/parser.tab.cpp"
+#line 2251 "build/parser.tab.cpp"
     break;
 
   case 73: /* condition: value $@27 GEQ value  */
-#line 552 "src/parser.y"
+#line 698 "src/parser.y"
                                           { 
         emit("SUB", 1);
         emit("JPOS", 0);
         if_stack.push_back(code.size()-1);
     }
-#line 2115 "build/parser.tab.cpp"
+#line 2261 "build/parser.tab.cpp"
     break;
 
   case 74: /* $@28: %empty  */
-#line 557 "src/parser.y"
+#line 703 "src/parser.y"
             { emit("SWP", 1); }
-#line 2121 "build/parser.tab.cpp"
+#line 2267 "build/parser.tab.cpp"
     break;
 
   case 75: /* condition: value $@28 LEQ value  */
-#line 557 "src/parser.y"
+#line 703 "src/parser.y"
                                           { 
         emit("SWP", 1); 
         emit("SUB", 1); 
         emit("JPOS", 0);
         if_stack.push_back(code.size()-1);
     }
-#line 2132 "build/parser.tab.cpp"
+#line 2278 "build/parser.tab.cpp"
     break;
 
   case 76: /* value: num  */
-#line 565 "src/parser.y"
+#line 711 "src/parser.y"
             { 
         long long start = code.size();
         gen_const(0, (yyvsp[0].num)); /* Generates code into r0 */
@@ -2140,26 +2286,48 @@ yyreduce:
         (yyval.operand).val = (yyvsp[0].num);
         (yyval.operand).instructions_count = code.size() - start;
     }
-#line 2144 "build/parser.tab.cpp"
+#line 2290 "build/parser.tab.cpp"
     break;
 
   case 77: /* value: identifier  */
-#line 572 "src/parser.y"
+#line 718 "src/parser.y"
                  {
         if (!(yyvsp[0].loc)->sym->is_initialized) yyerror("Usage of uninitialized variable");
-        if ((yyvsp[0].loc)->reg != -1) emit("RLOAD", (yyvsp[0].loc)->reg);
-        else emit("LOAD", (yyvsp[0].loc)->address);
+        
+        if ((yyvsp[0].loc)->sym->cache_reg != -1) {
+             // Cached in Register!
+             // Load from Reg X to Reg A
+             emit("RST", 0); 
+             emit("ADD", (yyvsp[0].loc)->sym->cache_reg);
+        } else {
+            if ((yyvsp[0].loc)->reg != -1) emit("RLOAD", (yyvsp[0].loc)->reg);
+            else emit("LOAD", (yyvsp[0].loc)->address);
+        }
         delete (yyvsp[0].loc);
         (yyval.operand).is_const = false;
     }
-#line 2156 "build/parser.tab.cpp"
+#line 2310 "build/parser.tab.cpp"
     break;
 
   case 78: /* identifier: pidentifier  */
-#line 581 "src/parser.y"
+#line 735 "src/parser.y"
                          {
          Symbol* s = get_variable(string((yyvsp[0].str)));
          if (!s) yyerror(("Undefined identifier " + string((yyvsp[0].str))).c_str());
+         
+         string scoped_name = (current_procedure == "") ? string((yyvsp[0].str)) : current_procedure + "_" + string((yyvsp[0].str));
+         if (analyze_mode) {
+             long long weight = 1;
+             for(int k=0; k<loop_depth; k++) weight *= 10;
+             var_usage_counts[scoped_name] += weight;
+         } else {
+             if (var_register_assignments.count(scoped_name)) {
+                 s->cache_reg = var_register_assignments[scoped_name];
+                 // Update reg_descriptors
+                 reg_descriptors[s->cache_reg] = s;
+             }
+         }
+
          (yyval.loc) = new Location();
          (yyval.loc)->address = s->address;
          (yyval.loc)->sym = s;
@@ -2172,11 +2340,11 @@ yyreduce:
              (yyval.loc)->reg = -1;
          }
     }
-#line 2176 "build/parser.tab.cpp"
+#line 2344 "build/parser.tab.cpp"
     break;
 
   case 79: /* identifier: pidentifier LBRACKET num RBRACKET  */
-#line 596 "src/parser.y"
+#line 764 "src/parser.y"
                                         {
          Symbol* s = get_variable(string((yyvsp[-3].str)));
          if (!s) yyerror(("Undefined identifier " + string((yyvsp[-3].str))).c_str());
@@ -2195,11 +2363,11 @@ yyreduce:
             (yyval.loc)->reg = -1;
          }
     }
-#line 2199 "build/parser.tab.cpp"
+#line 2367 "build/parser.tab.cpp"
     break;
 
   case 80: /* identifier: pidentifier LBRACKET pidentifier RBRACKET  */
-#line 614 "src/parser.y"
+#line 782 "src/parser.y"
                                                 {
          Symbol* arr = get_variable(string((yyvsp[-3].str)));
          Symbol* idx = get_variable(string((yyvsp[-1].str)));
@@ -2231,11 +2399,11 @@ yyreduce:
          (yyval.loc)->reg = 7;
          (yyval.loc)->sym = arr;
     }
-#line 2235 "build/parser.tab.cpp"
+#line 2403 "build/parser.tab.cpp"
     break;
 
 
-#line 2239 "build/parser.tab.cpp"
+#line 2407 "build/parser.tab.cpp"
 
       default: break;
     }
@@ -2428,7 +2596,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 647 "src/parser.y"
+#line 815 "src/parser.y"
 
 
 void yyerror(const char *s) {
@@ -2437,6 +2605,7 @@ void yyerror(const char *s) {
 }
 
 extern FILE *yyin;
+void yyrestart(FILE *input_file);
 
 int main(int argc, char* argv[]) {
     if (argc > 1) {
@@ -2447,8 +2616,53 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // PASS 1: Analysis
+    analyze_mode = true;
+    if (yyparse() != 0) return 1;
+    
+    // Assign Registers
+    vector<pair<long long, string>> usage_list;
+    for (auto const& [name, count] : var_usage_counts) {
+        usage_list.push_back({count, name});
+    }
+    sort(usage_list.rbegin(), usage_list.rend());
+    
+    // Use r4(e), r5(f), r6(g) primarily. Maybe r1(b), r2(c), r7(h)?
+    // User requested r1-r7.
+    // r3 is RA - Reserved.
+    // r1, r2 are used by Math Kernel Inputs. If we spill around calls, we can use them!
+    // But parser uses r1, r2 as temps for Expressions.
+    // Safest set without rewriting Expression Logic: r4, r5, r6, r7. (r7 used for Arr offset).
+    // Let's stick to r4, r5, r6 for now to avoid Reg1/Reg2 clobbering in `expression` rule.
+    // If I had time to rewrite `expression` to use any free register, I would.
+    // For now, let's try 4, 5, 6.
+    
+    int available_regs[] = {4, 5, 6}; 
+    int reg_limit = 3;
+    int reg_idx = 0;
+    
+    for (auto p : usage_list) {
+         if (reg_idx >= reg_limit) break;
+         string name = p.second;
+         // Note: Symbol table is cleared, so we don't know if is_array.
+         // We assume scalar. Arrays usage counts should be on the array name?
+         // Ideally Pass 1 checks is_array.
+         // Let's filter out known arrays if possible. 
+         // Since symtable is gone, we can't check `is_array`.
+         // Improvise: Register assignment is tentative. In Pass 2, `add_symbol` will check.
+         var_register_assignments[name] = available_regs[reg_idx];
+         reg_idx++;
+    }
+
+    // PASS 2: Codegen
+    fseek(yyin, 0, SEEK_SET);
+    yyrestart(yyin);
+    reset_parser_state();
+    analyze_mode = false;
+    yylineno = 1;
+
     if (yyparse() == 0) {
-        // lets NOT OPTIMIZE CODE NOW
+        // Optimize
         optimize_code();
         
         FILE* out = stdout;

@@ -21,6 +21,15 @@ extern vector<long long> calls_mul;
 extern vector<long long> calls_div;
 extern vector<long long> calls_mod;
 
+extern bool analyze_mode;
+
+// Register Allocation (Simple Tracker)
+// Maps Register ID (0-7) to a Symbol or NULL if free/trash.
+// Used to decide if we need to spill before Math Kernel calls.
+// 4=e, 5=f, 6=g are clobbered by Kernel.
+struct Symbol; // Forward declaration
+extern Symbol* reg_descriptors[8];
+
 void emit(string opcode);
 void emit(string opcode, long long arg);
 void gen_const(int reg, long long value);

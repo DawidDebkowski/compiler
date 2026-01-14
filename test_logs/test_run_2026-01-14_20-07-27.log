@@ -1,0 +1,286 @@
+==========================================
+Test Run Report - 2026-01-14_20-07-27
+==========================================
+
+
+### Category: basic ###
+==========================================
+  read...                        FAIL (output mismatch)
+    Expected: tests/ans/basic/read.ans
+    Got:      tests/out/basic/read.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 4).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m250[34m; w tym i/o: 200).[0m
+  test10_proc_arr_range...       FAIL (output mismatch)
+    Expected: tests/ans/basic/test10_proc_arr_range.ans
+    Got:      tests/out/basic/test10_proc_arr_range.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 113).[0m
+      > [34mUruchamianie programu.[0m
+      2a6
+      > [34mSkończono program (koszt: [31m1 970[34m; w tym i/o: 200).[0m
+  test1_io...                    FAIL (output mismatch)
+    Expected: tests/ans/basic/test1_io.ans
+    Got:      tests/out/basic/test1_io.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 4).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m250[34m; w tym i/o: 200).[0m
+  test2_vars...                  FAIL (output mismatch)
+    Expected: tests/ans/basic/test2_vars.ans
+    Got:      tests/out/basic/test2_vars.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 20).[0m
+      > [34mUruchamianie programu.[0m
+      2a6
+      > [34mSkończono program (koszt: [31m413[34m; w tym i/o: 200).[0m
+  test3_mul...                   FAIL (output mismatch)
+    Expected: tests/ans/basic/test3_mul.ans
+    Got:      tests/out/basic/test3_mul.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 50).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m597[34m; w tym i/o: 100).[0m
+  test4_div...                   FAIL (output mismatch)
+    Expected: tests/ans/basic/test4_div.ans
+    Got:      tests/out/basic/test4_div.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 74).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m719[34m; w tym i/o: 100).[0m
+  test5_mod...                   FAIL (output mismatch)
+    Expected: tests/ans/basic/test5_mod.ans
+    Got:      tests/out/basic/test5_mod.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 82).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m669[34m; w tym i/o: 100).[0m
+  test6_arr...                   FAIL (output mismatch)
+    Expected: tests/ans/basic/test6_arr.ans
+    Got:      tests/out/basic/test6_arr.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 18).[0m
+      > [34mUruchamianie programu.[0m
+      2a6
+      > [34mSkończono program (koszt: [31m411[34m; w tym i/o: 200).[0m
+  test7_arr_range...             FAIL (output mismatch)
+    Expected: tests/ans/basic/test7_arr_range.ans
+    Got:      tests/out/basic/test7_arr_range.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 29).[0m
+      > [34mUruchamianie programu.[0m
+      2a6
+      > [34mSkończono program (koszt: [31m422[34m; w tym i/o: 200).[0m
+  test8_proc...                  FAIL (output mismatch)
+    Expected: tests/ans/basic/test8_proc.ans
+    Got:      tests/out/basic/test8_proc.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 63).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m985[34m; w tym i/o: 100).[0m
+  test9_proc_arr...              FAIL (output mismatch)
+    Expected: tests/ans/basic/test9_proc_arr.ans
+    Got:      tests/out/basic/test9_proc_arr.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 111).[0m
+      > [34mUruchamianie programu.[0m
+      2a6
+      > [34mSkończono program (koszt: [31m1 968[34m; w tym i/o: 200).[0m
+  test_mul_simple...             FAIL (output mismatch)
+    Expected: tests/ans/basic/test_mul_simple.ans
+    Got:      tests/out/basic/test_mul_simple.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 45).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m514[34m; w tym i/o: 100).[0m
+  Category results: 0 passed, 12 failed
+
+### Category: custom ###
+==========================================
+  test...                        SKIP (no answer file)
+  Category results: 0 passed, 0 failed
+
+### Category: example ###
+==========================================
+  example1...                    FAIL (output mismatch)
+    Expected: tests/ans/example/example1.ans
+    Got:      tests/out/example/example1.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 330).[0m
+      > [34mUruchamianie programu.[0m
+      3a7
+      > [34mSkończono program (koszt: [31m10 207[34m; w tym i/o: 500).[0m
+  example2...                    FAIL (output mismatch)
+    Expected: tests/ans/example/example2.ans
+    Got:      tests/out/example/example2.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 121).[0m
+      > [34mUruchamianie programu.[0m
+      2a6
+      > [34mSkończono program (koszt: [31m34 617[34m; w tym i/o: 400).[0m
+  example3...                    FAIL (output mismatch)
+    Expected: tests/ans/example/example3.ans
+    Got:      tests/out/example/example3.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 101).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m2 940[34m; w tym i/o: 200).[0m
+  example4...                    FAIL (output mismatch)
+    Expected: tests/ans/example/example4.ans
+    Got:      tests/out/example/example4.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 298).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m63 156[34m; w tym i/o: 300).[0m
+  example5...                    FAIL (output mismatch)
+    Expected: tests/ans/example/example5.ans
+    Got:      tests/out/example/example5.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 250).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m322 282[34m; w tym i/o: 400).[0m
+  example6...                    FAIL (output mismatch)
+    Expected: tests/ans/example/example6.ans
+    Got:      tests/out/example/example6.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 247).[0m
+      > [34mUruchamianie programu.[0m
+      2a6
+      > [34mSkończono program (koszt: [31m39 648[34m; w tym i/o: 300).[0m
+  example7...                    FAIL (output mismatch)
+    Expected: tests/ans/example/example7.ans
+    Got:      tests/out/example/example7.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 156).[0m
+      > [34mUruchamianie programu.[0m
+      3a7
+      > [34mSkończono program (koszt: [31m799 008[34m; w tym i/o: 600).[0m
+  example8...                    FAIL (output mismatch)
+    Expected: tests/ans/example/example8.ans
+    Got:      tests/out/example/example8.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 433).[0m
+      > [34mUruchamianie programu.[0m
+      11a15
+      > [34mSkończono program (koszt: [31m50 685[34m; w tym i/o: 1 100).[0m
+  example9...                    FAIL (output mismatch)
+    Expected: tests/ans/example/example9.ans
+    Got:      tests/out/example/example9.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 289).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m28 074[34m; w tym i/o: 300).[0m
+  exampleA...                    FAIL (output mismatch)
+    Expected: tests/ans/example/exampleA.ans
+    Got:      tests/out/example/exampleA.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 269).[0m
+      > [34mUruchamianie programu.[0m
+      25a29
+      > [34mSkończono program (koszt: [31m60 734[34m; w tym i/o: 2 500).[0m
+  Category results: 0 passed, 10 failed
+
+### Category: labor4 ###
+==========================================
+  crash_repro...                 SKIP (no answer file)
+  program0...                    FAIL (output mismatch)
+    Expected: tests/ans/labor4/program0.ans
+    Got:      tests/out/labor4/program0.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 44).[0m
+      > [34mUruchamianie programu.[0m
+      5a9
+      > [34mSkończono program (koszt: [31m3 116[34m; w tym i/o: 600).[0m
+  program1...                    FAIL (output mismatch)
+    Expected: tests/ans/labor4/program1.ans
+    Got:      tests/out/labor4/program1.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 143).[0m
+      > [34mUruchamianie programu.[0m
+      1a5
+      > [34mSkończono program (koszt: [31m12 774[34m; w tym i/o: 500).[0m
+  program2...                    FAIL (output mismatch)
+    Expected: tests/ans/labor4/program2.ans
+    Got:      tests/out/labor4/program2.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 190).[0m
+      > [34mUruchamianie programu.[0m
+      25a29
+      > [34mSkończono program (koszt: [31m244 828[34m; w tym i/o: 2 500).[0m
+  program3...                    FAIL (output mismatch)
+    Expected: tests/ans/labor4/program3.ans
+    Got:      tests/out/labor4/program3.out
+    Diff:
+      0a1,3
+      > [34mCzytanie kodu.[0m
+      > [34mSkończono czytanie kodu (liczba rozkazów: 259).[0m
+      > [34mUruchamianie programu.[0m
+      8a12
+      > [34mSkończono program (koszt: [31m20 451[34m; w tym i/o: 900).[0m
+  Category results: 0 passed, 4 failed
+
+### Category: standard ###
+==========================================
+  binary...                      

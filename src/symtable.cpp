@@ -5,7 +5,7 @@
 map<string, Symbol> symbol_table;
 map<string, ProcedureInfo> procedures_map;
 
-long long memory_offset = 2; // Start at 2. 0 unused. 1 reserved for LHS hold.
+long long memory_offset = 5; // Start at 2. 0 unused. 1 reserved for LHS hold.
 long long lhs_hold_addr = 1;
 
 string current_procedure = ""; 
@@ -32,6 +32,10 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
     s.end = end;
     s.mod = mod;
     s.is_iterator = false;
+    
+    // Opt
+    s.usage_count = 0;
+    s.cache_reg = -1;
     
     // Point 5: O means undefined value.
     if (mod == "O") s.is_initialized = false;

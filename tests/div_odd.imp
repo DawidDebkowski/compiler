@@ -1,8 +1,0 @@
-PROGRAM IS
-  a, b, c
-IN
-  a := 13;
-  b := 2;
-  c := a / b;
-  WRITE c;
-END

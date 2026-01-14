@@ -19,6 +19,10 @@ struct Symbol {
     string mod; // "T", "I", "O", ""
     bool is_iterator = false;
     bool is_initialized = false;
+    
+    // Opt
+    long long usage_count = 0;
+    int cache_reg = -1;
 };
 
 struct Operand {
