@@ -111,6 +111,8 @@ void restore_registers(int max_reg) {
 program_all : { 
      emit("JUMP", 0); // JUMP to Main
    } procedures main {
+      for(int i=0; i<8; i++) reg_descriptors[i] = nullptr; 
+      
       if (!analyze_mode) {
           code[0].arg = symbol_table["main_start"].address; 
           emit("HALT");
@@ -139,6 +141,7 @@ procedures : procedures PROCEDURE proc_head IS declarations IN {
         procedures_map[current_procedure].ra_address = ra_addr;
         emit("STORE", ra_addr);
         
+        for(int i=0; i<8; i++) reg_descriptors[i] = nullptr;
     } commands END {
         // Restore Return Address
         long long ra_addr = procedures_map[current_procedure].ra_address;
@@ -179,6 +182,7 @@ main : PROGRAM IS {
          current_procedure = "main"; 
          Symbol s; s.address = code.size();
          symbol_table["main_start"] = s; 
+         for(int i=0; i<8; i++) reg_descriptors[i] = nullptr;
        } declarations IN {
          symbol_table["main_start"].address = code.size();
        } commands END
@@ -288,22 +292,41 @@ command : identifier {
           if (iter->cache_reg != -1) emit("SWP", iter->cache_reg);
           else emit("STORE", iter->address);
     } TO value {
-          emit("SWP", 1); 
+          emit("SWP", 1); // r1 = end 
           Symbol* iter = get_variable(string($2));
           
           if (iter->cache_reg != -1) {
-              emit("RST", 0); emit("ADD", 1);
-              emit("SUB", iter->cache_reg);
-              emit("INC", 0);
+              emit("RST", 0); emit("ADD", iter->cache_reg); // r0 = start
           } else {
-              emit("LOAD", iter->address);
-              emit("SWP", 1); 
-              emit("SUB", 1); 
-              emit("INC", 0); 
+              emit("LOAD", iter->address); // r0 = start
           }
+          emit("SWP", 2); // r2 = start. r0 = trash. r1 = end.
+          
+          // Check if start > end: (start - end > 0)
+          emit("RST", 0); emit("ADD", 2); // r0 = start
+          emit("SUB", 1); // r0 = start - end
           
           long long count_addr = memory_offset++;
+          emit("JPOS", code.size()+6); // Jump to setting 0 count (relative +6 approx)
+          // Actually we don't know absolute address yet.
+          // Create jump
+          long long jump_skip = code.size();
+          emit("JPOS", 0);
+          
+          // Count = end - start + 1
+          emit("RST", 0); emit("ADD", 1); // r0 = end
+          emit("SUB", 2); // r0 = end - start
+          emit("INC", 0); // r0 = end - start + 1
           emit("STORE", count_addr);
+          
+          long long jump_continue = code.size();
+          emit("JUMP", 0);
+          
+          if (!analyze_mode) code[jump_skip].arg = code.size();
+          emit("RST", 0); // count = 0
+          emit("STORE", count_addr);
+          
+          if (!analyze_mode) code[jump_continue].arg = code.size();
           
           long long start_loop = code.size();
           emit("LOAD", count_addr);
@@ -361,21 +384,37 @@ command : identifier {
           if (iter->cache_reg != -1) emit("SWP", iter->cache_reg);
           else emit("STORE", iter->address);
     } DOWNTO value {
-          emit("SWP", 1); 
+          emit("SWP", 1); // r1 = end
           Symbol* iter = get_variable(string($2));
           
           if (iter->cache_reg != -1) {
-              emit("RST", 0); emit("ADD", iter->cache_reg);
-              emit("SUB", 1);
-              emit("INC", 0);
+              emit("RST", 0); emit("ADD", iter->cache_reg); // r0 = start
           } else {
               emit("LOAD", iter->address);
-              emit("SUB", 1); 
-              emit("INC", 0); 
           }
-          
-          long long count_addr = memory_offset++;
-          emit("STORE", count_addr);
+           emit("SWP", 2); // r2 = start. r1 = end.
+           
+           // Check if end > start: (end - start > 0)
+           emit("RST", 0); emit("ADD", 1); // r0 = end
+           emit("SUB", 2); // r0 = end - start
+           
+           long long count_addr = memory_offset++;
+           long long jump_skip = code.size();
+           emit("JPOS", 0);
+           
+           // Count = start - end + 1
+           emit("RST", 0); emit("ADD", 2); // r0 = start
+           emit("SUB", 1); // r0 = start - end
+           emit("INC", 0); // r0 = count
+           emit("STORE", count_addr);
+           
+           long long jump_continue = code.size();
+           emit("JUMP", 0);
+           
+           if (!analyze_mode) code[jump_skip].arg = code.size();
+           emit("RST", 0); emit("STORE", count_addr); // count = 0
+           
+           if (!analyze_mode) code[jump_continue].arg = code.size();
           
           long long start_loop = code.size();
           emit("LOAD", count_addr);
@@ -550,8 +589,8 @@ argument : pidentifier {
 
 expression : value
     | value { emit("SWP", 1); } PLUS value { emit("ADD", 1); }
-    | value { emit("SWP", 1); } MINUS value { emit("SWP", 1); emit("SUB", 1); }
-    | value { emit("SWP", 1); } MULT value { 
+          | value { emit("SWP", 1); } MINUS value { emit("SWP", 1); emit("SUB", 1); }
+          | value { emit("SWP", 1); } MULT value { 
         bool optimized = false;
         // Case 1: Right operand is constant power of 2 (Var * Const)
         if ($4.is_const && $4.val > 0) {
@@ -790,7 +829,11 @@ identifier : pidentifier {
              emit("LOAD", idx->address);
              emit("RLOAD", 0); 
          } else {
-             emit("LOAD", idx->address);
+             if (idx->cache_reg != -1) {
+                 emit("RST", 0); emit("ADD", idx->cache_reg);
+             } else {
+                 emit("LOAD", idx->address);
+             }
          }
          
          if (arr->start > 0) { gen_const(2, arr->start); emit("SUB", 2); }
