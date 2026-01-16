@@ -45,11 +45,12 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 24 "src/parser.y"
+#line 27 "src/parser.y"
 
     #include "types.hpp"
+    #include "ast.hpp"
 
-#line 53 "build/parser.tab.hpp"
+#line 54 "build/parser.tab.hpp"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -113,14 +114,20 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 28 "src/parser.y"
+#line 32 "src/parser.y"
 
     char* str;
     long long num;
-    struct Location* loc; 
-    struct Operand operand;
+    ASTNode* node;
+    StatementNode* stmt;
+    ExpressionNode* expr;
+    IdentifierNode* ident;
+    ConditionNode* cond;
+    std::vector<StatementNode*>* stmt_list;
+    std::vector<ProcedureNode*>* proc_list;
+    std::vector<IdentifierNode*>* ident_list;
 
-#line 124 "build/parser.tab.hpp"
+#line 131 "build/parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

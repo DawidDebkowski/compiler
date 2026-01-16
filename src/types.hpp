@@ -24,12 +24,6 @@ struct Symbol {
     int reg_in_use = -1; // -1 if in memory, 0-7 if in register
 };
 
-struct Operand {
-     bool is_const;
-     long long val;
-     int instructions_count;
-};
-
 struct ProcedureInfo {
     long long address;
     long long ra_address; // Return address storage location
@@ -44,11 +38,5 @@ struct Instruction {
     bool has_arg;
 };
 
-// Helper for Identifier location used in Parser union
-struct Location {
-    long long address; 
-    int reg;           
-    Symbol* sym;
-};
 
 #endif

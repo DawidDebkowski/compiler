@@ -36,3 +36,27 @@ czeń na wielkość liczb, obliczenia mogą generować dowolną liczbę naturaln
 12. Małe i duże litery są rozróżniane.
 13. W programie można użyć komentarzy zaczynających się od # i obowiązujących do
 końca linii.
+
+
+Rozkaz Interpretacja Czas
+READ pobraną liczbę zapisuje w rejestrze ra oraz k ← k + 1 100
+WRITE wyświetla zawartość rejestru ra oraz k ← k + 1 100
+LOAD j ra ← pj oraz k ← k + 1 50
+STORE j pj ← ra oraz k ← k + 1 50
+RLOAD x ra ← prx oraz k ← k + 1 50
+RSTORE x prx ← ra oraz k ← k + 1 50
+ADD x ra ← ra + rx oraz k ← k + 1 5
+SUB x ra ← max{ra − rx, 0} oraz k ← k + 1 5
+SWP x ra ↔ rx oraz k ← k + 1 5
+RST x rx ← 0 oraz k ← k + 1 1
+INC x rx ← rx + 1 oraz k ← k + 1 1
+DEC x rx ← max{rx − 1, 0} oraz k ← k + 1 1
+SHL x rx ← 2 ∗ rx oraz k ← k + 1 1
+SHR x rx ← ⌊rx/2⌋ oraz k ← k + 1 1
+JUMP j k ← j 1
+JPOS j jeśli ra > 0 to k ← j, w p.p. k ← k + 1 1
+JZERO j jeśli ra = 0 to k ← j, w p.p. k ← k + 1 1
+CALL j ra ← k + 1 oraz k ← j 1
+RTRN k ← ra 1
+HALT zatrzymaj program 0
+Tabela 2: Rozkazy maszyny wirtualnej (x ∈ {a, b, c, d, e, f, g, h} i j ∈ N)

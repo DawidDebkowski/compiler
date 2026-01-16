@@ -12,6 +12,7 @@
 #include "codegen.hpp"
 #include "symtable.hpp"
 #include "math_kernel.hpp"
+#include "ast.hpp"
 
 using namespace std;
 
@@ -19,17 +20,26 @@ extern int yylineno;
 int yylex();
 void yyerror(const char *s);
 
+extern RootNode* parsed_root;
+
 %}
 
 %code requires {
     #include "types.hpp"
+    #include "ast.hpp"
 }
 
 %union {
     char* str;
     long long num;
-    struct Location* loc; 
-    struct Operand operand;
+    ASTNode* node;
+    StatementNode* stmt;
+    ExpressionNode* expr;
+    IdentifierNode* ident;
+    ConditionNode* cond;
+    std::vector<StatementNode*>* stmt_list;
+    std::vector<ProcedureNode*>* proc_list;
+    std::vector<IdentifierNode*>* ident_list;
 }
 
 %token <str> PROCEDURE IS IN END PROGRAM IF THEN ELSE ENDIF WHILE DO ENDWHILE REPEAT UNTIL FOR FROM TO DOWNTO READ WRITE
@@ -41,62 +51,37 @@ void yyerror(const char *s);
 %token <num> num
 %token <str> ENDFOR
 
-%type <operand> value
-%type <loc> identifier
+%type <expr> value expression
+%type <ident> identifier
+%type <cond> condition
+%type <stmt> command proc_call
+%type <stmt_list> commands main
+%type <proc_list> procedures
+%type <ident_list> args
 %type <str> type
 
 %%
 
-program_all : { 
-     emit("JUMP", 0); // JUMP to Main
-   } procedures main {
-      code[0].arg = symbol_table["main_start"].address; 
-      emit("HALT");
-
-      if (!calls_mul.empty()) {
-          generate_mul();
-          for(long long idx : calls_mul) code[idx].arg = addr_mul;
-      }
-      if (!calls_div.empty() || !calls_mod.empty()) {
-          if (addr_div == -1) generate_div();
-          for(long long idx : calls_div) code[idx].arg = addr_div;
-      }
-      if (!calls_mod.empty()) {
-          generate_mod();
-          for(long long idx : calls_mod) code[idx].arg = addr_mod;
-      }
+program_all : procedures main {
+     parsed_root = new RootNode(*$1, *$2, yylineno);
+     delete $1;
+     delete $2;
    }
    ;
 
-procedures : procedures PROCEDURE proc_head IS declarations IN {
-        procedures_map[current_procedure].address = code.size();
-        
-        // Save Return Address
-        long long ra_addr = memory_offset++;
-        procedures_map[current_procedure].ra_address = ra_addr;
-        emit("STORE", ra_addr);
-        
-    } commands END {
-        // Restore Return Address
-        long long ra_addr = procedures_map[current_procedure].ra_address;
-        emit("LOAD", ra_addr);
-        emit("RTRN");
+procedures : procedures PROCEDURE proc_head IS declarations IN commands END {
+        $1->push_back(new ProcedureNode(current_procedure, *$7, yylineno));
+        delete $7;
         current_procedure = "";
+        $$ = $1;
     }
-    | procedures PROCEDURE proc_head IS IN {
-        procedures_map[current_procedure].address = code.size();
-        
-        long long ra_addr = memory_offset++;
-        procedures_map[current_procedure].ra_address = ra_addr;
-        emit("STORE", ra_addr);
-        
-    } commands END {
-        long long ra_addr = procedures_map[current_procedure].ra_address;
-        emit("LOAD", ra_addr);
-        emit("RTRN");
+    | procedures PROCEDURE proc_head IS IN commands END {
+        $1->push_back(new ProcedureNode(current_procedure, *$7, yylineno));
+        delete $7;
         current_procedure = "";
+        $$ = $1;
     }
-    | /* empty */
+    | /* empty */ { $$ = new std::vector<ProcedureNode*>(); }
     ;
 
 proc_head : pidentifier LPAREN { 
@@ -112,211 +97,67 @@ proc_head : pidentifier LPAREN {
     }
     ;
 
-main : PROGRAM IS { 
-         current_procedure = "main"; 
-         Symbol s; s.address = code.size();
-         symbol_table["main_start"] = s; 
-       } declarations IN {
-         symbol_table["main_start"].address = code.size();
-       } commands END
-    | PROGRAM IS { 
-         current_procedure = "main"; 
-         Symbol s; s.address = code.size(); 
-         symbol_table["main_start"] = s;
-       } IN {
-         symbol_table["main_start"].address = code.size();
-       } commands END
+main : PROGRAM IS declarations IN commands END { $$ = $5; }
+    | PROGRAM IS IN commands END { $$ = $4; }
     ;
 
-commands : commands command
-    | command
+commands : commands command { $1->push_back($2); $$ = $1; }
+    | command { $$ = new std::vector<StatementNode*>(); $$->push_back($1); }
     ;
 
-command : identifier {
-        // Save LHS address if it is in a register (because RHS calculation might clobber it)
-        if ($1->reg != -1) {
-             emit("SWP", $1->reg); // Move Addr to r[0]
-             emit("STORE", lhs_hold_addr);
-             emit("SWP", $1->reg); // Move back (optional but safest state)
-        }
-    } ASSIGN expression SEMICOLON {
-        if ($1->sym->is_iterator) yyerror("Cannot modify loop iterator");
-        if ($1->sym->mod == "I") yyerror("Cannot modify initialized parameter (I)");
-        
-        $1->sym->is_initialized = true;
-        
-        if ($1->reg != -1) {
-             // Restore Address from lhs_hold_addr
-             emit("SWP", 1); // Save Expression Result to rb
-             emit("LOAD", lhs_hold_addr); // Load Addr to ra
-             emit("SWP", $1->reg); // Move Addr to reg (e.g. r[7])
-             emit("SWP", 1); // Restore Expression Result to ra
-             emit("RSTORE", $1->reg);
-        }
-        else emit("STORE", $1->address);
-        delete $1;
+command : identifier ASSIGN expression SEMICOLON {
+        $$ = new AssignmentNode($1, $3, yylineno);
     }
-    | IF condition THEN commands ELSE {
-        long long jump_over_else = code.size();
-        emit("JUMP", 0); 
-        long long false_jump_idx = if_stack.back();
-        if_stack.pop_back();
-        code[false_jump_idx].arg = code.size();
-        if_stack.push_back(jump_over_else);
-    } commands ENDIF {
-        long long jump_over_else = if_stack.back();
-        if_stack.pop_back();
-        code[jump_over_else].arg = code.size();
+    | IF condition THEN commands ELSE commands ENDIF {
+        $$ = new IfNode($2, *$4, *$6, yylineno);
+        delete $4;
+        delete $6;
     }
     | IF condition THEN commands ENDIF {
-        long long false_jump_idx = if_stack.back();
-        if_stack.pop_back();
-        code[false_jump_idx].arg = code.size();
+        std::vector<StatementNode*> empty;
+        $$ = new IfNode($2, *$4, empty, yylineno);
+        delete $4;
     }
-    | WHILE {
-        loop_stack.push_back(code.size());
-    } condition DO commands ENDWHILE {
-         long long jump_out = if_stack.back();
-         if_stack.pop_back();
-         long long start = loop_stack.back();
-         loop_stack.pop_back();
-         emit("JUMP", start);
-         code[jump_out].arg = code.size();
+    | WHILE condition DO commands ENDWHILE {
+        $$ = new WhileNode($2, *$4, yylineno);
+        delete $4;
     }
-    | REPEAT {
-        loop_stack.push_back(code.size());
-    } commands UNTIL condition SEMICOLON {
-         long long jump_if_false = if_stack.back(); 
-         if_stack.pop_back();
-         long long start = loop_stack.back();
-         loop_stack.pop_back();
-         code[jump_if_false].arg = start;
-    }
-    | FOR pidentifier FROM value {
-          Symbol* iter = get_variable(string($2));
-          if (!iter) {
-              // Implicit declaration of iterator
-              add_symbol(string($2), false, false, "", 0, 0);
-              iter = get_variable(string($2));
-          }
-          if (iter->is_iterator) yyerror("Nested loop with same iterator");
-          if (iter->is_param) yyerror("Iterator must be local variable");
-          
-          iter->is_iterator = true;
-          iter->is_initialized = true;
-          
-          emit("STORE", iter->address);
-    } TO value {
-          emit("SWP", 1); 
-          Symbol* iter = get_variable(string($2));
-          emit("LOAD", iter->address);
-          
-          emit("SWP", 1); 
-          emit("SUB", 1); 
-          emit("INC", 0); 
-          
-          long long count_addr = memory_offset++;
-          emit("STORE", count_addr);
-          
-          long long start_loop = code.size();
-          emit("LOAD", count_addr);
-          emit("JZERO", 0);
-          long long jump_out = code.size()-1;
-          
-          loop_stack.push_back(start_loop);
-          loop_stack.push_back(jump_out);
-          loop_stack.push_back(count_addr);
-    } DO commands ENDFOR {
-          long long count_addr = loop_stack.back(); loop_stack.pop_back();
-          long long jump_out = loop_stack.back(); loop_stack.pop_back();
-          long long start_loop = loop_stack.back(); loop_stack.pop_back();
-          
-          emit("LOAD", count_addr);
-          emit("DEC", 0);
-          emit("STORE", count_addr);
-          
-          Symbol* iter = get_variable(string($2));
-          emit("LOAD", iter->address);
-          emit("INC", 0);
-          emit("STORE", iter->address);
-          
-          emit("JUMP", start_loop);
-          code[jump_out].arg = code.size();
-          
-          iter->is_iterator = false;
-    }
-    | FOR pidentifier FROM value {
-          Symbol* iter = get_variable(string($2));
-          if (!iter) {
-              // Implicit declaration of iterator
-              add_symbol(string($2), false, false, "", 0, 0);
-              iter = get_variable(string($2));
-          }
-          if (iter->is_iterator) yyerror("Nested loop with same iterator");
-          if (iter->is_param) yyerror("Iterator must be local variable");
-          iter->is_iterator = true;
-          iter->is_initialized = true;
-
-          emit("STORE", iter->address); 
-    } DOWNTO value {
-          emit("SWP", 1); 
-          Symbol* iter = get_variable(string($2));
-          emit("LOAD", iter->address);
-          
-          emit("SUB", 1); 
-          emit("INC", 0); 
-          
-          long long count_addr = memory_offset++;
-          emit("STORE", count_addr);
-          
-          long long start_loop = code.size();
-          emit("LOAD", count_addr);
-          emit("JZERO", 0);
-          long long jump_out = code.size()-1;
-          
-          loop_stack.push_back(start_loop);
-          loop_stack.push_back(jump_out);
-          loop_stack.push_back(count_addr);
-    } DO commands ENDFOR {
-          long long count_addr = loop_stack.back(); loop_stack.pop_back();
-          long long jump_out = loop_stack.back(); loop_stack.pop_back();
-          long long start_loop = loop_stack.back(); loop_stack.pop_back();
-          
-          emit("LOAD", count_addr);
-          emit("DEC", 0);
-          emit("STORE", count_addr);
-          
-          Symbol* iter = get_variable(string($2));
-          emit("LOAD", iter->address);
-          emit("DEC", 0);
-          emit("STORE", iter->address);
-          
-          emit("JUMP", start_loop);
-          code[jump_out].arg = code.size();
-          
-          iter->is_iterator = false;
-    }
-    | proc_call SEMICOLON
-    | READ identifier SEMICOLON {
-        if ($2->sym->is_iterator) yyerror("Cannot read into loop iterator");
-        if ($2->sym->mod == "I") yyerror("Cannot read into I parameter");
-        $2->sym->is_initialized = true;
-
-        emit("READ");
-        if ($2->reg != -1) emit("RSTORE", $2->reg);
-        else emit("STORE", $2->address);
+    | REPEAT commands UNTIL condition SEMICOLON {
+        $$ = new RepeatNode($4, *$2, yylineno);
         delete $2;
     }
+    | FOR pidentifier FROM value TO value DO commands ENDFOR {
+        $$ = new ForNode(string($2), $4, $6, false, *$8, yylineno);
+        delete $8;
+    }
+    | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR {
+        $$ = new ForNode(string($2), $4, $6, true, *$8, yylineno);
+        delete $8;
+    }
+    | proc_call SEMICOLON {
+        $$ = $1;
+    }
+    | READ identifier SEMICOLON {
+        $$ = new ReadNode($2, yylineno);
+    }
     | WRITE value SEMICOLON {
-        emit("WRITE");
+        $$ = new WriteNode($2, yylineno);
     }
     ;
 
-proc_call : pidentifier LPAREN { 
-        current_call_proc = string($1);
-        current_arg_idx = 0;
-    } args RPAREN {
-        emit("CALL", procedures_map[$1].address);
+proc_call : pidentifier LPAREN args RPAREN {
+        $$ = new ProcCallNode(string($1), *$3, yylineno);
+        delete $3;
+    }
+    ;
+
+args : args COMMA pidentifier {
+        $1->push_back(new IdentifierNode(string($3), yylineno));
+        $$ = $1;
+    }
+    | pidentifier {
+        $$ = new std::vector<IdentifierNode*>();
+        $$->push_back(new IdentifierNode(string($1), yylineno));
     }
     ;
 
@@ -352,309 +193,34 @@ type : T { $$ = strdup("T"); }
      | /* empty */ { $$ = strdup(""); }
      ;
 
-args : args COMMA argument 
-    | argument 
+expression : value { $$ = $1; }
+    | value PLUS value { $$ = new BinaryOpNode($1, BinaryOp::PLUS, $3, yylineno); }
+    | value MINUS value { $$ = new BinaryOpNode($1, BinaryOp::MINUS, $3, yylineno); }
+    | value MULT value { $$ = new BinaryOpNode($1, BinaryOp::MULT, $3, yylineno); }
+    | value DIV value { $$ = new BinaryOpNode($1, BinaryOp::DIV, $3, yylineno); }
+    | value MOD value { $$ = new BinaryOpNode($1, BinaryOp::MOD, $3, yylineno); }
     ;
 
-argument : pidentifier {
-        Symbol* s = get_variable(string($1));
-        if (!s) yyerror(("Undefined variable " + string($1)).c_str());
-        
-        ProcedureInfo& info = procedures_map[current_call_proc];
-        if (current_arg_idx >= (int)info.param_addresses.size()) yyerror("Too many arguments for procedure call");
-        
-        long long param_addr = info.param_addresses[current_arg_idx];
-        bool p_array = info.param_is_array[current_arg_idx];
-        
-        if (p_array && !s->is_array) yyerror(("Expected array for parameter " + to_string(current_arg_idx+1)).c_str());
-        if (!p_array && s->is_array) yyerror(("Expected scalar for parameter " + to_string(current_arg_idx+1)).c_str());
-
-        current_arg_idx++;
-
-        if (s->is_param) {
-            emit("LOAD", s->address); 
-            emit("STORE", param_addr); 
-        } else {
-            if (s->is_array) {
-                gen_const(0, s->address); 
-                emit("STORE", param_addr);
-            } else {
-                gen_const(0, s->address);
-                emit("STORE", param_addr);
-            }
-        }
-    }
-    | num {
-        ProcedureInfo& info = procedures_map[current_call_proc];
-        if (current_arg_idx >= (int)info.param_addresses.size()) yyerror("Too many arguments for procedure call");
-        
-        long long param_addr = info.param_addresses[current_arg_idx];
-        bool p_array = info.param_is_array[current_arg_idx];
-        
-        if (p_array) yyerror(("Expected array for parameter " + to_string(current_arg_idx+1) + " but got number").c_str());
-        
-        current_arg_idx++;
-
-        // Store constant in temporary memory
-        long long temp_addr = memory_offset++;
-        gen_const(0, $1);
-        emit("STORE", temp_addr);
-        
-        // Pass address of temp
-        gen_const(0, temp_addr);
-        emit("STORE", param_addr);
-    }
+condition : value EQ value { $$ = new ConditionNode($1, ConditionOp::EQ, $3, yylineno); }
+    | value NEQ value { $$ = new ConditionNode($1, ConditionOp::NEQ, $3, yylineno); }
+    | value GT value { $$ = new ConditionNode($1, ConditionOp::GT, $3, yylineno); }
+    | value LT value { $$ = new ConditionNode($1, ConditionOp::LT, $3, yylineno); }
+    | value GEQ value { $$ = new ConditionNode($1, ConditionOp::GEQ, $3, yylineno); }
+    | value LEQ value { $$ = new ConditionNode($1, ConditionOp::LEQ, $3, yylineno); }
     ;
 
+value : num { $$ = new NumberNode($1, yylineno); }
+    | identifier { $$ = $1; }
     ;
 
-expression : value
-    | value { emit("SWP", 1); } PLUS value { emit("ADD", 1); }
-    | value { emit("SWP", 1); } MINUS value { emit("SWP", 1); emit("SUB", 1); }
-    | value { emit("SWP", 1); } MULT value { 
-        bool optimized = false;
-        // Case 1: Right operand is constant power of 2 (Var * Const)
-        if ($4.is_const && $4.val > 0) {
-            long long v = $4.val;
-            if ((v & (v - 1)) == 0) { // Power of 2
-                // Remove constant load
-                for(int k=0; k<$4.instructions_count; k++) code.pop_back();
-                
-                // r1 contains first operand. r0 is now free/unknown.
-                // Apply shifts to r1
-                int shifts = 0;
-                while (v > 1) { v >>= 1; shifts++; }
-                for(int k=0; k<shifts; k++) emit("SHL", 1);
-                
-                // Move result to r0 (expected output register)
-                emit("SWP", 1);
-                
-                optimized = true;
-            }
-        }
-        
-        // Case 2: Left operand is constant power of 2 (Const * Var)
-        if (!optimized && $1.is_const && $1.val > 0) {
-             long long v = $1.val;
-             if ((v & (v - 1)) == 0) {
-                 // The Var is in r0 (a). The Const is in r1 (b) (put there by SWP 1).
-                 // We want Var * Const.
-                 // Just shift r0.
-                 int shifts = 0;
-                 while (v > 1) { v >>= 1; shifts++; }
-                 for(int k=0; k<shifts; k++) emit("SHL", 0);
-                 
-                 optimized = true;
-             }
-        }
-        
-        if (!optimized) {
-            // Check for spills
-            // MUL clobbers e(4), f(5)
-            if (reg_descriptors[4]) { emit("LOAD", reg_descriptors[4]->address); emit("RXCHG", 4); } // Wait RLOAD? No.
-            // Wait, reg_descriptors[4] means "Variable X is in Reg 4".
-            // Since we CLOBBER Reg 4, we must SAVE it.
-            // emit("RST", 0); emit("ADD", 4); emit("STORE", reg_descriptors[4]->address);
-            // But wait, the address is in Memory. Ideally we want to spill to stack or temp.
-            // Simpler: Just spill to its home address?
-            // Yes if we assume reg contains current value.
-            // emit("SWP", 4); emit("STORE", reg_descriptors[4]->address); emit("SWP", 4); // Save
-            
-            // Actually, we don't have usage yet. This is placeholder logic.
-            
-            emit("SWP", 2); emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 1); 
-        }
-    }
-    | value { emit("SWP", 1); } DIV value { 
-        bool optimized = false;
-        if ($4.is_const && $4.val > 0) {
-            long long v = $4.val;
-            if ((v & (v - 1)) == 0) { // Power of 2
-                // Remove constant load
-                for(int k=0; k<$4.instructions_count; k++) code.pop_back();
-                
-                // r1 contains first operand. r0 is now free/unknown.
-                // Apply shifts to r1
-                int shifts = 0;
-                while (v > 1) { v >>= 1; shifts++; }
-                for(int k=0; k<shifts; k++) emit("SHR", 1);
-                
-                // Move result to r0
-                emit("SWP", 1);
-                
-                optimized = true;
-            }
-        }
-        
-        if (!optimized) {
-             // DIV clobbers e(4), f(5), g(6)
-            emit("SWP", 2); emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 1); 
-        }
-    }
-    | value { emit("SWP", 1); } MOD value { 
-        bool optimized = false;
-        if ($4.is_const && $4.val > 0) {
-            long long v = $4.val;
-            if ((v & (v - 1)) == 0) { // Power of 2
-                // Remove constant load
-                for(int k=0; k<$4.instructions_count; k++) code.pop_back();
-                
-                // x % 2^k  ==  x - ((x >> k) << k)
-                // r1 has x.
-                
-                int shifts = 0;
-                while (v > 1) { v >>= 1; shifts++; }
-                
-                // Save x to proper register to preserve it?
-                // Logic:
-                // r1 = x
-                // r2 = x (copy) -- Need instruction COPY or logic
-                // No COPY in VM? 
-                // We have r0..r7.
-                // SWP 2 (r2 <-> r0). r0 is trash.
-                // r1 has x. emit("SWP", 2); -> r1 trash, r2 = x ?? No SWP x swaps r0 and rx.
-                // SWP x: r0 <-> rx.
-                
-                emit("SWP", 1); // r0 = x, r1 = trash
-                emit("SWP", 2); // r2 = x, r0 = trash/r2_old
-                emit("RST", 0); emit("ADD", 2); // r0 = x
-                
-                // Calculate (x >> k) << k
-                 for(int k=0; k<shifts; k++) emit("SHR", 0);
-                 for(int k=0; k<shifts; k++) emit("SHL", 0);
-                 
-                 // Subtract from original x (in r2)
-                 // r0 = (x>>k)<<k
-                 // r2 = x
-                 emit("SWP", 2); // r0 = x, r2 = (x>>k)<<k
-                 emit("SUB", 2); // r0 = x - ...
-                 
-                 optimized = true;
-            }
-        }
-    
-        if (!optimized) {
-            emit("SWP", 2); emit("CALL", 0); calls_mod.push_back(code.size()-1); emit("SWP", 1); 
-        }
-    } 
-    ;
-
-condition : value { emit("SWP", 1); } EQ value {
-        emit("SWP", 2); 
-        emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3);
-        emit("RST", 0); emit("ADD", 2); emit("SUB", 1); emit("ADD", 3);
-        emit("JPOS", 0); 
-        if_stack.push_back(code.size()-1); 
-    }
-    | value { emit("SWP", 1); } NEQ value {
-        emit("SWP", 2); 
-        emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3);
-        emit("RST", 0); emit("ADD", 2); emit("SUB", 1); emit("ADD", 3);
-        emit("JZERO", 0); 
-        if_stack.push_back(code.size()-1); 
-    }
-    | value { emit("SWP", 1); } GT value { 
-        emit("SWP", 1); emit("SUB", 1); 
-        emit("JZERO", 0); 
-        if_stack.push_back(code.size()-1); 
-    }
-    | value { emit("SWP", 1); } LT value { 
-        emit("SUB", 1); 
-        emit("JZERO", 0); 
-        if_stack.push_back(code.size()-1); 
-    }
-    | value { emit("SWP", 1); } GEQ value { 
-        emit("SUB", 1);
-        emit("JPOS", 0);
-        if_stack.push_back(code.size()-1);
-    }
-    | value { emit("SWP", 1); } LEQ value { 
-        emit("SWP", 1); 
-        emit("SUB", 1); 
-        emit("JPOS", 0);
-        if_stack.push_back(code.size()-1);
-    }
-    ;
-
-value : num { 
-        long long start = code.size();
-        gen_const(0, $1); /* Generates code into r0 */
-        $$.is_const = true;
-        $$.val = $1;
-        $$.instructions_count = code.size() - start;
-    }
-    | identifier {
-        if (!$1->sym->is_initialized) yyerror("Usage of uninitialized variable");
-        if ($1->reg != -1) emit("RLOAD", $1->reg);
-        else emit("LOAD", $1->address);
-        delete $1;
-        $$.is_const = false;
-    }
-    ;
-
-identifier : pidentifier {
-         Symbol* s = get_variable(string($1));
-         if (!s) yyerror(("Undefined identifier " + string($1)).c_str());
-         $$ = new Location();
-         $$->address = s->address;
-         $$->sym = s;
-         if (s->is_param) {
-             emit("LOAD", s->address);
-             emit("SWP", 7); 
-             $$->reg = 7;
-             $$->address = -1;
-         } else {
-             $$->reg = -1;
-         }
-    }
+identifier : pidentifier { $$ = new IdentifierNode(string($1), yylineno); }
     | pidentifier LBRACKET num RBRACKET {
-         Symbol* s = get_variable(string($1));
-         if (!s) yyerror(("Undefined identifier " + string($1)).c_str());
-         $$ = new Location();
-         $$->sym = s;
-         if (s->is_param) {
-             emit("LOAD", s->address); 
-             long long offset = $3 - s->start;
-             gen_const(2, offset);
-             emit("ADD", 2);
-             emit("SWP", 7);
-             $$->reg = 7;
-             $$->address = -1;
-         } else {
-            $$->address = s->address + $3 - s->start;
-            $$->reg = -1;
-         }
+         $$ = new IdentifierNode(string($1), yylineno);
+         $$->set_array_access($3, yylineno);
     }
     | pidentifier LBRACKET pidentifier RBRACKET {
-         Symbol* arr = get_variable(string($1));
-         Symbol* idx = get_variable(string($3));
-         if (!arr) yyerror(("Undefined array " + string($1)).c_str());
-         if (!idx) yyerror(("Undefined variable " + string($3)).c_str());
-         if (!idx->is_initialized) yyerror("Usage of uninitialized variable for loop index");
-         
-         if (idx->is_param) {
-             emit("LOAD", idx->address);
-             emit("RLOAD", 0); 
-         } else {
-             emit("LOAD", idx->address);
-         }
-         
-         if (arr->start > 0) { gen_const(2, arr->start); emit("SUB", 2); }
-         
-         if (arr->is_param) {
-             emit("SWP", 2); 
-             emit("LOAD", arr->address); 
-             emit("ADD", 2); 
-         } else {
-             gen_const(2, arr->address); 
-             emit("ADD", 2);
-         }
-         
-         emit("SWP", 7);
-         $$ = new Location();
-         $$->address = -1;
-         $$->reg = 7;
-         $$->sym = arr;
+         $$ = new IdentifierNode(string($1), yylineno);
+         $$->set_array_access(string($3), yylineno);
     }
     ;
 
@@ -667,6 +233,8 @@ void yyerror(const char *s) {
 
 extern FILE *yyin;
 
+RootNode* parsed_root = nullptr;
+
 int main(int argc, char* argv[]) {
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
@@ -676,8 +244,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (yyparse() == 0) {
-        // lets NOT OPTIMIZE CODE NOW
+    if (yyparse() == 0 && parsed_root) {
+        parsed_root->validate();
+        parsed_root->codegen();
         optimize_code();
         
         FILE* out = stdout;
@@ -711,6 +280,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (out != stdout) fclose(out);
+        delete parsed_root;
     }
     return 0;
 }

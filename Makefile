@@ -6,7 +6,7 @@ BUILD_DIR = build
 TARGET = compiler
 
 # List of source files (excluding generated ones)
-SRCS = $(SRC_DIR)/codegen.cpp $(SRC_DIR)/symtable.cpp $(SRC_DIR)/math_kernel.cpp
+SRCS = $(SRC_DIR)/codegen.cpp $(SRC_DIR)/symtable.cpp $(SRC_DIR)/math_kernel.cpp $(SRC_DIR)/ast.cpp
 OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
 all: $(TARGET)
