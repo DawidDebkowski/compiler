@@ -52,8 +52,8 @@ public:
 };
 
 class NumberNode : public ValueNode {
-    long long value;
 public:
+    long long value;
     NumberNode(long long val, int ln) : ValueNode(ln), value(val) {}
     bool is_constant() const override { return true; }
     long long evaluate() const override { return value; }
@@ -190,9 +190,9 @@ public:
 
 class ProcCallNode : public StatementNode {
     std::string proc_name;
-    std::vector<IdentifierNode*> args; // Definition says args can be pidentifier
+    std::vector<ValueNode*> args;
 public:
-    ProcCallNode(std::string name, std::vector<IdentifierNode*>& a, int ln)
+    ProcCallNode(std::string name, std::vector<ValueNode*>& a, int ln)
         : StatementNode(ln), proc_name(name), args(a) {}
     void codegen() override;
     void validate() override;

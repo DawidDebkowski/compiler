@@ -215,15 +215,22 @@ void AssignmentNode::codegen() {
     // Then RSTORE 7.
     
     if (target->is_array || (get_variable(target->name)->is_param)) {
-        // Compute Address of Target -> r7
+        // Compute Address of Target
         target->codegen_address(0); 
-        emit("SWP", 7); // Save Address in r7
+        
+        long long spill_loc = memory_offset++;
+        emit("STORE", spill_loc);
         
         // Compute Right Side -> r0
         expr->codegen_to_reg(0);
         
+        // Restore Address to r1
+        emit("SWP", 1); // Value(r0) -> r1
+        emit("LOAD", spill_loc); // Addr -> r0
+        emit("SWP", 1); // Addr -> r1, Value -> r0
+        
         // Store
-        emit("RSTORE", 7);
+        emit("RSTORE", 1);
     } else {
         // Simple global scalar
         expr->codegen_to_reg(0);
@@ -241,16 +248,20 @@ void ReadNode::codegen() {
     if (!s) { yyerror("Undefined variable"); exit(1); }
     
      if (target->is_array || s->is_param) {
-        // Read into r0.
-        // We need to store r0 into Address.
-        // But we need Address.
-        // If we compute address first, we clobber r0.
-        // We can compute address into r7.
+        // Compute Address
         target->codegen_address(0);
-        emit("SWP", 7); // Addr in 7
+        
+        long long spill_loc = memory_offset++;
+        emit("STORE", spill_loc);
         
         emit("READ"); // Value in 0
-        emit("RSTORE", 7);
+        
+        // Restore Address to r1
+        emit("SWP", 1); // Value -> r1
+        emit("LOAD", spill_loc); // Addr -> r0
+        emit("SWP", 1); // Addr -> r1, Value -> r0
+        
+        emit("RSTORE", 1);
     } else {
         emit("STORE", s->address);
     }
@@ -489,16 +500,31 @@ void ProcCallNode::codegen() {
     ProcedureInfo& info = procedures_map[proc_name];
     for (size_t i=0; i<args.size(); i++) {
         long long param_addr = info.param_addresses[i];
-        bool p_array = info.param_is_array[i];
-        IdentifierNode* arg = args[i];
-        Symbol* s = get_variable(arg->name);
         
-        if (s->is_param) {
-            emit("LOAD", s->address); 
-            emit("STORE", param_addr); 
-        } else {
-            // Pass Address
-             gen_const(0, s->address);
+        // Handle Identifier
+        if (auto* arg = dynamic_cast<IdentifierNode*>(args[i])) {
+            Symbol* s = get_variable(arg->name);
+            if (s->is_param) {
+                emit("LOAD", s->address); 
+                emit("STORE", param_addr); 
+            } else {
+                // Pass Address
+                // Subtract start index to ensure 0-based indexing inside procedure matches real memory layout
+                long long adjusted_addr = s->address;
+                if (s->is_array) {
+                    adjusted_addr -= s->start;
+                }
+                gen_const(0, adjusted_addr);
+                emit("STORE", param_addr);
+            }
+        }
+        // Handle Number
+        else if (auto* num = dynamic_cast<NumberNode*>(args[i])) {
+             long long temp_addr = memory_offset++;
+             gen_const(0, num->value);
+             emit("STORE", temp_addr);
+             
+             gen_const(0, temp_addr);
              emit("STORE", param_addr);
         }
     }
@@ -516,16 +542,22 @@ void ProcCallNode::validate() {
      }
      // Check Types
      for (size_t i=0; i<args.size(); i++) {
-         Symbol* s = get_variable(args[i]->name);
-         if (!s) { yyerror("Undefined arg variable"); exit(1); }
-         if (info.param_is_array[i] && !s->is_array) { yyerror("Expected array"); exit(1); }
-         if (!info.param_is_array[i] && s->is_array) { yyerror("Expected scalar"); exit(1); }
+         if (auto* arg = dynamic_cast<IdentifierNode*>(args[i])) {
+             Symbol* s = get_variable(arg->name);
+             if (!s) { yyerror("Undefined arg variable"); exit(1); }
+             if (info.param_is_array[i] && !s->is_array) { yyerror("Expected array"); exit(1); }
+             if (!info.param_is_array[i] && s->is_array) { yyerror("Expected scalar"); exit(1); }
+         } 
+         else if (dynamic_cast<NumberNode*>(args[i])) {
+             if (info.param_is_array[i]) { yyerror("Expected array, got number"); exit(1); }
+         }
      }
 }
 
 // --- Procedure & Root ---
 
 void ProcedureNode::codegen() {
+    current_procedure = name;
     procedures_map[name].address = code.size();
     long long ra = memory_offset++;
     procedures_map[name].ra_address = ra;
@@ -535,6 +567,7 @@ void ProcedureNode::codegen() {
     
     emit("LOAD", ra);
     emit("RTRN");
+    current_procedure = "";
 }
 
 void ProcedureNode::validate() {

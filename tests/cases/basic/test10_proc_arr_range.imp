@@ -6,8 +6,8 @@ END
 PROGRAM IS
     tab[10:15]
 IN
-    set(tab, 0, 333);
-    set(tab, 5, 444);
+    set(tab, 10, 333);
+    set(tab, 15, 444);
     WRITE tab[10];
     WRITE tab[15];
 END

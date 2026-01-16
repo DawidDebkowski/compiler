@@ -40,6 +40,7 @@ extern RootNode* parsed_root;
     std::vector<StatementNode*>* stmt_list;
     std::vector<ProcedureNode*>* proc_list;
     std::vector<IdentifierNode*>* ident_list;
+    std::vector<ValueNode*>* val_list;
 }
 
 %token <str> PROCEDURE IS IN END PROGRAM IF THEN ELSE ENDIF WHILE DO ENDWHILE REPEAT UNTIL FOR FROM TO DOWNTO READ WRITE
@@ -57,7 +58,7 @@ extern RootNode* parsed_root;
 %type <stmt> command proc_call
 %type <stmt_list> commands main
 %type <proc_list> procedures
-%type <ident_list> args
+%type <val_list> args
 %type <str> type
 
 %%
@@ -76,8 +77,8 @@ procedures : procedures PROCEDURE proc_head IS declarations IN commands END {
         $$ = $1;
     }
     | procedures PROCEDURE proc_head IS IN commands END {
-        $1->push_back(new ProcedureNode(current_procedure, *$7, yylineno));
-        delete $7;
+        $1->push_back(new ProcedureNode(current_procedure, *$6, yylineno));
+        delete $6;
         current_procedure = "";
         $$ = $1;
     }
@@ -156,8 +157,16 @@ args : args COMMA pidentifier {
         $$ = $1;
     }
     | pidentifier {
-        $$ = new std::vector<IdentifierNode*>();
+        $$ = new std::vector<ValueNode*>();
         $$->push_back(new IdentifierNode(string($1), yylineno));
+    }
+    | args COMMA num {
+        $1->push_back(new NumberNode($3, yylineno));
+        $$ = $1;
+    }
+    | num {
+        $$ = new std::vector<ValueNode*>();
+        $$->push_back(new NumberNode($1, yylineno));
     }
     ;
 

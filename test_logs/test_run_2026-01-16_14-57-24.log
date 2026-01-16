@@ -1,0 +1,61 @@
+==========================================
+Test Run Report - 2026-01-16_14-57-24
+==========================================
+
+ADDED AST HERE
+
+
+### Category: basic ###
+==========================================
+  read...                        PASS (Cost: 250, Instructions: 4)
+  test10_proc_arr_range...       FAIL (compilation error)
+  test1_io...                    PASS (Cost: 250, Instructions: 4)
+  test2_vars...                  PASS (Cost: 413, Instructions: 20)
+  test3_mul...                   PASS (Cost: 597, Instructions: 50)
+  test4_div...                   PASS (Cost: 719, Instructions: 74)
+  test5_mod...                   PASS (Cost: 669, Instructions: 82)
+  test6_arr...                   PASS (Cost: 443, Instructions: 42)
+  test7_arr_range...             PASS (Cost: 454, Instructions: 53)
+  test8_proc...                  FAIL (compilation error)
+  test9_proc_arr...              FAIL (compilation error)
+  test_mul_simple...             PASS (Cost: 514, Instructions: 45)
+  Category results: 9 passed, 3 failed
+
+### Category: custom ###
+==========================================
+  test...                        SKIP (no answer file)
+  Category results: 0 passed, 0 failed
+
+### Category: example ###
+==========================================
+  example1...                    FAIL (compilation error)
+  example2...                    PASS (Cost: 16 057, Instructions: 202)
+  example3...                    PASS (Cost: 2 940, Instructions: 101)
+  example4...                    FAIL (compilation error)
+  example5...                    FAIL (compilation error)
+  example6...                    PASS (Cost: 32 126, Instructions: 283)
+  example7...                    PASS (Cost: 799 008, Instructions: 156)
+  example8...                    FAIL (compilation error)
+  example9...                    FAIL (compilation error)
+  exampleA...                    PASS (Cost: 50 949, Instructions: 287)
+  Category results: 5 passed, 5 failed
+
+### Category: labor4 ###
+==========================================
+  crash_repro...                 FAIL (compilation error)
+  program0...                    PASS (Cost: 2 726, Instructions: 35)
+  program1...                    FAIL (output mismatch)
+    Expected: tests/ans/labor4/program1.ans
+    Got:      tests/out/labor4/program1.out
+    Diff:
+      1c1
+      < ? ? ? ? > 50
+      ---
+      > ? ? ? ? > 0
+  program2...                    FAIL (compilation error)
+  program3...                    FAIL (compilation error)
+  Category results: 1 passed, 4 failed
+
+==========================================
+TOTAL RESULTS: 15 passed, 12 failed
+==========================================

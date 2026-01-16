@@ -126,8 +126,9 @@ union YYSTYPE
     std::vector<StatementNode*>* stmt_list;
     std::vector<ProcedureNode*>* proc_list;
     std::vector<IdentifierNode*>* ident_list;
+    std::vector<ValueNode*>* val_list;
 
-#line 131 "build/parser.tab.hpp"
+#line 132 "build/parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
