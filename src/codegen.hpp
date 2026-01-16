@@ -21,8 +21,6 @@ extern vector<long long> calls_mul;
 extern vector<long long> calls_div;
 extern vector<long long> calls_mod;
 
-extern bool analyze_mode;
-
 // Register Allocation (Simple Tracker)
 // Maps Register ID (0-7) to a Symbol or NULL if free/trash.
 // Used to decide if we need to spill before Math Kernel calls.

@@ -33,10 +33,6 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
     s.mod = mod;
     s.is_iterator = false;
     
-    // Opt
-    s.usage_count = 0;
-    s.cache_reg = -1;
-    
     // Point 5: O means undefined value.
     if (mod == "O") s.is_initialized = false;
     else s.is_initialized = true; 

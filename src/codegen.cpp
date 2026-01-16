@@ -15,15 +15,11 @@ vector<long long> calls_mod;
 
 Symbol* reg_descriptors[8] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
 
-extern bool analyze_mode;
-
 void emit(string opcode) {
-    if (analyze_mode) return;
     code.push_back({opcode, 0, false});
 }
 
 void emit(string opcode, long long arg) {
-    if (analyze_mode) return;
     code.push_back({opcode, arg, true});
 }
 
@@ -83,27 +79,6 @@ void optimize_code() {
             if (code[i].opcode == "JUMP" && code[i].arg == (long long)(i + 1)) {
                  to_delete[i] = true;
                  changed = true;
-            }
-
-            // RST k, RST k -> Remove second
-            if (code[i].opcode == "RST" && i+1 < code.size()) {
-                 if (code[i+1].opcode == "RST" && 
-                     code[i].arg == code[i+1].arg && 
-                     !is_target[i+1]) {
-                     to_delete[i+1] = true;
-                     changed = true;
-                 }
-            }
-            
-            // SWP k, SWP k -> Remove both
-            if (code[i].opcode == "SWP" && i+1 < code.size()) {
-                 if (code[i+1].opcode == "SWP" && 
-                     code[i].arg == code[i+1].arg && 
-                     !is_target[i] && !is_target[i+1]) {
-                     to_delete[i] = true;
-                     to_delete[i+1] = true;
-                     changed = true;
-                 }
             }
         }
         

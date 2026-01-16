@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 85 "src/parser.y"
+#line 24 "src/parser.y"
 
     #include "types.hpp"
 
@@ -113,7 +113,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 89 "src/parser.y"
+#line 28 "src/parser.y"
 
     char* str;
     long long num;

@@ -12,73 +12,12 @@
 #include "codegen.hpp"
 #include "symtable.hpp"
 #include "math_kernel.hpp"
-#include <algorithm>
 
 using namespace std;
 
 extern int yylineno;
 int yylex();
 void yyerror(const char *s);
-
-// Global Analysis State
-bool analyze_mode = false;
-int loop_depth = 0;
-map<string, long long> var_usage_counts;
-map<string, int> var_register_assignments;
-extern Symbol* reg_descriptors[8]; // Track which variable is in which register (0-7)
-
-void reset_parser_state() {
-    code.clear();
-    symbol_table.clear();
-    procedures_map.clear();
-    memory_offset = 1000;
-    current_procedure = "";
-    calls_mul.clear(); calls_div.clear(); calls_mod.clear();
-    loop_stack.clear(); if_stack.clear();
-    loop_depth = 0;
-    addr_mul = -1; addr_div = -1; addr_mod = -1;
-    for(int i=0; i<8; i++) reg_descriptors[i] = nullptr;
-}
-
-void check_reg_assignment(char* name) {
-    if (analyze_mode) return;
-    string sname = (current_procedure == "") ? string(name) : current_procedure + "_" + string(name);
-    if (var_register_assignments.count(sname)) {
-         Symbol* s = get_variable(string(name));
-         if (s) {
-             s->cache_reg = var_register_assignments[sname];
-             reg_descriptors[s->cache_reg] = s;
-         }
-    }
-}
-
-void spill_registers(int max_reg) {
-    for(int i=4; i<=max_reg; i++) {
-        if(reg_descriptors[i]) {
-            emit("SWP", i);
-            emit("STORE", reg_descriptors[i]->address);
-            emit("SWP", i);
-        }
-    }
-}
-
-void restore_registers(int max_reg) {
-    bool needed = false;
-    for(int i=4; i<=max_reg; i++) if(reg_descriptors[i]) needed = true;
-    if(!needed) return;
-    
-    long long temp = memory_offset++;
-    emit("STORE", temp); 
-    
-    for(int i=4; i<=max_reg; i++) {
-        if(reg_descriptors[i]) {
-            emit("LOAD", reg_descriptors[i]->address); 
-            emit("SWP", i); 
-        }
-    }
-    
-    emit("LOAD", temp); 
-}
 
 %}
 
@@ -111,24 +50,20 @@ void restore_registers(int max_reg) {
 program_all : { 
      emit("JUMP", 0); // JUMP to Main
    } procedures main {
-      for(int i=0; i<8; i++) reg_descriptors[i] = nullptr; 
-      
-      if (!analyze_mode) {
-          code[0].arg = symbol_table["main_start"].address; 
-          emit("HALT");
+      code[0].arg = symbol_table["main_start"].address; 
+      emit("HALT");
 
-          if (!calls_mul.empty()) {
-              generate_mul();
-              for(long long idx : calls_mul) code[idx].arg = addr_mul;
-          }
-          if (!calls_div.empty() || !calls_mod.empty()) {
-              if (addr_div == -1) generate_div();
-              for(long long idx : calls_div) code[idx].arg = addr_div;
-          }
-          if (!calls_mod.empty()) {
-              generate_mod();
-              for(long long idx : calls_mod) code[idx].arg = addr_mod;
-          }
+      if (!calls_mul.empty()) {
+          generate_mul();
+          for(long long idx : calls_mul) code[idx].arg = addr_mul;
+      }
+      if (!calls_div.empty() || !calls_mod.empty()) {
+          if (addr_div == -1) generate_div();
+          for(long long idx : calls_div) code[idx].arg = addr_div;
+      }
+      if (!calls_mod.empty()) {
+          generate_mod();
+          for(long long idx : calls_mod) code[idx].arg = addr_mod;
       }
    }
    ;
@@ -141,7 +76,6 @@ procedures : procedures PROCEDURE proc_head IS declarations IN {
         procedures_map[current_procedure].ra_address = ra_addr;
         emit("STORE", ra_addr);
         
-        for(int i=0; i<8; i++) reg_descriptors[i] = nullptr;
     } commands END {
         // Restore Return Address
         long long ra_addr = procedures_map[current_procedure].ra_address;
@@ -182,7 +116,6 @@ main : PROGRAM IS {
          current_procedure = "main"; 
          Symbol s; s.address = code.size();
          symbol_table["main_start"] = s; 
-         for(int i=0; i<8; i++) reg_descriptors[i] = nullptr;
        } declarations IN {
          symbol_table["main_start"].address = code.size();
        } commands END
@@ -220,13 +153,7 @@ command : identifier {
              emit("SWP", 1); // Restore Expression Result to ra
              emit("RSTORE", $1->reg);
         }
-        else {
-             if ($1->sym->cache_reg != -1) {
-                 emit("SWP", $1->sym->cache_reg); 
-             } else {
-                 emit("STORE", $1->address);
-             }
-        }
+        else emit("STORE", $1->address);
         delete $1;
     }
     | IF condition THEN commands ELSE {
@@ -234,44 +161,41 @@ command : identifier {
         emit("JUMP", 0); 
         long long false_jump_idx = if_stack.back();
         if_stack.pop_back();
-        if (!analyze_mode) code[false_jump_idx].arg = code.size();
+        code[false_jump_idx].arg = code.size();
         if_stack.push_back(jump_over_else);
     } commands ENDIF {
         long long jump_over_else = if_stack.back();
         if_stack.pop_back();
-        if (!analyze_mode) code[jump_over_else].arg = code.size();
+        code[jump_over_else].arg = code.size();
     }
     | IF condition THEN commands ENDIF {
         long long false_jump_idx = if_stack.back();
         if_stack.pop_back();
-        if (!analyze_mode) code[false_jump_idx].arg = code.size();
+        code[false_jump_idx].arg = code.size();
     }
     | WHILE {
         loop_stack.push_back(code.size());
-        loop_depth++;
     } condition DO commands ENDWHILE {
-         loop_depth--;
          long long jump_out = if_stack.back();
          if_stack.pop_back();
          long long start = loop_stack.back();
          loop_stack.pop_back();
          emit("JUMP", start);
-         if (!analyze_mode) code[jump_out].arg = code.size();
+         code[jump_out].arg = code.size();
     }
     | REPEAT {
-        loop_depth++;
         loop_stack.push_back(code.size());
     } commands UNTIL condition SEMICOLON {
-         loop_depth--;
-         long long jump = if_stack.back(); 
+         long long jump_if_false = if_stack.back(); 
          if_stack.pop_back();
          long long start = loop_stack.back();
          loop_stack.pop_back();
-         if (!analyze_mode) code[jump].arg = start;
+         code[jump_if_false].arg = start;
     }
     | FOR pidentifier FROM value {
           Symbol* iter = get_variable(string($2));
           if (!iter) {
+              // Implicit declaration of iterator
               add_symbol(string($2), false, false, "", 0, 0);
               iter = get_variable(string($2));
           }
@@ -281,52 +205,18 @@ command : identifier {
           iter->is_iterator = true;
           iter->is_initialized = true;
           
-          string scoped_name = (current_procedure == "") ? string($2) : current_procedure + "_" + string($2);
-          if (analyze_mode) {
-               var_usage_counts[scoped_name] += (pow(10, loop_depth) * 10);
-          } else {
-               if (var_register_assignments.count(scoped_name)) 
-                   iter->cache_reg = var_register_assignments[scoped_name];
-          }
-
-          if (iter->cache_reg != -1) emit("SWP", iter->cache_reg);
-          else emit("STORE", iter->address);
+          emit("STORE", iter->address);
     } TO value {
-          emit("SWP", 1); // r1 = end 
+          emit("SWP", 1); 
           Symbol* iter = get_variable(string($2));
+          emit("LOAD", iter->address);
           
-          if (iter->cache_reg != -1) {
-              emit("RST", 0); emit("ADD", iter->cache_reg); // r0 = start
-          } else {
-              emit("LOAD", iter->address); // r0 = start
-          }
-          emit("SWP", 2); // r2 = start. r0 = trash. r1 = end.
-          
-          // Check if start > end: (start - end > 0)
-          emit("RST", 0); emit("ADD", 2); // r0 = start
-          emit("SUB", 1); // r0 = start - end
+          emit("SWP", 1); 
+          emit("SUB", 1); 
+          emit("INC", 0); 
           
           long long count_addr = memory_offset++;
-          emit("JPOS", code.size()+6); // Jump to setting 0 count (relative +6 approx)
-          // Actually we don't know absolute address yet.
-          // Create jump
-          long long jump_skip = code.size();
-          emit("JPOS", 0);
-          
-          // Count = end - start + 1
-          emit("RST", 0); emit("ADD", 1); // r0 = end
-          emit("SUB", 2); // r0 = end - start
-          emit("INC", 0); // r0 = end - start + 1
           emit("STORE", count_addr);
-          
-          long long jump_continue = code.size();
-          emit("JUMP", 0);
-          
-          if (!analyze_mode) code[jump_skip].arg = code.size();
-          emit("RST", 0); // count = 0
-          emit("STORE", count_addr);
-          
-          if (!analyze_mode) code[jump_continue].arg = code.size();
           
           long long start_loop = code.size();
           emit("LOAD", count_addr);
@@ -336,9 +226,7 @@ command : identifier {
           loop_stack.push_back(start_loop);
           loop_stack.push_back(jump_out);
           loop_stack.push_back(count_addr);
-          loop_depth++;
     } DO commands ENDFOR {
-          loop_depth--;
           long long count_addr = loop_stack.back(); loop_stack.pop_back();
           long long jump_out = loop_stack.back(); loop_stack.pop_back();
           long long start_loop = loop_stack.back(); loop_stack.pop_back();
@@ -346,25 +234,21 @@ command : identifier {
           emit("LOAD", count_addr);
           emit("DEC", 0);
           emit("STORE", count_addr);
-          // FOR TO END
           
           Symbol* iter = get_variable(string($2));
-          if (iter->cache_reg != -1) {
-              emit("INC", iter->cache_reg);
-          } else {
-              emit("LOAD", iter->address);
-              emit("INC", 0);
-              emit("STORE", iter->address);
-          }
+          emit("LOAD", iter->address);
+          emit("INC", 0);
+          emit("STORE", iter->address);
           
           emit("JUMP", start_loop);
-          if (!analyze_mode) code[jump_out].arg = code.size();
+          code[jump_out].arg = code.size();
           
           iter->is_iterator = false;
     }
     | FOR pidentifier FROM value {
           Symbol* iter = get_variable(string($2));
           if (!iter) {
+              // Implicit declaration of iterator
               add_symbol(string($2), false, false, "", 0, 0);
               iter = get_variable(string($2));
           }
@@ -373,48 +257,17 @@ command : identifier {
           iter->is_iterator = true;
           iter->is_initialized = true;
 
-          string scoped_name = (current_procedure == "") ? string($2) : current_procedure + "_" + string($2);
-          if (analyze_mode) {
-               var_usage_counts[scoped_name] += (pow(10, loop_depth) * 10);
-          } else {
-               if (var_register_assignments.count(scoped_name)) 
-                   iter->cache_reg = var_register_assignments[scoped_name];
-          }
-
-          if (iter->cache_reg != -1) emit("SWP", iter->cache_reg);
-          else emit("STORE", iter->address);
+          emit("STORE", iter->address); 
     } DOWNTO value {
-          emit("SWP", 1); // r1 = end
+          emit("SWP", 1); 
           Symbol* iter = get_variable(string($2));
+          emit("LOAD", iter->address);
           
-          if (iter->cache_reg != -1) {
-              emit("RST", 0); emit("ADD", iter->cache_reg); // r0 = start
-          } else {
-              emit("LOAD", iter->address);
-          }
-           emit("SWP", 2); // r2 = start. r1 = end.
-           
-           // Check if end > start: (end - start > 0)
-           emit("RST", 0); emit("ADD", 1); // r0 = end
-           emit("SUB", 2); // r0 = end - start
-           
-           long long count_addr = memory_offset++;
-           long long jump_skip = code.size();
-           emit("JPOS", 0);
-           
-           // Count = start - end + 1
-           emit("RST", 0); emit("ADD", 2); // r0 = start
-           emit("SUB", 1); // r0 = start - end
-           emit("INC", 0); // r0 = count
-           emit("STORE", count_addr);
-           
-           long long jump_continue = code.size();
-           emit("JUMP", 0);
-           
-           if (!analyze_mode) code[jump_skip].arg = code.size();
-           emit("RST", 0); emit("STORE", count_addr); // count = 0
-           
-           if (!analyze_mode) code[jump_continue].arg = code.size();
+          emit("SUB", 1); 
+          emit("INC", 0); 
+          
+          long long count_addr = memory_offset++;
+          emit("STORE", count_addr);
           
           long long start_loop = code.size();
           emit("LOAD", count_addr);
@@ -424,9 +277,7 @@ command : identifier {
           loop_stack.push_back(start_loop);
           loop_stack.push_back(jump_out);
           loop_stack.push_back(count_addr);
-          loop_depth++;
     } DO commands ENDFOR {
-          loop_depth--;
           long long count_addr = loop_stack.back(); loop_stack.pop_back();
           long long jump_out = loop_stack.back(); loop_stack.pop_back();
           long long start_loop = loop_stack.back(); loop_stack.pop_back();
@@ -434,19 +285,14 @@ command : identifier {
           emit("LOAD", count_addr);
           emit("DEC", 0);
           emit("STORE", count_addr);
-          // FOR DOWNTO END
           
           Symbol* iter = get_variable(string($2));
-          if (iter->cache_reg != -1) {
-              emit("DEC", iter->cache_reg);
-          } else {
-              emit("LOAD", iter->address);
-              emit("DEC", 0);
-              emit("STORE", iter->address);
-          }
+          emit("LOAD", iter->address);
+          emit("DEC", 0);
+          emit("STORE", iter->address);
           
           emit("JUMP", start_loop);
-          if (!analyze_mode) code[jump_out].arg = code.size();
+          code[jump_out].arg = code.size();
           
           iter->is_iterator = false;
     }
@@ -457,14 +303,8 @@ command : identifier {
         $2->sym->is_initialized = true;
 
         emit("READ");
-        
-        if ($2->sym->cache_reg != -1) {
-             emit("SWP", $2->sym->cache_reg);
-        } else if ($2->reg != -1) {
-             emit("RSTORE", $2->reg);
-        } else {
-             emit("STORE", $2->address);
-        }
+        if ($2->reg != -1) emit("RSTORE", $2->reg);
+        else emit("STORE", $2->address);
         delete $2;
     }
     | WRITE value SEMICOLON {
@@ -475,28 +315,22 @@ command : identifier {
 proc_call : pidentifier LPAREN { 
         current_call_proc = string($1);
         current_arg_idx = 0;
-        spill_registers(7);
     } args RPAREN {
         emit("CALL", procedures_map[$1].address);
-        restore_registers(7);
     }
     ;
 
 declarations : declarations COMMA pidentifier {
         add_symbol(string($3), false, false, "", 0, 0);
-        check_reg_assignment($3);
     }
     | declarations COMMA pidentifier LBRACKET num COLON num RBRACKET {
         add_symbol(string($3), true, false, "", $5, $7);
-        check_reg_assignment($3);
     }
     | pidentifier {
         add_symbol(string($1), false, false, "", 0, 0);
-        check_reg_assignment($1);
     }
     | pidentifier LBRACKET num COLON num RBRACKET {
         add_symbol(string($1), true, false, "", $3, $5);
-        check_reg_assignment($1);
     }
     ;
 
@@ -526,14 +360,6 @@ argument : pidentifier {
         Symbol* s = get_variable(string($1));
         if (!s) yyerror(("Undefined variable " + string($1)).c_str());
         
-        // Usage Analysis
-        string scoped_name = (current_procedure == "") ? string($1) : current_procedure + "_" + string($1);
-        if (analyze_mode) {
-             long long weight = 1;
-             for(int k=0; k<loop_depth; k++) weight *= 10;
-             var_usage_counts[scoped_name] += weight; // Params getting passed have cost
-        }
-        
         ProcedureInfo& info = procedures_map[current_call_proc];
         if (current_arg_idx >= (int)info.param_addresses.size()) yyerror("Too many arguments for procedure call");
         
@@ -549,11 +375,6 @@ argument : pidentifier {
             emit("LOAD", s->address); 
             emit("STORE", param_addr); 
         } else {
-            if (s->cache_reg != -1) {
-                 emit("SWP", s->cache_reg); 
-                 emit("STORE", s->address);
-                 emit("SWP", s->cache_reg);
-            }
             if (s->is_array) {
                 gen_const(0, s->address); 
                 emit("STORE", param_addr);
@@ -589,8 +410,8 @@ argument : pidentifier {
 
 expression : value
     | value { emit("SWP", 1); } PLUS value { emit("ADD", 1); }
-          | value { emit("SWP", 1); } MINUS value { emit("SWP", 1); emit("SUB", 1); }
-          | value { emit("SWP", 1); } MULT value { 
+    | value { emit("SWP", 1); } MINUS value { emit("SWP", 1); emit("SUB", 1); }
+    | value { emit("SWP", 1); } MULT value { 
         bool optimized = false;
         // Case 1: Right operand is constant power of 2 (Var * Const)
         if ($4.is_const && $4.val > 0) {
@@ -628,9 +449,20 @@ expression : value
         }
         
         if (!optimized) {
-            spill_registers(5);
+            // Check for spills
+            // MUL clobbers e(4), f(5)
+            if (reg_descriptors[4]) { emit("LOAD", reg_descriptors[4]->address); emit("RXCHG", 4); } // Wait RLOAD? No.
+            // Wait, reg_descriptors[4] means "Variable X is in Reg 4".
+            // Since we CLOBBER Reg 4, we must SAVE it.
+            // emit("RST", 0); emit("ADD", 4); emit("STORE", reg_descriptors[4]->address);
+            // But wait, the address is in Memory. Ideally we want to spill to stack or temp.
+            // Simpler: Just spill to its home address?
+            // Yes if we assume reg contains current value.
+            // emit("SWP", 4); emit("STORE", reg_descriptors[4]->address); emit("SWP", 4); // Save
+            
+            // Actually, we don't have usage yet. This is placeholder logic.
+            
             emit("SWP", 2); emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 1); 
-            restore_registers(5);
         }
     }
     | value { emit("SWP", 1); } DIV value { 
@@ -655,9 +487,8 @@ expression : value
         }
         
         if (!optimized) {
-            spill_registers(6);
+             // DIV clobbers e(4), f(5), g(6)
             emit("SWP", 2); emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 1); 
-            restore_registers(6);
         }
     }
     | value { emit("SWP", 1); } MOD value { 
@@ -703,9 +534,7 @@ expression : value
         }
     
         if (!optimized) {
-            spill_registers(6);
             emit("SWP", 2); emit("CALL", 0); calls_mod.push_back(code.size()-1); emit("SWP", 1); 
-            restore_registers(6);
         }
     } 
     ;
@@ -756,16 +585,8 @@ value : num {
     }
     | identifier {
         if (!$1->sym->is_initialized) yyerror("Usage of uninitialized variable");
-        
-        if ($1->sym->cache_reg != -1) {
-             // Cached in Register!
-             // Load from Reg X to Reg A
-             emit("RST", 0); 
-             emit("ADD", $1->sym->cache_reg);
-        } else {
-            if ($1->reg != -1) emit("RLOAD", $1->reg);
-            else emit("LOAD", $1->address);
-        }
+        if ($1->reg != -1) emit("RLOAD", $1->reg);
+        else emit("LOAD", $1->address);
         delete $1;
         $$.is_const = false;
     }
@@ -774,20 +595,6 @@ value : num {
 identifier : pidentifier {
          Symbol* s = get_variable(string($1));
          if (!s) yyerror(("Undefined identifier " + string($1)).c_str());
-         
-         string scoped_name = (current_procedure == "") ? string($1) : current_procedure + "_" + string($1);
-         if (analyze_mode) {
-             long long weight = 1;
-             for(int k=0; k<loop_depth; k++) weight *= 10;
-             var_usage_counts[scoped_name] += weight;
-         } else {
-             if (var_register_assignments.count(scoped_name)) {
-                 s->cache_reg = var_register_assignments[scoped_name];
-                 // Update reg_descriptors
-                 reg_descriptors[s->cache_reg] = s;
-             }
-         }
-
          $$ = new Location();
          $$->address = s->address;
          $$->sym = s;
@@ -829,11 +636,7 @@ identifier : pidentifier {
              emit("LOAD", idx->address);
              emit("RLOAD", 0); 
          } else {
-             if (idx->cache_reg != -1) {
-                 emit("RST", 0); emit("ADD", idx->cache_reg);
-             } else {
-                 emit("LOAD", idx->address);
-             }
+             emit("LOAD", idx->address);
          }
          
          if (arr->start > 0) { gen_const(2, arr->start); emit("SUB", 2); }
@@ -863,7 +666,6 @@ void yyerror(const char *s) {
 }
 
 extern FILE *yyin;
-void yyrestart(FILE *input_file);
 
 int main(int argc, char* argv[]) {
     if (argc > 1) {
@@ -874,53 +676,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // PASS 1: Analysis
-    analyze_mode = true;
-    if (yyparse() != 0) return 1;
-    
-    // Assign Registers
-    vector<pair<long long, string>> usage_list;
-    for (auto const& [name, count] : var_usage_counts) {
-        usage_list.push_back({count, name});
-    }
-    sort(usage_list.rbegin(), usage_list.rend());
-    
-    // Use r4(e), r5(f), r6(g) primarily. Maybe r1(b), r2(c), r7(h)?
-    // User requested r1-r7.
-    // r3 is RA - Reserved.
-    // r1, r2 are used by Math Kernel Inputs. If we spill around calls, we can use them!
-    // But parser uses r1, r2 as temps for Expressions.
-    // Safest set without rewriting Expression Logic: r4, r5, r6, r7. (r7 used for Arr offset).
-    // Let's stick to r4, r5, r6 for now to avoid Reg1/Reg2 clobbering in `expression` rule.
-    // If I had time to rewrite `expression` to use any free register, I would.
-    // For now, let's try 4, 5, 6.
-    
-    int available_regs[] = {4, 5, 6}; 
-    int reg_limit = 3;
-    int reg_idx = 0;
-    
-    for (auto p : usage_list) {
-         if (reg_idx >= reg_limit) break;
-         string name = p.second;
-         // Note: Symbol table is cleared, so we don't know if is_array.
-         // We assume scalar. Arrays usage counts should be on the array name?
-         // Ideally Pass 1 checks is_array.
-         // Let's filter out known arrays if possible. 
-         // Since symtable is gone, we can't check `is_array`.
-         // Improvise: Register assignment is tentative. In Pass 2, `add_symbol` will check.
-         var_register_assignments[name] = available_regs[reg_idx];
-         reg_idx++;
-    }
-
-    // PASS 2: Codegen
-    fseek(yyin, 0, SEEK_SET);
-    yyrestart(yyin);
-    reset_parser_state();
-    analyze_mode = false;
-    yylineno = 1;
-
     if (yyparse() == 0) {
-        // Optimize
+        // lets NOT OPTIMIZE CODE NOW
         optimize_code();
         
         FILE* out = stdout;

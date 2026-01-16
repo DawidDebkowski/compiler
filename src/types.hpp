@@ -20,9 +20,8 @@ struct Symbol {
     bool is_iterator = false;
     bool is_initialized = false;
     
-    // Opt
-    long long usage_count = 0;
-    int cache_reg = -1;
+    // Register Allocation
+    int reg_in_use = -1; // -1 if in memory, 0-7 if in register
 };
 
 struct Operand {

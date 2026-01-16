@@ -1,0 +1,52 @@
+==========================================
+Test Run Report - 2026-01-16_14-07-25
+==========================================
+
+
+### Category: basic ###
+==========================================
+  read...                        PASS (Cost: 250, Instructions: 4)
+  test10_proc_arr_range...       PASS (Cost: 1 970, Instructions: 113)
+  test1_io...                    PASS (Cost: 250, Instructions: 4)
+  test2_vars...                  PASS (Cost: 413, Instructions: 20)
+  test3_mul...                   PASS (Cost: 597, Instructions: 50)
+  test4_div...                   PASS (Cost: 719, Instructions: 74)
+  test5_mod...                   PASS (Cost: 669, Instructions: 82)
+  test6_arr...                   PASS (Cost: 411, Instructions: 18)
+  test7_arr_range...             PASS (Cost: 422, Instructions: 29)
+  test8_proc...                  PASS (Cost: 985, Instructions: 63)
+  test9_proc_arr...              PASS (Cost: 1 968, Instructions: 111)
+  test_mul_simple...             PASS (Cost: 514, Instructions: 45)
+  Category results: 12 passed, 0 failed
+
+### Category: custom ###
+==========================================
+  test...                        SKIP (no answer file)
+  Category results: 0 passed, 0 failed
+
+### Category: example ###
+==========================================
+  example1...                    PASS (Cost: 10 207, Instructions: 330)
+  example2...                    PASS (Cost: 34 617, Instructions: 121)
+  example3...                    PASS (Cost: 2 940, Instructions: 101)
+  example4...                    PASS (Cost: 63 156, Instructions: 298)
+  example5...                    PASS (Cost: 322 282, Instructions: 250)
+  example6...                    PASS (Cost: 39 648, Instructions: 247)
+  example7...                    PASS (Cost: 799 008, Instructions: 156)
+  example8...                    PASS (Cost: 50 685, Instructions: 433)
+  example9...                    PASS (Cost: 28 074, Instructions: 289)
+  exampleA...                    PASS (Cost: 60 734, Instructions: 269)
+  Category results: 10 passed, 0 failed
+
+### Category: labor4 ###
+==========================================
+  crash_repro...                 SKIP (no answer file)
+  program0...                    PASS (Cost: 3 116, Instructions: 44)
+  program1...                    PASS (Cost: 12 774, Instructions: 143)
+  program2...                    PASS (Cost: 244 828, Instructions: 190)
+  program3...                    PASS (Cost: 20 451, Instructions: 259)
+  Category results: 4 passed, 0 failed
+
+==========================================
+TOTAL RESULTS: 26 passed, 0 failed
+==========================================
