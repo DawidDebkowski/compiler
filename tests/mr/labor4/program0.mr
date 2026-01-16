@@ -1,9 +1,9 @@
 READ
 STORE 5
 LOAD 5
-SHR a
+SHR a # optimizing left div 2
 STORE 6
-SHL a
+SHL a # optimizing left mult 2
 STORE 6
 LOAD 5
 SWP b
@@ -18,18 +18,7 @@ JUMP 19
 RST a
 WRITE
 LOAD 5
-SHR a
+SHR a # optimizing left div 2
 STORE 5
-SWP b
-RST a
-SWP c
-RST a
-ADD b
-SUB c
-SWP d
-RST a
-ADD c
-SUB b
-ADD d
 JPOS 2
 HALT

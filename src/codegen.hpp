@@ -28,6 +28,8 @@ extern vector<long long> calls_mod;
 struct Symbol; // Forward declaration
 extern Symbol* reg_descriptors[8];
 
+void emit(string opcode, string comment);
+void emit(string opcode, long long arg, string comment);
 void emit(string opcode);
 void emit(string opcode, long long arg);
 void gen_const(int reg, long long value);

@@ -76,7 +76,7 @@ LOAD 19
 SWP b
 RSTORE b
 LOAD 10
-SHR a
+SHR a # optimizing left div 2
 STORE 10
 LOAD 9
 SWP b

@@ -36,6 +36,7 @@ struct Instruction {
     string opcode;
     long long arg;
     bool has_arg;
+    string comment;
 };
 
 

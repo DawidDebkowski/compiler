@@ -1,0 +1,19 @@
+Program
+  Procedures:
+    Procedure set
+      Assignment
+        Identifier(arr[idx])
+        Identifier(val)
+  Main:
+    ProcCall(set)
+      Identifier(tab)
+      Number(10)
+      Number(333)
+    ProcCall(set)
+      Identifier(tab)
+      Number(15)
+      Number(444)
+    Write
+      Identifier(tab[10])
+    Write
+      Identifier(tab[15])

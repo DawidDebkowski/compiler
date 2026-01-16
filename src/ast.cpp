@@ -121,8 +121,8 @@ void BinaryOpNode::codegen_to_reg(int reg) {
                  left->codegen_to_reg(0);
                  int shifts = 0;
                  while (v > 1) { v >>= 1; shifts++; }
-                 for(int k=0; k<shifts; k++) emit("SHL", 0);
-                 if (reg != 0) emit("SWP", reg);
+                 for(int k=0; k<shifts; k++) emit("SHL", 0, "optimizing right mult 2");
+                 if (reg != 0) emit("SWP", reg, "optimizing mult 2 with wrong register");
                  return;
              }
         }
@@ -132,8 +132,8 @@ void BinaryOpNode::codegen_to_reg(int reg) {
                  right->codegen_to_reg(0);
                  int shifts = 0;
                  while (v > 1) { v >>= 1; shifts++; }
-                 for(int k=0; k<shifts; k++) emit("SHL", 0);
-                 if (reg != 0) emit("SWP", reg);
+                 for(int k=0; k<shifts; k++) emit("SHL", 0, "optimizing left mult 2");
+                 if (reg != 0) emit("SWP", reg, "optimizing mult 2 with wrong register");
                  return;
              }
         }
@@ -144,8 +144,8 @@ void BinaryOpNode::codegen_to_reg(int reg) {
              left->codegen_to_reg(0);
              int shifts = 0;
              while (v > 1) { v >>= 1; shifts++; }
-             for(int k=0; k<shifts; k++) emit("SHR", 0);
-             if (reg != 0) emit("SWP", reg);
+             for(int k=0; k<shifts; k++) emit("SHR", 0, "optimizing left div 2");
+             if (reg != 0) emit("SWP", reg, "with wrong register DIV");
              return;
          }
     }
@@ -247,7 +247,7 @@ void ReadNode::codegen() {
     Symbol* s = get_variable(target->name);
     if (!s) { yyerror("Undefined variable"); exit(1); }
     
-     if (target->is_array || s->is_param) {
+    if (target->is_array || s->is_param) {
         // Compute Address
         target->codegen_address(0);
         
@@ -291,59 +291,127 @@ void ConditionNode::validate() {
 }
 
 void ConditionNode::codegen_jump_false(long long target_instruction_index) {
-     // Generate EQ/NEQ/etc logic
-     // Left in r1, Right in r0
-     left->codegen_to_reg(1); // r1
-     right->codegen_to_reg(0); // r0
-     
-     // Compare
-     // r1(L), r0(R)
-     
      switch(op) {
          case ConditionOp::EQ:
-             // if L != R jump
-             // Logic: Check Difference
-             emit("SWP", 2); 
-             emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3);
-             emit("RST", 0); emit("ADD", 2); emit("SUB", 1); emit("ADD", 3);
-             emit("JPOS", 0); // Jump if Diff > 0
-             // code.size()-1 needs to be backpatched by caller
+             // Jump if L != R
+             // Optimization: VAR == 0 -> Jump if VAR != 0 (VAR > 0)
+             if(right->is_constant() && right->evaluate() == 0) {
+                 left->codegen_to_reg(0);
+                 emit("JPOS", 0);
+             } else if(left->is_constant() && left->evaluate() == 0) {
+                 right->codegen_to_reg(0);
+                 emit("JPOS", 0);
+             } else {
+                 // Standard Abs Diff: |L-R| > 0 implies NEQ (jump)
+                 left->codegen_to_reg(1);  // L -> r1
+                 right->codegen_to_reg(0); // R -> r0
+                 
+                 emit("SWP", 2);  // r0(R) -> r2
+                 
+                 // Calc L - R
+                 emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3); // r3 = max(L-R, 0)
+                 
+                 // Calc R - L
+                 emit("RST", 0); emit("ADD", 2); emit("SUB", 1); emit("ADD", 3); // r0 = max(R-L, 0) + r3
+                 
+                 emit("JPOS", 0); // If |L-R| > 0, they are unequal -> Jump
+             }
              break;
+
          case ConditionOp::NEQ:
-             emit("SWP", 2); 
-             emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3);
-             emit("RST", 0); emit("ADD", 2); emit("SUB", 1); emit("ADD", 3);
-             emit("JZERO", 0); 
+             // Jump if L == R
+             // Optimization: VAR != 0 -> Jump if VAR == 0
+             if(right->is_constant() && right->evaluate() == 0) {
+                 left->codegen_to_reg(0);
+                 emit("JZERO", 0);
+             } else if(left->is_constant() && left->evaluate() == 0) {
+                 right->codegen_to_reg(0);
+                 emit("JZERO", 0);
+             } else {
+                 // Standard Abs Diff: |L-R| == 0 implies EQ (jump)
+                 left->codegen_to_reg(1);
+                 right->codegen_to_reg(0);
+                 
+                 emit("SWP", 2); 
+                 emit("RST", 0); emit("ADD", 1); emit("SUB", 2); emit("SWP", 3);
+                 emit("RST", 0); emit("ADD", 2); emit("SUB", 1); emit("ADD", 3);
+                 
+                 emit("JZERO", 0);
+             }
              break;
+
          case ConditionOp::GT:
-             emit("SWP", 1); emit("SUB", 1); // L - R
-             emit("JZERO", 0); // If L-R <= 0 (False) Jump
-             // Wait: L > R. True if L-R > 0.
-             // False if L-R <= 0.
-             // SUB produces 0 if L <= R. 
-             // OK: JZERO.
+             // L > R. Jump if False (L <= R).
+             // L <= R <=> L - R == 0 (Saturating subtraction)
+             // Need: L - R
+             // Code: L in r0, R in r1 (or any reg to subtract from r0)
+             
+             left->codegen_to_reg(0); // L -> r0
+             // Save L, calc R. Safe way: Swap L to r1.
+             // Note: If Right is complex, it might clobber r1. 
+             // Ideally we'd spill L. For now, assuming standard register safety or simple Right.
+             emit("SWP", 1);          // L -> r1
+             right->codegen_to_reg(0);// R -> r0
+             
+             // We have R in r0, L in r1. 
+             // We want L - R. 
+             // Instruction SUB is `r0 = r0 - rX`.
+             // We can't do `r1 - r0`.
+             // So Swap.
+             emit("SWP", 1); // L in r0, R in r1.
+             emit("SUB", 1); // L - R
+             
+             emit("JZERO", 0); // If 0, then L <= R (False) -> Jump
              break;
-             // ... And so on for others
+
           case ConditionOp::LT:
-              // L < R. 
-              // check R - L > 0 ?
+              // L < R. Jump if False (L >= R).
+              // L >= R <=> R - L == 0 (Saturating subtraction: 3 - 5 = 0)
+              // Need: R - L
+              
+              right->codegen_to_reg(0); // R -> r0
+              emit("SWP", 1);           // R -> r1
+              left->codegen_to_reg(0);  // L -> r0
+              
+              // We have L in r0, R in r1.
+              // We want R - L.
+              // Needs R in r0.
+              emit("SWP", 1); // R in r0, L in r1
               emit("SUB", 1); // R - L
-              emit("JZERO", 0); // If 0, then R <= L (False)
+              
+              emit("JZERO", 0); // If 0, then R <= L (i.e. L >= R, False) -> Jump
               break;
+
           case ConditionOp::GEQ:
-               // L >= R.
-               // Check R - L <= 0?
-               // SUB: max(R-L, 0).
-               // If R-L > 0 (R>L), result > 0. -> False.
-               emit("SUB", 1); 
-               emit("JPOS", 0);
+               // L >= R. Jump if False (L < R).
+               // L < R <=> R - L > 0
+               // Need: R - L
+               
+               right->codegen_to_reg(0); // R -> r0
+               emit("SWP", 1);           // R -> r1
+               left->codegen_to_reg(0);  // L -> r0
+               
+               // L in r0, R in r1. Want R - L.
+               emit("SWP", 1); // R in r0
+               emit("SUB", 1); // R - L
+               
+               emit("JPOS", 0); // If R - L > 0, then R > L (L < R, False) -> Jump
                break;
+
           case ConditionOp::LEQ:
-               // L <= R
-               // Check L - R <= 0
-               emit("SWP", 1);
+               // L <= R. Jump if False (L > R).
+               // L > R <=> L - R > 0.
+               // Need: L - R
+               
+               left->codegen_to_reg(0); // L -> r0
+               emit("SWP", 1);          // L -> r1
+               right->codegen_to_reg(0);// R -> r0
+               
+               // R in r0, L in r1. Want L - R.
+               emit("SWP", 1); // L in r0
                emit("SUB", 1); // L - R
-               emit("JPOS", 0);
+               
+               emit("JPOS", 0); // If L - R > 0, then L > R (False) -> Jump
                break;
      }
 }
@@ -609,4 +677,128 @@ void RootNode::codegen() {
 void RootNode::validate() {
     for(auto p : procedures) p->validate();
     for(auto s : main_block) s->validate();
+}
+
+// --- AST Printing ---
+
+std::string indent_str(int n) {
+    return std::string(n * 2, ' ');
+}
+
+void NumberNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "Number(" << value << ")" << std::endl;
+}
+
+void IdentifierNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "Identifier(" << name;
+    if(is_array) {
+        if(is_index_const) out << "[" << index_val << "]";
+        else if (index_expr) {
+            out << "[Expr]"; 
+        } else {
+             out << "[" << index_name << "]";
+        }
+    }
+    out << ")" << std::endl;
+}
+
+void BinaryOpNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "BinaryOp(";
+    switch(op) {
+        case BinaryOp::PLUS: out << "+"; break;
+        case BinaryOp::MINUS: out << "-"; break;
+        case BinaryOp::MULT: out << "*"; break;
+        case BinaryOp::DIV: out << "/"; break;
+        case BinaryOp::MOD: out << "%"; break;
+    }
+    out << ")" << std::endl;
+    left->print(out, indent + 1);
+    right->print(out, indent + 1);
+}
+
+void ConditionNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "Condition(";
+    switch(op) {
+        case ConditionOp::EQ: out << "="; break;
+        case ConditionOp::NEQ: out << "!="; break;
+        case ConditionOp::GT: out << ">"; break;
+        case ConditionOp::LT: out << "<"; break;
+        case ConditionOp::GEQ: out << ">="; break;
+        case ConditionOp::LEQ: out << "<="; break;
+    }
+    out << ")" << std::endl;
+    left->print(out, indent + 1);
+    right->print(out, indent + 1);
+}
+
+void AssignmentNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "Assignment" << std::endl;
+    target->print(out, indent + 1);
+    expr->print(out, indent + 1);
+}
+
+void IfNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "If" << std::endl;
+    condition->print(out, indent + 1);
+    out << indent_str(indent) << "Then" << std::endl;
+    for(auto s : then_block) s->print(out, indent + 1);
+    
+    if(!else_block.empty()){
+        out << indent_str(indent) << "Else" << std::endl;
+        for(auto s : else_block) s->print(out, indent + 1);
+    }
+}
+
+void WhileNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "While" << std::endl;
+    condition->print(out, indent + 1);
+    out << indent_str(indent) << "Do" << std::endl;
+    for(auto s : body) s->print(out, indent + 1);
+}
+
+void RepeatNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "Repeat" << std::endl;
+    for(auto s : body) s->print(out, indent + 1);
+    out << indent_str(indent) << "Until" << std::endl;
+    condition->print(out, indent + 1);
+}
+
+void ForNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "For(" << iterator << " " << (downto ? "DOWNTO" : "TO") << ")" << std::endl;
+    out << indent_str(indent+1) << "From:" << std::endl;
+    start_val->print(out, indent + 2);
+    out << indent_str(indent+1) << "To:" << std::endl;
+    end_val->print(out, indent + 2);
+    out << indent_str(indent) << "Do" << std::endl;
+    for(auto s : body) s->print(out, indent + 1);
+}
+
+void ProcCallNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "ProcCall(" << proc_name << ")" << std::endl;
+    for(auto a : args) a->print(out, indent + 1);
+}
+
+void ReadNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "Read" << std::endl;
+    target->print(out, indent + 1);
+}
+
+void WriteNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "Write" << std::endl;
+    expr->print(out, indent + 1);
+}
+
+void ProcedureNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "Procedure " << name << std::endl;
+    for(auto s : body) s->print(out, indent + 1);
+}
+
+void RootNode::print(std::ostream& out, int indent) const {
+    out << indent_str(indent) << "Program" << std::endl;
+    if(!procedures.empty()) {
+        out << indent_str(indent + 1) << "Procedures:" << std::endl;
+        for(auto p : procedures) p->print(out, indent + 2);
+    }
+    out << indent_str(indent + 1) << "Main:" << std::endl;
+    for(auto s : main_block) s->print(out, indent + 2);
 }

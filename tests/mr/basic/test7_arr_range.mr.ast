@@ -1,0 +1,12 @@
+Program
+  Main:
+    Assignment
+      Identifier(tab[10])
+      Number(100)
+    Assignment
+      Identifier(tab[15])
+      Number(150)
+    Write
+      Identifier(tab[10])
+    Write
+      Identifier(tab[15])

@@ -1,0 +1,12 @@
+Program
+  Main:
+    Assignment
+      Identifier(tab[0])
+      Number(5)
+    Assignment
+      Identifier(tab[5])
+      Number(10)
+    Write
+      Identifier(tab[0])
+    Write
+      Identifier(tab[5])

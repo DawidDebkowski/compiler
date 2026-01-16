@@ -15,12 +15,21 @@ vector<long long> calls_mod;
 
 Symbol* reg_descriptors[8] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
 
+// I
 void emit(string opcode) {
-    code.push_back({opcode, 0, false});
+    code.push_back({opcode, 0, false, ""});
 }
-
+// hate
 void emit(string opcode, long long arg) {
-    code.push_back({opcode, arg, true});
+    code.push_back({opcode, arg, true, ""});
+}
+// C
+void emit(string opcode, string comment) {
+    code.push_back({opcode, 0, false, comment});
+}
+// ++
+void emit(string opcode, long long arg, string comment) {
+    code.push_back({opcode, arg, true, comment});
 }
 
 void gen_const(int reg, long long value) {

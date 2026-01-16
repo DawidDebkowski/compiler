@@ -1,0 +1,53 @@
+Program
+  Procedures:
+    Procedure factorial
+      Assignment
+        Identifier(s[0])
+        Number(1)
+      Assignment
+        Identifier(p)
+        Identifier(s[0])
+      For(i TO)
+        From:
+          Number(1)
+        To:
+          Identifier(n)
+      Do
+        Assignment
+          Identifier(s[i])
+          BinaryOp(*)
+            Identifier(p)
+            Identifier(i)
+        Assignment
+          Identifier(p)
+          Identifier(s[i])
+    Procedure bc
+      ProcCall(factorial)
+        Identifier(s)
+        Identifier(n)
+      Assignment
+        Identifier(p)
+        BinaryOp(-)
+          Identifier(n)
+          Identifier(k)
+      Assignment
+        Identifier(m)
+        BinaryOp(/)
+          Identifier(s[n])
+          Identifier(s[k])
+      Assignment
+        Identifier(m)
+        BinaryOp(/)
+          Identifier(m)
+          Identifier(s[p])
+  Main:
+    Read
+      Identifier(n)
+    Read
+      Identifier(k)
+    ProcCall(bc)
+      Identifier(n)
+      Identifier(k)
+      Identifier(w)
+    Write
+      Identifier(w)

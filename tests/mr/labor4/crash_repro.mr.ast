@@ -1,0 +1,19 @@
+Program
+  Procedures:
+    Procedure licz
+      For(i TO)
+        From:
+          Number(2)
+        To:
+          Identifier(n)
+      Do
+        Assignment
+          Identifier(s[i])
+          Number(1)
+  Main:
+    Assignment
+      Identifier(n)
+      Number(10)
+    ProcCall(licz)
+      Identifier(tab)
+      Identifier(n)

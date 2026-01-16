@@ -61,7 +61,7 @@ INC a
 SHL a
 SWP b
 SUB b
-JPOS 149
+JPOS 150
 RST a
 INC a
 SHL a
@@ -75,8 +75,6 @@ SHL a
 SHL a
 INC a
 STORE 9
-LOAD 9
-SWP b
 RST a
 INC a
 SHL a
@@ -88,8 +86,11 @@ INC a
 SHL a
 SHL a
 SHL a
+SWP b
+LOAD 9
+SWP b
 SUB b
-JPOS 137
+JPOS 138
 RST a
 INC a
 SHL a
@@ -109,7 +110,7 @@ SHL a
 SHL a
 SWP b
 SUB b
-JPOS 124
+JPOS 125
 LOAD 5
 SWP b
 LOAD 10
@@ -121,7 +122,7 @@ RST a
 INC a
 ADD b
 STORE 10
-JUMP 100
+JUMP 101
 LOAD 6
 SWP b
 LOAD 9

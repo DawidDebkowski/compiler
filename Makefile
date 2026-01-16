@@ -152,7 +152,7 @@ run: $(TARGET)
 		exit 1; \
 	fi
 	@echo "Compiling $(FILE)..."
-	@./$(TARGET) $(FILE) output.mr
+	@./$(TARGET) $(FILE) output.mr output.ast
 	@echo "Running output.mr..."
 	@$(VM) output.mr
 

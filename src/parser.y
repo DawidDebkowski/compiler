@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include <fstream>
 
 #include "types.hpp"
 #include "codegen.hpp"
@@ -255,6 +256,18 @@ int main(int argc, char* argv[]) {
 
     if (yyparse() == 0 && parsed_root) {
         parsed_root->validate();
+        
+        if (argc > 2) {
+             string out_name = argv[2];
+             string ast_name = out_name + ".ast";
+             ofstream ast_file(ast_name);
+             if (ast_file.is_open()) {
+                 parsed_root->print(ast_file);
+                 ast_file.close();
+                 // cout << "AST written to " << ast_name << endl;
+             }
+        }
+        
         parsed_root->codegen();
         optimize_code();
         
@@ -284,6 +297,9 @@ int main(int argc, char* argv[]) {
                 } else {
                     fprintf(out, " %lld", instr.arg);
                 }
+            }
+            if(instr.comment != "") {
+                fprintf(out, " # %s", instr.comment.c_str());
             }
             fprintf(out, "\n");
         }
