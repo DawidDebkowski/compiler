@@ -5,16 +5,14 @@ SHR a # optimizing left div 2
 STORE 6
 SHL a # optimizing left mult 2
 STORE 6
+SWP b
 LOAD 5
-SWP b
-LOAD 6
-SWP b
-SUB b
-JZERO 17
+SUB b # >
+JZERO 15
 RST a
 INC a
 WRITE
-JUMP 19
+JUMP 17
 RST a
 WRITE
 LOAD 5

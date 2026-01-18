@@ -1,0 +1,27 @@
+PROGRAM IS
+    sum
+IN
+    sum := 0;
+    FOR i FROM 1 TO 2 DO
+        FOR i FROM 1 TO 2 DO
+            FOR i FROM 1 TO 2 DO
+                FOR i FROM 1 TO 2 DO
+                    FOR i FROM 1 TO 2 DO
+                        FOR i FROM 1 TO 2 DO
+                            FOR i FROM 1 TO 2 DO
+                                FOR i FROM 1 TO 2 DO
+                                    FOR i FROM 1 TO 2 DO
+                                        FOR i FROM 1 TO 2 DO
+                                            sum := sum + i;
+                                        ENDFOR
+                                    ENDFOR
+                                ENDFOR
+                            ENDFOR
+                        ENDFOR
+                    ENDFOR
+                ENDFOR
+            ENDFOR
+        ENDFOR
+    ENDFOR
+    WRITE sum;
+END

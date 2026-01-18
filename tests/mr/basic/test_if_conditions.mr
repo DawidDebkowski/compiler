@@ -1,0 +1,447 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+STORE 5
+RST a
+INC a
+SHL a
+INC a
+SHL a
+STORE 6
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+STORE 7
+RST a
+INC a
+SHL a
+SHL a
+STORE 8
+LOAD 5
+SWP b
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JPOS 44
+RST a
+INC a
+WRITE
+LOAD 6
+SWP b
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JPOS 65
+RST a
+INC a
+SHL a
+WRITE
+LOAD 5
+SWP b
+LOAD 8
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JZERO 83
+RST a
+INC a
+SHL a
+INC a
+WRITE
+LOAD 6
+SWP b
+LOAD 5
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JZERO 101
+RST a
+INC a
+SHL a
+SHL a
+WRITE
+LOAD 5
+SWP b
+LOAD 7
+SUB b
+JZERO 112 # <
+RST a
+INC a
+SHL a
+SHL a
+INC a
+WRITE
+LOAD 8
+SWP b
+LOAD 5
+SUB b
+JZERO 123 # <
+RST a
+INC a
+SHL a
+INC a
+SHL a
+WRITE
+LOAD 5
+SWP b
+LOAD 7
+SUB b # >
+JZERO 135
+RST a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+WRITE
+LOAD 8
+SWP b
+LOAD 6
+SUB b # >
+JZERO 146
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+WRITE
+RST b
+INC b
+SHL b
+SHL b
+INC b
+LOAD 5
+SUB b
+JPOS 161 # <=
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+WRITE
+LOAD 5
+SWP b
+LOAD 8
+SUB b
+JPOS 173 # <=
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+WRITE
+LOAD 5
+SWP b
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SUB b
+JPOS 190 # >=
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+WRITE
+LOAD 7
+SWP b
+LOAD 5
+SUB b
+JPOS 202 # >=
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+WRITE
+LOAD 5
+SWP b
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JPOS 222
+RST a
+WRITE
+JUMP 230
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+WRITE
+LOAD 6
+SWP b
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JPOS 250
+RST a
+WRITE
+JUMP 258
+RST a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+WRITE
+LOAD 5
+SWP b
+LOAD 8
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JPOS 274
+RST a
+WRITE
+JUMP 283
+RST a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+WRITE
+LOAD 6
+SWP b
+LOAD 5
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JPOS 299
+RST a
+WRITE
+JUMP 306
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+WRITE
+LOAD 7
+SWP b
+LOAD 5
+SUB b # >
+JZERO 314
+RST a
+WRITE
+JUMP 322
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+INC a
+WRITE
+LOAD 5
+SWP b
+LOAD 8
+SUB b # >
+JZERO 330
+RST a
+WRITE
+JUMP 338
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+WRITE
+LOAD 7
+SWP b
+LOAD 5
+SUB b
+JZERO 346 # <
+RST a
+WRITE
+JUMP 355
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+WRITE
+LOAD 6
+SWP b
+LOAD 8
+SUB b
+JZERO 363 # <
+RST a
+WRITE
+JUMP 371
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+WRITE
+RST b
+INC b
+SHL b
+SHL b
+INC b
+LOAD 5
+SUB b # >
+JZERO 382
+RST a
+WRITE
+JUMP 391
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+WRITE
+LOAD 5
+SWP b
+LOAD 8
+SUB b # >
+JZERO 399
+RST a
+WRITE
+JUMP 408
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+WRITE
+LOAD 5
+SWP b
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SUB b
+JZERO 420 # <
+RST a
+WRITE
+JUMP 430
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+WRITE
+LOAD 7
+SWP b
+LOAD 5
+SUB b
+JZERO 438 # <
+RST a
+WRITE
+JUMP 446
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+WRITE
+HALT

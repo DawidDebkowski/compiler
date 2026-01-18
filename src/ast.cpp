@@ -346,20 +346,18 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
              // Need: L - R
              // Code: L in r0, R in r1 (or any reg to subtract from r0)
              
-             left->codegen_to_reg(0); // L -> r0
              // Save L, calc R. Safe way: Swap L to r1.
              // Note: If Right is complex, it might clobber r1. 
              // Ideally we'd spill L. For now, assuming standard register safety or simple Right.
-             emit("SWP", 1);          // L -> r1
-             right->codegen_to_reg(0);// R -> r0
+             right->codegen_to_reg(1);// R -> r0
+             left->codegen_to_reg(0); // L -> r0
              
              // We have R in r0, L in r1. 
              // We want L - R. 
              // Instruction SUB is `r0 = r0 - rX`.
              // We can't do `r1 - r0`.
              // So Swap.
-             emit("SWP", 1); // L in r0, R in r1.
-             emit("SUB", 1); // L - R
+             emit("SUB", 1, ">"); // L - R
              
              emit("JZERO", 0); // If 0, then L <= R (False) -> Jump
              break;
@@ -369,17 +367,15 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
               // L >= R <=> R - L == 0 (Saturating subtraction: 3 - 5 = 0)
               // Need: R - L
               
+              left->codegen_to_reg(1);  // L -> r0
               right->codegen_to_reg(0); // R -> r0
-              emit("SWP", 1);           // R -> r1
-              left->codegen_to_reg(0);  // L -> r0
               
               // We have L in r0, R in r1.
               // We want R - L.
               // Needs R in r0.
-              emit("SWP", 1); // R in r0, L in r1
               emit("SUB", 1); // R - L
               
-              emit("JZERO", 0); // If 0, then R <= L (i.e. L >= R, False) -> Jump
+              emit("JZERO", 0, "<"); // If 0, then R <= L (i.e. L >= R, False) -> Jump
               break;
 
           case ConditionOp::GEQ:
@@ -387,15 +383,13 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
                // L < R <=> R - L > 0
                // Need: R - L
                
+               left->codegen_to_reg(1);  // L -> r0
                right->codegen_to_reg(0); // R -> r0
-               emit("SWP", 1);           // R -> r1
-               left->codegen_to_reg(0);  // L -> r0
                
                // L in r0, R in r1. Want R - L.
-               emit("SWP", 1); // R in r0
                emit("SUB", 1); // R - L
                
-               emit("JPOS", 0); // If R - L > 0, then R > L (L < R, False) -> Jump
+               emit("JPOS", 0, ">="); // If R - L > 0, then R > L (L < R, False) -> Jump
                break;
 
           case ConditionOp::LEQ:
@@ -403,15 +397,13 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
                // L > R <=> L - R > 0.
                // Need: L - R
                
+               right->codegen_to_reg(1);// R -> r0
                left->codegen_to_reg(0); // L -> r0
-               emit("SWP", 1);          // L -> r1
-               right->codegen_to_reg(0);// R -> r0
                
                // R in r0, L in r1. Want L - R.
-               emit("SWP", 1); // L in r0
                emit("SUB", 1); // L - R
                
-               emit("JPOS", 0); // If L - R > 0, then L > R (False) -> Jump
+               emit("JPOS", 0, "<="); // If L - R > 0, then L > R (False) -> Jump
                break;
      }
 }
@@ -474,12 +466,6 @@ void WhileNode::validate() {
 void RepeatNode::codegen() {
      long long start = code.size();
      for(auto s : body) s->codegen();
-     
-     // UNTIL cond: Repeat IF False.
-     // So Jump to Start IF False.
-     // condition->codegen_jump_false(start) -> Jumps to start if False.
-     // Wait, UNTIL (Cond). If Cond is True, Stop. If Cond is False, Repeat.
-     // So yes, Jump False.
      
      condition->codegen_jump_false(0);
      long long jump_instr = code.size()-1;
