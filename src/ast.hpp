@@ -189,6 +189,7 @@ class ForNode : public StatementNode {
     ExpressionNode* end_val;
     bool downto;
     std::vector<StatementNode*> body;
+    int for_id = -1;
 public:
     ForNode(std::string iter, ExpressionNode* start, ExpressionNode* end, bool down, std::vector<StatementNode*>& b, int ln)
         : StatementNode(ln), iterator(iter), start_val(start), end_val(end), downto(down), body(b) {}

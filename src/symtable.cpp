@@ -1,6 +1,7 @@
 #include "symtable.hpp"
 #include <iostream>
 #include <stdlib.h>
+#include <vector>
 
 map<string, Symbol> symbol_table;
 map<string, ProcedureInfo> procedures_map;
@@ -11,6 +12,9 @@ long long lhs_hold_addr = 1;
 string current_procedure = ""; 
 string current_call_proc = "";
 int current_arg_idx = 0;
+
+std::vector<int> current_for_stack;
+int for_id_counter = 0;
 
 void add_symbol(string name, bool is_array, bool is_param, string mod, long long start, long long end) {
     if (is_array && start > end) {
@@ -59,12 +63,21 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
 }
 
 Symbol* get_variable(string name) {
-    // Try local first
+    // Try local proc first
     string key = current_procedure + "_" + name;
     if (symbol_table.find(key) != symbol_table.end()) {
         return &symbol_table[key];
     }
     
+    // Try current FOR scope (innermost)
+    if (!current_for_stack.empty()) {
+        string for_key = "for_" + std::to_string(current_for_stack.back()) + "_" + name;
+        if (symbol_table.find(for_key) != symbol_table.end()) {
+            return &symbol_table[for_key];
+        }
+    }
+    
+    // Global
     if (symbol_table.count(name)) return &symbol_table[name];
     
     return nullptr;

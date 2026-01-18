@@ -15,8 +15,8 @@ extern map<string, ProcedureInfo> procedures_map;
 extern long long memory_offset;
 extern long long lhs_hold_addr;
 extern string current_procedure; 
-extern string current_call_proc;
-extern int current_arg_idx;
+extern std::vector<int> current_for_stack;
+extern int for_id_counter;
 
 // Helper to access yyerror from C++ code
 void yyerror(const char *s);

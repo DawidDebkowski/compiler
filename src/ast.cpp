@@ -480,6 +480,8 @@ void RepeatNode::validate() {
 // --- ForNode ---
 // FOR i FROM start TO end DO ...
 void ForNode::codegen() {
+    current_for_stack.push_back(for_id);
+    
     Symbol* iter = get_variable(iterator);
     
     // Init: iter := start
@@ -528,23 +530,31 @@ void ForNode::codegen() {
     
     emit("JUMP", loop_start);
     code[jump_out].arg = code.size();
+    
+    current_for_stack.pop_back();
 }
 
 void ForNode::validate() {
-    Symbol* iter = get_variable(iterator);
-    if (!iter) {
-         add_symbol(iterator, false, false, "", 0, 0);
-         iter = get_variable(iterator);
-    }
-    if (iter->is_iterator) { yyerror("Nested loop same iterator"); exit(1); }
-    iter->is_iterator = true;
-    iter->is_initialized = true;
+    for_id = ++for_id_counter;
+    current_for_stack.push_back(for_id);
+    
+    string iter_key = "for_" + std::to_string(for_id) + "_" + iterator;
+    Symbol s;
+    s.address = memory_offset++;
+    s.is_array = false;
+    s.is_param = false;
+    s.start = 0;
+    s.end = 0;
+    s.mod = "";
+    s.is_iterator = true;
+    s.is_initialized = true;
+    symbol_table[iter_key] = s;
     
     start_val->validate();
     end_val->validate();
     for(auto s : body) s->validate();
     
-    iter->is_iterator = false; // Reset after validation
+    current_for_stack.pop_back();
 }
 
 // --- ProcCall ---

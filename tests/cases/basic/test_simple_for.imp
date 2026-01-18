@@ -1,0 +1,9 @@
+PROGRAM IS
+    i
+IN
+    i := 10;
+    FOR i FROM 2 TO 3 DO
+        WRITE i;
+    ENDFOR
+    WRITE i;
+END

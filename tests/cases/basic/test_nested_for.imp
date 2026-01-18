@@ -12,7 +12,7 @@ IN
                                 FOR i FROM 1 TO 2 DO
                                     FOR i FROM 1 TO 2 DO
                                         FOR i FROM 1 TO 2 DO
-                                            sum := sum + i;
+                                            sum := sum + 1;
                                         ENDFOR
                                     ENDFOR
                                 ENDFOR
