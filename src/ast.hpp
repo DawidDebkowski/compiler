@@ -38,7 +38,7 @@ public:
     virtual bool is_constant() const { return false; }
     virtual long long evaluate() const { return 0; }
     
-    // Helper to load result into a specific register (convention: usually reg[0] aka 'a')
+    // Helper to load result into a specific register
     virtual void codegen_to_reg(int reg) = 0; 
     
     // Default codegen puts result in r[0]
@@ -68,7 +68,6 @@ public:
     std::string index_name; // For arr[var]
     ASTNode* index_expr; // For simpler handling in AST if index is complex? 
                          // Spec says arr[num] or arr[pidentifier]. 
-                         // So index is either string (var) or long long (num).
     
     bool is_array;
     bool is_index_const; // true if arr[num]
@@ -123,10 +122,8 @@ public:
         : ASTNode(ln), left(l), right(r), op(o) {}
         
     // Generates code that Jumps to `target_label` if condition is FALSE
-    // OR Jumps if TRUE?
-    // Usually: code code... if FALSE(cond) jump target.
     void codegen_jump_false(long long target_instruction_index);
-    void codegen() override {} // Standard codegen might not be used directly
+    void codegen() override {}
     void validate() override;
     void print(std::ostream& out, int indent = 0) const override;
     ~ConditionNode() { delete left; delete right; }
@@ -235,7 +232,7 @@ public:
 
 class ProcedureNode : public ASTNode {
     std::string name;
-    // Args declaration info is stored in Symbol Table, not necessarily here, 
+    // Args declaration info is stored in Symbol Table, not here
     // but AST should own the body.
     std::vector<StatementNode*> body; 
 public:

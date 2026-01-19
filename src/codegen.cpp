@@ -32,6 +32,7 @@ void emit(string opcode, long long arg, string comment) {
     code.push_back({opcode, arg, true, comment});
 }
 
+// generates const to reg, uses only reg
 void gen_const(int reg, long long value) {
     if (value < 0) value = 0; 
     
@@ -57,6 +58,8 @@ void gen_const(int reg, long long value) {
     }
 }
 
+// removes STORE x; LOAD x; if LOAD is not target of jumps,
+// then correctly remaps jumps
 void optimize_code() {
     bool changed = true;
     while (changed) {
