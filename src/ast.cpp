@@ -192,16 +192,11 @@ void AssignmentNode::validate() {
 void AssignmentNode::codegen() {
     // Safe way: Evaluate Expr first
     // If Assign: A[i] := B + C.
-    // 1. Calc B+C -> Result in r0.
-    // 2. SWP 1 (Save result).
-    // 3. Calc Address of A[i] -> r0.
-    // 4. SWP 1 (Addr in r1, Result in r0).
-    // 5. STORE/RSTORE. 
-    
-    // Complex Case: A[i] := Expr.
-    // Address of A[i] is computed into a register (say r7).
-    // Expr is computed into r0.
-    // Then RSTORE 7.
+    // Calc B+C -> Result in r0.
+    // SWP 1 (Save result).
+    // Calc Address of A[i] -> r0.
+    // SWP 1 (Addr in r1, Result in r0).
+    // STORE/RSTORE. 
     
     if (target->is_array || (get_variable(target->name)->is_param)) {
         // Compute Address of Target

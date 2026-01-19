@@ -1,0 +1,17 @@
+1. constant folding
+    a. pytanie co z CLN
+
+2. Zmienianie loop i inne cuda z ast
+
+3. Zmienne w rejestrach - trackowanie zycia
+4. Inlinowanie procedur przy 1-2 callach
+
+5. Mnozenie przez stale na shiftach (na razie tylko 2)
+
+
+
+4. TAC ?
+
+5. AST:
+    a. dead code elimination
+    b. łączenie bloków kodu?
