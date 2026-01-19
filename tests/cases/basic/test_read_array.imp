@@ -1,0 +1,10 @@
+PROGRAM IS
+    tab[10:15], a
+IN
+    READ tab[10];
+    a := 11;
+    READ tab[a];
+    WRITE tab[10];
+    WRITE tab[11];
+    WRITE tab[a];
+END

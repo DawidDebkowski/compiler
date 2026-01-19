@@ -6,14 +6,11 @@
 
 extern void yyerror(const char* s);
 
-// --- NumberNode ---
-
 void NumberNode::codegen_to_reg(int reg) {
     gen_const(reg, value);
 }
 
-// --- IdentifierNode ---
-
+// uses 0-2 regs
 void IdentifierNode::codegen_address(int reg) {
     Symbol* s = get_variable(name);
     if (!s) {
@@ -27,11 +24,9 @@ void IdentifierNode::codegen_address(int reg) {
             // Parameter passed by reference (address is at s->address)
             // Load the ADDRESS stored in the parameter slot
             emit("LOAD", s->address); 
-            if (reg != 0) { emit("SWP", reg); emit("RST", 0); emit("ADD", reg); emit("SWP", reg); } // Move specific if needed, but usually we just want it in 0 or specific
-            // Actually gen_const generates to specific reg. LOAD goes to 0. 
+            if (reg != 0) { emit("SWP", reg); emit("RST", 0); emit("ADD", reg);} 
             if (reg != 0) {
-                 emit("SWP", reg); // Move r0 to reg
-                 // Note: SWP swaps r0 and reg. 
+                 emit("SWP", reg);
             }
         } else {
             // Global scalar
@@ -52,23 +47,18 @@ void IdentifierNode::codegen_address(int reg) {
         } else {
              // arr[var]
              // Calculate Index Value first
-             if (!index_expr) {
-                 // Should be IdentifierNode* really or Resolved
-                 Symbol* idx = get_variable(index_name);
-                 if (!idx) { yyerror(("Undefined index " + index_name).c_str()); exit(1); }
-                 
-                 if (idx->is_param) {
-                     emit("LOAD", idx->address);
-                     emit("RLOAD", 0);
-                 } else {
-                     emit("LOAD", idx->address);
-                 }
-             } else {
-                 // General expression index? Spec says pidentifier or num. 
-                 // If we support complex expr in future, codegen it here.
-             }
+
+            // Should be IdentifierNode*
+            Symbol* idx = get_variable(index_name);
+            
+            if (idx->is_param) {
+                emit("LOAD", idx->address); // load address of param
+                emit("RLOAD", 0); // load value
+            } else {
+                emit("LOAD", idx->address);
+            }
              
-             // Index is in r0
+             // Calc offset
              if (s->start > 0) {
                  gen_const(2, s->start);
                  emit("SUB", 2);
@@ -113,7 +103,8 @@ void IdentifierNode::codegen_to_reg(int reg) {
 void BinaryOpNode::codegen_to_reg(int reg) {
     // Standard BinOp: Left in r1, Right in r0
     
-    // Optimization: Check for Constant Power of 2
+    // Check for Constant Power of 2
+    // TODO: special cases for 1-10
     if (op == BinaryOp::MULT) {
         if (right->is_constant()) {
              long long v = right->evaluate();
@@ -149,29 +140,32 @@ void BinaryOpNode::codegen_to_reg(int reg) {
              return;
          }
     }
-    // MOD optimization similar...
-    
-    
-    left->codegen_to_reg(0);
-    emit("SWP", 1); // Left -> r1
-    right->codegen_to_reg(0); // Right -> r0
+    left->codegen_to_reg(1);
+    right->codegen_to_reg(0);
     
     switch(op) {
         case BinaryOp::PLUS:
             emit("ADD", 1); 
             break;
         case BinaryOp::MINUS:
-            emit("SWP", 1);
+            right->codegen_to_reg(1);
+            left->codegen_to_reg(0);
             emit("SUB", 1);
             break;
         case BinaryOp::MULT:
-            emit("SWP", 2); emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 1);
+            left->codegen_to_reg(1);
+            right->codegen_to_reg(2);    
+            emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 1);
             break;
         case BinaryOp::DIV:
-            emit("SWP", 2); emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 1);
+            left->codegen_to_reg(1);
+            right->codegen_to_reg(2);    
+            emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 1);
             break;
         case BinaryOp::MOD:
-            emit("SWP", 2); emit("CALL", 0); calls_mod.push_back(code.size()-1); emit("SWP", 1);
+            left->codegen_to_reg(1);
+            right->codegen_to_reg(2);    
+            emit("CALL", 0); calls_mod.push_back(code.size()-1); emit("SWP", 1);
             break;
     }
     
@@ -183,10 +177,9 @@ void BinaryOpNode::validate() {
     right->validate();
 }
 
-// --- AssignmentNode ---
 
 void AssignmentNode::validate() {
-    // Check iterator modification etc.
+    // Check iterator modification
     Symbol* s = get_variable(target->name);
     if (s) {
         if (s->is_iterator) { yyerror("Cannot modify loop iterator"); exit(1); }
@@ -197,17 +190,13 @@ void AssignmentNode::validate() {
 }
 
 void AssignmentNode::codegen() {
-    // If target is array or indirect, we might need to calculate address
-    // But evaluating expr uses registers.
-    // Safe way: Evaluate Expr first?
+    // Safe way: Evaluate Expr first
     // If Assign: A[i] := B + C.
     // 1. Calc B+C -> Result in r0.
     // 2. SWP 1 (Save result).
     // 3. Calc Address of A[i] -> r0.
     // 4. SWP 1 (Addr in r1, Result in r0).
     // 5. STORE/RSTORE. 
-    // Wait, STORE takes Addr as ARG (const) or RSTORE takes REG ID.
-    // VM: STORE addr (addr is const). RSTORE reg (store r0 to mem[reg]).
     
     // Complex Case: A[i] := Expr.
     // Address of A[i] is computed into a register (say r7).
@@ -216,21 +205,17 @@ void AssignmentNode::codegen() {
     
     if (target->is_array || (get_variable(target->name)->is_param)) {
         // Compute Address of Target
+        expr->codegen_to_reg(0);
+
+        emit("SWP", 3);
+
         target->codegen_address(0); 
         
-        long long spill_loc = memory_offset++;
-        emit("STORE", spill_loc);
-        
-        // Compute Right Side -> r0
-        expr->codegen_to_reg(0);
-        
-        // Restore Address to r1
-        emit("SWP", 1); // Value(r0) -> r1
-        emit("LOAD", spill_loc); // Addr -> r0
-        emit("SWP", 1); // Addr -> r1, Value -> r0
-        
-        // Store
-        emit("RSTORE", 1);
+        // address in r0, value in r3
+        emit("SWP", 3);
+
+        // address in r3, value in r0
+        emit("RSTORE", 3);
     } else {
         // Simple global scalar
         expr->codegen_to_reg(0);
@@ -242,27 +227,17 @@ void AssignmentNode::codegen() {
 // --- Read / Write ---
 
 void ReadNode::codegen() {
-    emit("READ");
-    
     Symbol* s = get_variable(target->name);
-    if (!s) { yyerror("Undefined variable"); exit(1); }
     
     if (target->is_array || s->is_param) {
         // Compute Address
-        target->codegen_address(0);
+        target->codegen_address(1);
         
-        long long spill_loc = memory_offset++;
-        emit("STORE", spill_loc);
-        
-        emit("READ"); // Value in 0
-        
-        // Restore Address to r1
-        emit("SWP", 1); // Value -> r1
-        emit("LOAD", spill_loc); // Addr -> r0
-        emit("SWP", 1); // Addr -> r1, Value -> r0
+        emit("READ"); // Value in r0
         
         emit("RSTORE", 1);
     } else {
+        emit("READ");
         emit("STORE", s->address);
     }
 }
@@ -283,8 +258,6 @@ void WriteNode::validate() {
     expr->validate();
 }
 
-// --- IfNode ---
-
 void ConditionNode::validate() {
     left->validate();
     right->validate();
@@ -302,7 +275,7 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
                  right->codegen_to_reg(0);
                  emit("JPOS", 0);
              } else {
-                 // Standard Abs Diff: |L-R| > 0 implies NEQ (jump)
+                 // |L-R| > 0 => NEQ (jump)
                  left->codegen_to_reg(1);  // L -> r1
                  right->codegen_to_reg(0); // R -> r0
                  
@@ -328,7 +301,7 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
                  right->codegen_to_reg(0);
                  emit("JZERO", 0);
              } else {
-                 // Standard Abs Diff: |L-R| == 0 implies EQ (jump)
+                 // |L-R| == 0 => EQ (jump)
                  left->codegen_to_reg(1);
                  right->codegen_to_reg(0);
                  
@@ -341,22 +314,9 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
              break;
 
          case ConditionOp::GT:
-             // L > R. Jump if False (L <= R).
-             // L <= R <=> L - R == 0 (Saturating subtraction)
-             // Need: L - R
-             // Code: L in r0, R in r1 (or any reg to subtract from r0)
-             
-             // Save L, calc R. Safe way: Swap L to r1.
-             // Note: If Right is complex, it might clobber r1. 
-             // Ideally we'd spill L. For now, assuming standard register safety or simple Right.
-             right->codegen_to_reg(1);// R -> r0
+             right->codegen_to_reg(1);// R -> r1
              left->codegen_to_reg(0); // L -> r0
              
-             // We have R in r0, L in r1. 
-             // We want L - R. 
-             // Instruction SUB is `r0 = r0 - rX`.
-             // We can't do `r1 - r0`.
-             // So Swap.
              emit("SUB", 1, ">"); // L - R
              
              emit("JZERO", 0); // If 0, then L <= R (False) -> Jump
@@ -364,29 +324,23 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
 
           case ConditionOp::LT:
               // L < R. Jump if False (L >= R).
-              // L >= R <=> R - L == 0 (Saturating subtraction: 3 - 5 = 0)
-              // Need: R - L
+              // L >= R <=> R - L == 0 (3 - 5 = 0)
               
-              left->codegen_to_reg(1);  // L -> r0
+              left->codegen_to_reg(1);  // L -> r1
               right->codegen_to_reg(0); // R -> r0
               
-              // We have L in r0, R in r1.
-              // We want R - L.
-              // Needs R in r0.
               emit("SUB", 1); // R - L
               
-              emit("JZERO", 0, "<"); // If 0, then R <= L (i.e. L >= R, False) -> Jump
+              emit("JZERO", 0, "<");
               break;
 
           case ConditionOp::GEQ:
                // L >= R. Jump if False (L < R).
                // L < R <=> R - L > 0
-               // Need: R - L
                
-               left->codegen_to_reg(1);  // L -> r0
+               left->codegen_to_reg(1);  // L -> r1
                right->codegen_to_reg(0); // R -> r0
                
-               // L in r0, R in r1. Want R - L.
                emit("SUB", 1); // R - L
                
                emit("JPOS", 0, ">="); // If R - L > 0, then R > L (L < R, False) -> Jump
@@ -395,12 +349,10 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
           case ConditionOp::LEQ:
                // L <= R. Jump if False (L > R).
                // L > R <=> L - R > 0.
-               // Need: L - R
                
-               right->codegen_to_reg(1);// R -> r0
-               left->codegen_to_reg(0); // L -> r0
+               right->codegen_to_reg(1);
+               left->codegen_to_reg(0);
                
-               // R in r0, L in r1. Want L - R.
                emit("SUB", 1); // L - R
                
                emit("JPOS", 0, "<="); // If L - R > 0, then L > R (False) -> Jump
@@ -411,13 +363,8 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
 void IfNode::codegen() {
     // Condition
     long long jump_idx_pos;
-    if (true) {
-         // We need to implement codegen_jump_false properly to Return the index? 
-         // Or we pass dummy and get the index from code.size().
-         // The ConditionNode emits the Jump but arg is 0.
-         condition->codegen_jump_false(0);
-         jump_idx_pos = code.size() - 1;
-    }
+    condition->codegen_jump_false(0);
+    jump_idx_pos = code.size() - 1;
     
     // Then Block
     for(auto s : then_block) s->codegen();
@@ -479,6 +426,7 @@ void RepeatNode::validate() {
 
 // --- ForNode ---
 // FOR i FROM start TO end DO ...
+// FOR i FROM start DOWNTO end DO ...
 void ForNode::codegen() {
     current_for_stack.push_back(for_id);
     

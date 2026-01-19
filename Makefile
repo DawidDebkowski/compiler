@@ -156,7 +156,7 @@ run: $(TARGET)
 	@echo "Running output.mr..."
 	@$(VM) output.mr
 
-test-all:
+test-all: $(TARGET)
 	@mkdir -p $(LOGS_DIR)
 	@timestamp=$$(date +"%Y-%m-%d_%H-%M-%S"); \
 	log_file=$(LOGS_DIR)/test_run_$$timestamp.log; \
