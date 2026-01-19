@@ -10,6 +10,9 @@ const long long SPILL_RE = 2;
 const long long SPILL_RF = 3;
 const long long SPILL_RG = 4;
 
+// poprzec na liste laboratoryjna
+// w program 0 jest mnozenie
+
 // Input: rb (left-side), rc (right-side)
 // Output: rb (Result)
 // Clobbers: ra, rb, rc, rd, re, rf,
@@ -20,17 +23,17 @@ void generate_mul() {
     // 1. Save Return Address
     emit("SWP", 3); // rd = RA
     
-    // 3. Initialize Accumulator
+    // 2. Initialize Accumulator
     emit("RST", 4); // re = 0 (Result)
     
     long long loop_start = code.size();
     
-    // 4. Check Termination (rc == 0)
+    // 3. Check Termination (rc == 0)
     emit("RST", 0); emit("ADD", 2);
     emit("JZERO", 0); // Placeholder
     long long jump_end = code.size() - 1;
     
-    // 5. Parity Check & Shift rc
+    // 4. Parity Check & Shift rc
     // rf = copy(rc)
     emit("RST", 0); emit("ADD", 2); emit("SWP", 5); // rf = rc
     
@@ -47,18 +50,18 @@ void generate_mul() {
     emit("JZERO", 0); 
     long long jump_even = code.size() - 1;
     
-    // 6. If Odd: re += rb
+    // 5. If Odd: re += rb
     emit("RST", 0); emit("ADD", 4); emit("ADD", 1); emit("SWP", 4);
     
     code[jump_even].arg = code.size();
     
-    // 7. rb = rb << 1
+    // 6. rb = rb << 1
     emit("SHL", 1);
     
-    // 8. Loop
+    // 7. Loop
     emit("JUMP", loop_start);
     
-    // 9. Cleanup
+    // 8. Cleanup
     code[jump_end].arg = code.size();
     
     // Move result re -> rb
@@ -70,12 +73,10 @@ void generate_mul() {
     emit("RTRN");
 }
 
-// poprzec na liste laboratoryjna
-// w program 0 jest mnozenie
+// Input: rb (Dividend), rc (Divisor)
+// Output: rb (Quotient), rc (Remainder)
 void generate_div() {
     addr_div = code.size();
-    // Input: rb (Dividend), rc (Divisor)
-    // Output: rb (Quotient), rc (Remainder)
     
     emit("SWP", 3); // Save RA
     
