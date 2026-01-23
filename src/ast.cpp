@@ -594,6 +594,32 @@ void RootNode::codegen() {
     Symbol s; s.address = main_start;
     symbol_table["main_start"] = s;
     
+    // emit("INC", 0); // test zaburzenia danych
+    // emit("INC", 0);
+    // emit("INC", 1);
+    // emit("INC", 1);
+    // emit("INC", 1);
+    // emit("INC", 2);
+    // emit("INC", 3);
+    // emit("INC", 3);
+    // emit("INC", 3);
+    // emit("INC", 4);
+    // emit("INC", 4);
+    // emit("INC", 4);
+    // emit("INC", 5);
+    // emit("INC", 5);
+    // emit("INC", 5);
+    // emit("INC", 6);
+    // emit("INC", 6);
+    // emit("INC", 6);
+    // emit("INC", 6);
+    // emit("INC", 6);
+    // emit("INC", 7);
+    // emit("INC", 7);
+    // emit("INC", 7);
+    // emit("INC", 7);
+    // emit("INC", 7);
+    // emit("INC", 7);
     for(auto s : main_block) s->codegen();
     
     emit("HALT");

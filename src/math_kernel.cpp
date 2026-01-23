@@ -164,146 +164,143 @@ void generate_mul() {
 //     emit("SWP", 3);
 //     emit("RTRN");
 // }
-
 void generate_div() {
     addr_div = code.size();
     
-    // Zapisz RA (jeśli konieczne - koszt 5 cykli). 
-    // Jeśli testy tego nie wymagają, wykomentuj.
+    // Opcjonalnie: Zapisz RA (SWP 3) - pomijam dla czystej wydajności, jeśli to "inline"
     emit("SWP", 3); 
 
-    // Inicjalizacja
-    emit("RST", 6); // rg = 0 (Wynik)
-    emit("RST", 5); emit("INC", 5); // rf = 1 (Maska)
-    emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc (Kopia dzielnika)
+    // r1(rb) = Dzielna / Reszta
+    // r2(rc) = Dzielnik (stały)
+    // r4(re) = Przesuwany Dzielnik
+    // r5(rf) = Licznik pętli (tylko maska do sprawdzania końca)
+    // r6(rg) = Wynik
 
-    // --- PĘTLA 1: ALIGN (Skalowanie w górę) ---
+    // 1. Init
+    emit("RST", 6); // rg = 0
+    emit("RST", 5); emit("INC", 5); // rf = 1 (tylko do liczenia iteracji)
+    emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc
+
+    // 2. ALIGN (W górę) - bez zmian, bo musimy znaleźć sufit
     long long loop_up = code.size();
 
-    // Sprawdź: czy re > rb? (ra = re - rb)
-    // Koszt: 11 cykli
+    // Czy re > rb?
     emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
     emit("JPOS", 0); 
     long long jump_peak = code.size() - 1;
 
-    // Przesuwaj
     emit("SHL", 4); // re << 1
     emit("SHL", 5); // rf << 1
     emit("JUMP", loop_up);
 
-    // --- PRZEJŚCIE ---
+    // 3. KOREKTA
     code[jump_peak].arg = code.size();
-    emit("SHR", 4); // Cofnij o jeden (bo re > rb)
+    emit("SHR", 4);
     emit("SHR", 5);
 
-    // --- PĘTLA 2: COMPUTE (Odejmowanie) ---
+    // 4. COMPUTE (W dół) - TU JEST OPTYMALIZACJA
     long long loop_down = code.size();
 
-    // 1. Sprawdź koniec (czy maska rf == 0?)
-    // Koszt: 6 cykli
+    // A. Czy koniec pętli? (rf == 0) - koszt 7 cykli
     emit("RST", 0); emit("ADD", 5);
     emit("JZERO", 0);
     long long jump_end = code.size() - 1;
 
-    // 2. Sprawdź: czy re > rb? (ra = re - rb)
-    // Koszt: 11 cykli
-    emit("RST", 0); emit("ADD", 4); emit("SUB", 1); 
-    emit("JPOS", 0); // Jeśli re > rb, pomiń odejmowanie
+    // B. Przesuń dotychczasowy wynik w lewo (rg << 1) - koszt 1 cykl
+    // To robi miejsce na nowy bit.
+    emit("SHL", 6);
+
+    // C. Sprawdź dopasowanie (re > rb?) - koszt 12 cykli
+    emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
+    emit("JPOS", 0); // Jeśli nie pasuje, skaczemy
     long long jump_skip = code.size() - 1;
 
-    // 3. Odejmowanie (rb -= re)
-    // Najtańsza metoda (bez RST): SWP b (ra=rb), SUB e (ra=rb-re), SWP b (rb=wynik)
-    // Koszt: 15 cykli
-    emit("SWP", 1); 
-    emit("SUB", 4); 
-    emit("SWP", 1);
-
-    // 4. Dodanie bitu do wyniku (rg += rf)
-    // Koszt: 15 cykli
-    emit("SWP", 6); 
-    emit("ADD", 5); 
-    emit("SWP", 6);
+    // D. JEŚLI PASUJE:
+    // Odejmij (rb -= re) - koszt 15 cykli
+    emit("SWP", 1); emit("SUB", 4); emit("SWP", 1);
+    
+    // Wstaw bit 1 (INC rg) - koszt 1 cykl!
+    // Ponieważ zrobiliśmy SHL na początku, LSB jest 0. INC robi z niego 1.
+    emit("INC", 6);
 
     code[jump_skip].arg = code.size();
 
-    // 5. Przesunięcie w dół
+    // E. Przesuń okno w dół - koszt 2 cykle
     emit("SHR", 4);
     emit("SHR", 5);
     emit("JUMP", loop_down);
 
-    // --- KONIEC ---
+    // 5. FINALIZE
     code[jump_end].arg = code.size();
-
-    // Wyniki na swoje miejsce: rc = Reszta (z rb), rb = Wynik (z rg)
-    // emit("RST", 0); emit("ADD", 1); emit("SWP", 2); // rc = rb
-    emit("RST", 0); emit("ADD", 6); emit("SWP", 1); // rb = rg
-
-    // Przywróć RA i wyjdź
-    emit("RST", 0); emit("ADD", 3); // RA do ra
+    
+    // Ustawienie wyników: rc = Reszta, rb = Iloraz
+    // emit("RST", 0); emit("ADD", 1); emit("SWP", 2); // rc = stara reszta
+    emit("RST", 0); emit("ADD", 6); emit("SWP", 1); // rb = wynik
+    
+    // Restore RA
+    emit("RST", 0); emit("ADD", 3);
     emit("RTRN");
 }
 
+// addr_mod = code.size();
+
+// Wejście: rb (Liczba), rc (Modulo)
+// Wyjście: rb (Wynik rb % rc)
 void generate_mod() {
     addr_mod = code.size();
-    emit("SWP", 3); 
-
-    // DZIELENIE
+    // 1. Init
+    // rb = Dzielna
+    // rc = Dzielnik
+    // re = Temp (przesuwany dzielnik)
+    // rf = Maska (licznik pętli)
     
-    // Inicjalizacja
-    emit("RST", 6); // rg = 0 (Wynik)
-    emit("RST", 5); emit("INC", 5); // rf = 1 (Maska)
-    emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc (Kopia dzielnika)
+    // Nie potrzebujemy rg (wyniku dzielenia)!
 
-    // --- PĘTLA 1: ALIGN (Skalowanie w górę) ---
+    emit("SWP", 3); // Zapis RA (opcjonalnie)
+    
+    emit("RST", 5); emit("INC", 5); // rf = 1
+    emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc
+
+    // --- ALIGN (W górę) ---
     long long loop_up = code.size();
 
-    // Sprawdź: czy re > rb? (ra = re - rb)
-    // Koszt: 11 cykli
+    // Czy re > rb?
     emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
     emit("JPOS", 0); 
     long long jump_peak = code.size() - 1;
 
-    // Przesuwaj
     emit("SHL", 4); // re << 1
     emit("SHL", 5); // rf << 1
     emit("JUMP", loop_up);
 
-    // --- PRZEJŚCIE ---
+    // --- KOREKTA ---
     code[jump_peak].arg = code.size();
-    emit("SHR", 4); // Cofnij o jeden (bo re > rb)
+    emit("SHR", 4);
     emit("SHR", 5);
 
-    // --- PĘTLA 2: COMPUTE (Odejmowanie) ---
+    // --- COMPUTE (W dół) ---
     long long loop_down = code.size();
 
-    // 1. Sprawdź koniec (czy maska rf == 0?)
-    // Koszt: 6 cykli
+    // Koniec pętli? (rf == 0)
     emit("RST", 0); emit("ADD", 5);
     emit("JZERO", 0);
     long long jump_end = code.size() - 1;
 
-    // 2. Sprawdź: czy re > rb? (ra = re - rb)
-    // Koszt: 11 cykli
-    emit("RST", 0); emit("ADD", 4); emit("SUB", 1); 
-    emit("JPOS", 0); // Jeśli re > rb, pomiń odejmowanie
+    // Czy re > rb? (Czy można odjąć?)
+    emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
+    emit("JPOS", 0); // Jeśli za duże, pomiń
     long long jump_skip = code.size() - 1;
 
-    // 3. Odejmowanie (rb -= re)
-    // Najtańsza metoda (bez RST): SWP b (ra=rb), SUB e (ra=rb-re), SWP b (rb=wynik)
-    // Koszt: 15 cykli
-    emit("SWP", 1); 
-    emit("SUB", 4); 
-    emit("SWP", 1);
-
-    // 4. Dodanie bitu do wyniku (rg += rf)
-    // Koszt: 15 cykli
-    emit("SWP", 6); 
-    emit("ADD", 5); 
-    emit("SWP", 6);
+    // Wykonaj odejmowanie (rb -= re)
+    // To jest jedyna operacja, która nas interesuje! Zmniejszamy liczbę.
+    emit("SWP", 1); emit("SUB", 4); emit("SWP", 1);
+    
+    // TU BYŁA OPTYMALIZACJA "INC rg" - TERAZ JEST USUNIĘTA.
+    // Nie liczymy ile razy się zmieściło. Po prostu odejmujemy.
 
     code[jump_skip].arg = code.size();
 
-    // 5. Przesunięcie w dół
+    // Przesuń w dół
     emit("SHR", 4);
     emit("SHR", 5);
     emit("JUMP", loop_down);
@@ -311,12 +308,9 @@ void generate_mod() {
     // --- KONIEC ---
     code[jump_end].arg = code.size();
 
-    // Wyniki na swoje miejsce: rc = Reszta (z rb), rb = Wynik (z rg)
-    emit("RST", 0); emit("ADD", 1); emit("SWP", 1); // rc = rb
-    // emit("RST", 0); emit("ADD", 6); emit("SWP", 1); // rb = rg
+    // Wynik jest już w rb!
+    // (W dzieleniu musieliśmy zamieniać rc z rb, tutaj rb to już wynik)
 
-    // koniec dzielenia
-
-    emit("SWP", 3); // RA
+    emit("RST", 0); emit("ADD", 3); // RA
     emit("RTRN");
 }
