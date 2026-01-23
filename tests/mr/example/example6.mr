@@ -299,29 +299,25 @@ ADD c
 RLOAD a
 WRITE
 HALT
-SWP d
-RST e
+SWP g
+RST d
 RST a
 ADD c
-JZERO 322
-RST a
-ADD c
-SWP f
+JZERO 317
 SHR c
+SHL c
+SUB c
+JZERO 314
 RST a
-ADD c
-SHL a
-SWP f
-SUB f
-JZERO 320
-RST a
-ADD e
+ADD d
 ADD b
-SWP e
+SWP d
+SHR c
 SHL b
 JUMP 303
 RST a
-ADD e
+ADD d
 SWP b
-SWP d
+RST a
+ADD g
 RTRN

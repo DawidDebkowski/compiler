@@ -67,17 +67,13 @@ test:
 	for test_file in $(CASES_DIR)/$(CATEGORY)/*.imp; do \
 		test_name=$$(basename $$test_file .imp); \
 		mr_file=$(MR_DIR)/$(CATEGORY)/$$test_name.mr; \
-		in_file=$(IN_DIR)/$(CATEGORY)/$$test_name.in; \
-		out_file=$(OUT_DIR)/$(CATEGORY)/$$test_name.out; \
-		ans_file=$(ANS_DIR)/$(CATEGORY)/$$test_name.ans; \
-		echo -n "Testing $$test_name... "; \
 		if [ ! -f "$$test_file" ]; then \
-			echo "SKIP (source not found)"; \
+			echo "Testing $$test_name... SKIP (source not found)"; \
 			continue; \
 		fi; \
 		./$(TARGET) $$test_file $$mr_file > /dev/null 2>&1; \
 		if [ $$? -ne 0 ]; then \
-			echo "FAIL (compilation error)"; \
+			echo "Testing $$test_name... FAIL (compilation error)"; \
 			failed=$$((failed + 1)); \
 			if [ "$(FAIL_FAST)" = "1" ]; then \
 				echo "Stopping due to FAIL_FAST=1"; \
@@ -86,7 +82,7 @@ test:
 			continue; \
 		fi; \
 		if [ ! -f "$$mr_file" ]; then \
-			echo "FAIL (no .mr file generated)"; \
+			echo "Testing $$test_name... FAIL (no .mr file generated)"; \
 			failed=$$((failed + 1)); \
 			if [ "$(FAIL_FAST)" = "1" ]; then \
 				echo "Stopping due to FAIL_FAST=1"; \
@@ -94,44 +90,78 @@ test:
 			fi; \
 			continue; \
 		fi; \
-		if [ -f "$$in_file" ]; then \
-			$(VM) $$mr_file < $$in_file > $$out_file.tmp 2>&1; \
-		else \
-			$(VM) $$mr_file > $$out_file.tmp 2>&1; \
+		inputs_list=""; \
+		has_inputs=0; \
+		if [ -f "$(IN_DIR)/$(CATEGORY)/$$test_name.in" ]; then \
+			inputs_list="$$inputs_list $(IN_DIR)/$(CATEGORY)/$$test_name.in"; \
+			has_inputs=1; \
 		fi; \
-		vm_status=$$?; \
-		cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep -vE "^Czytanie kodu|^Skończono czytanie|^Uruchamianie programu|^Skończono program \(koszt:" > $$out_file; \
-		cost=$$(cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono program (koszt:" | sed -E 's/.*koszt:[[:space:]]*([^;]+);.*/\1/'); \
-		instr=$$(cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono czytanie kodu (liczba rozkazów:" | sed -E 's/.*liczba rozkazów: ([0-9 ]+).*/\1/'); \
-		rm $$out_file.tmp; \
-		if [ $$vm_status -ne 0 ]; then \
-			echo "FAIL (runtime error)"; \
-			failed=$$((failed + 1)); \
-			if [ "$(FAIL_FAST)" = "1" ]; then \
-				echo "Stopping due to FAIL_FAST=1"; \
-				exit 1; \
+		multi_inputs=$$(find $(IN_DIR)/$(CATEGORY) -maxdepth 1 -name "$$test_name#*.in" 2>/dev/null | sort); \
+		if [ -n "$$multi_inputs" ]; then \
+			inputs_list="$$inputs_list $$multi_inputs"; \
+			has_inputs=1; \
+		fi; \
+		if [ $$has_inputs -eq 0 ]; then \
+			inputs_list="NO_INPUT"; \
+		fi; \
+		for in_file_path in $$inputs_list; do \
+			if [ "$$in_file_path" = "NO_INPUT" ]; then \
+				display_name="$$test_name"; \
+				cur_in=""; \
+				cur_out="$(OUT_DIR)/$(CATEGORY)/$$test_name.out"; \
+				cur_ans="$(ANS_DIR)/$(CATEGORY)/$$test_name.ans"; \
+			else \
+				base_in=$$(basename $$in_file_path .in); \
+				suffix=$${base_in#$$test_name}; \
+				if [ -z "$$suffix" ]; then \
+					display_name="$$test_name"; \
+				else \
+					display_name="$$test_name (input$$suffix)"; \
+				fi; \
+				cur_in="$$in_file_path"; \
+				cur_out="$(OUT_DIR)/$(CATEGORY)/$$base_in.out"; \
+				cur_ans="$(ANS_DIR)/$(CATEGORY)/$$base_in.ans"; \
 			fi; \
-			continue; \
-		fi; \
-		if [ ! -f "$$ans_file" ]; then \
-			echo "SKIP (no answer file)"; \
-			continue; \
-		fi; \
-		if diff -q $$out_file $$ans_file > /dev/null 2>&1; then \
-			echo "PASS (Cost: $$cost, Instructions: $$instr)"; \
-			passed=$$((passed + 1)); \
-		else \
-			echo "FAIL (output mismatch)"; \
-			echo "  Expected: $$ans_file"; \
-			echo "  Got:      $$out_file"; \
-			echo "  Diff:"; \
-			diff $$ans_file $$out_file | head -20 | sed 's/^/    /'; \
-			failed=$$((failed + 1)); \
-			if [ "$(FAIL_FAST)" = "1" ]; then \
-				echo "Stopping due to FAIL_FAST=1"; \
-				exit 1; \
+			echo -n "Testing $$display_name... "; \
+			if [ -n "$$cur_in" ]; then \
+				$(VM) $$mr_file < $$cur_in > $$cur_out.tmp 2>&1; \
+			else \
+				$(VM) $$mr_file > $$cur_out.tmp 2>&1; \
 			fi; \
-		fi; \
+			vm_status=$$?; \
+			cat $$cur_out.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep -vE "^Czytanie kodu|^Skończono czytanie|^Uruchamianie programu|^Skończono program \(koszt:" > $$cur_out; \
+			cost=$$(cat $$cur_out.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono program (koszt:" | sed -E 's/.*koszt:[[:space:]]*([^;]+);.*/\1/'); \
+			instr=$$(cat $$cur_out.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono czytanie kodu (liczba rozkazów:" | sed -E 's/.*liczba rozkazów: ([0-9 ]+).*/\1/'); \
+			rm $$cur_out.tmp; \
+			if [ $$vm_status -ne 0 ]; then \
+				echo "FAIL (runtime error)"; \
+				failed=$$((failed + 1)); \
+				if [ "$(FAIL_FAST)" = "1" ]; then \
+					echo "Stopping due to FAIL_FAST=1"; \
+					exit 1; \
+				fi; \
+				continue; \
+			fi; \
+			if [ ! -f "$$cur_ans" ]; then \
+				echo "SKIP (no answer file)"; \
+				continue; \
+			fi; \
+			if diff -q $$cur_out $$cur_ans > /dev/null 2>&1; then \
+				echo "PASS (Cost: $$cost, Instructions: $$instr)"; \
+				passed=$$((passed + 1)); \
+			else \
+				echo "FAIL (output mismatch)"; \
+				echo "  Expected: $$cur_ans"; \
+				echo "  Got:      $$cur_out"; \
+				echo "  Diff:"; \
+				diff $$cur_ans $$cur_out | head -20 | sed 's/^/    /'; \
+				failed=$$((failed + 1)); \
+				if [ "$(FAIL_FAST)" = "1" ]; then \
+					echo "Stopping due to FAIL_FAST=1"; \
+					exit 1; \
+				fi; \
+			fi; \
+		done; \
 	done; \
 	echo "=========================================="; \
 	echo "Results: $$passed passed, $$failed failed"; \
@@ -179,12 +209,9 @@ test-all: $(TARGET)
 			if [ ! -f "$$test_file" ]; then continue; fi; \
 			test_name=$$(basename $$test_file .imp); \
 			mr_file=$(MR_DIR)/$$cat_name/$$test_name.mr; \
-			in_file=$(IN_DIR)/$$cat_name/$$test_name.in; \
-			out_file=$(OUT_DIR)/$$cat_name/$$test_name.out; \
-			ans_file=$(ANS_DIR)/$$cat_name/$$test_name.ans; \
-			printf "  %-30s " "$$test_name..." | tee -a $$log_file; \
 			./$(TARGET) $$test_file $$mr_file > /dev/null 2>&1; \
 			if [ $$? -ne 0 ]; then \
+				printf "  %-30s " "$$test_name..." | tee -a $$log_file; \
 				echo "FAIL (compilation error)" | tee -a $$log_file; \
 				failed=$$((failed + 1)); \
 				if [ "$(FAIL_FAST)" = "1" ]; then \
@@ -194,6 +221,7 @@ test-all: $(TARGET)
 				continue; \
 			fi; \
 			if [ ! -f "$$mr_file" ]; then \
+				printf "  %-30s " "$$test_name..." | tee -a $$log_file; \
 				echo "FAIL (no .mr file generated)" | tee -a $$log_file; \
 				failed=$$((failed + 1)); \
 				if [ "$(FAIL_FAST)" = "1" ]; then \
@@ -202,44 +230,78 @@ test-all: $(TARGET)
 				fi; \
 				continue; \
 			fi; \
-			if [ -f "$$in_file" ]; then \
-				$(VM) $$mr_file < $$in_file > $$out_file.tmp 2>&1; \
-			else \
-				$(VM) $$mr_file > $$out_file.tmp 2>&1; \
+			inputs_list=""; \
+			has_inputs=0; \
+			if [ -f "$(IN_DIR)/$$cat_name/$$test_name.in" ]; then \
+				inputs_list="$$inputs_list $(IN_DIR)/$$cat_name/$$test_name.in"; \
+				has_inputs=1; \
 			fi; \
-			vm_exit=$$?; \
-			cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep -vE "^Czytanie kodu|^Skończono czytanie|^Uruchamianie programu|^Skończono program \(koszt:" > $$out_file; \
-			cost=$$(cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono program (koszt:" | sed -E 's/.*koszt:[[:space:]]*([^;]+);.*/\1/'); \
-			instr=$$(cat $$out_file.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono czytanie kodu (liczba rozkazów:" | sed -E 's/.*liczba rozkazów: ([0-9 ]+).*/\1/'); \
-			rm $$out_file.tmp; \
-			if [ $$vm_exit -ne 0 ]; then \
-				echo "FAIL (runtime error, exit code: $$vm_exit)" | tee -a $$log_file; \
-				failed=$$((failed + 1)); \
-				if [ "$(FAIL_FAST)" = "1" ]; then \
-					echo "Stopping due to FAIL_FAST=1" | tee -a $$log_file; \
-					exit 1; \
+			multi_inputs=$$(find $(IN_DIR)/$$cat_name -maxdepth 1 -name "$$test_name#*.in" 2>/dev/null | sort); \
+			if [ -n "$$multi_inputs" ]; then \
+				inputs_list="$$inputs_list $$multi_inputs"; \
+				has_inputs=1; \
+			fi; \
+			if [ $$has_inputs -eq 0 ]; then \
+				inputs_list="NO_INPUT"; \
+			fi; \
+			for in_file_path in $$inputs_list; do \
+				if [ "$$in_file_path" = "NO_INPUT" ]; then \
+					display_name="$$test_name"; \
+					cur_in=""; \
+					cur_out="$(OUT_DIR)/$$cat_name/$$test_name.out"; \
+					cur_ans="$(ANS_DIR)/$$cat_name/$$test_name.ans"; \
+				else \
+					base_in=$$(basename $$in_file_path .in); \
+					suffix=$${base_in#$$test_name}; \
+					if [ -z "$$suffix" ]; then \
+						display_name="$$test_name"; \
+					else \
+						display_name="$$test_name (input$$suffix)"; \
+					fi; \
+					cur_in="$$in_file_path"; \
+					cur_out="$(OUT_DIR)/$$cat_name/$$base_in.out"; \
+					cur_ans="$(ANS_DIR)/$$cat_name/$$base_in.ans"; \
 				fi; \
-				continue; \
-			fi; \
-			if [ ! -f "$$ans_file" ]; then \
-				echo "SKIP (no answer file)" | tee -a $$log_file; \
-				continue; \
-			fi; \
-			if diff -q $$out_file $$ans_file > /dev/null 2>&1; then \
-				echo "PASS (Cost: $$cost, Instructions: $$instr)" | tee -a $$log_file; \
-				passed=$$((passed + 1)); \
-			else \
-				echo "FAIL (output mismatch)" | tee -a $$log_file; \
-				echo "    Expected: $$ans_file" >> $$log_file; \
-				echo "    Got:      $$out_file" >> $$log_file; \
-				echo "    Diff:" >> $$log_file; \
-				diff $$ans_file $$out_file | head -20 | sed 's/^/      /' >> $$log_file; \
-				failed=$$((failed + 1)); \
-				if [ "$(FAIL_FAST)" = "1" ]; then \
-					echo "Stopping due to FAIL_FAST=1" | tee -a $$log_file; \
-					exit 1; \
+				printf "  %-30s " "$$display_name..." | tee -a $$log_file; \
+				if [ -n "$$cur_in" ]; then \
+					$(VM) $$mr_file < $$cur_in > $$cur_out.tmp 2>&1; \
+				else \
+					$(VM) $$mr_file > $$cur_out.tmp 2>&1; \
 				fi; \
-			fi; \
+				vm_exit=$$?; \
+				cat $$cur_out.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep -vE "^Czytanie kodu|^Skończono czytanie|^Uruchamianie programu|^Skończono program \(koszt:" > $$cur_out; \
+				cost=$$(cat $$cur_out.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono program (koszt:" | sed -E 's/.*koszt:[[:space:]]*([^;]+);.*/\1/'); \
+				instr=$$(cat $$cur_out.tmp | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | grep "Skończono czytanie kodu (liczba rozkazów:" | sed -E 's/.*liczba rozkazów: ([0-9 ]+).*/\1/'); \
+				rm $$cur_out.tmp; \
+				if [ $$vm_exit -ne 0 ]; then \
+					echo "FAIL (runtime error, exit code: $$vm_exit)" | tee -a $$log_file; \
+					failed=$$((failed + 1)); \
+					if [ "$(FAIL_FAST)" = "1" ]; then \
+						echo "Stopping due to FAIL_FAST=1" | tee -a $$log_file; \
+						exit 1; \
+					fi; \
+					continue; \
+				fi; \
+				if [ ! -f "$$cur_ans" ]; then \
+					echo "SKIP (no answer file)" | tee -a $$log_file; \
+					continue; \
+				fi; \
+				if diff -q $$cur_out $$cur_ans > /dev/null 2>&1; then \
+					echo "PASS (Cost: $$cost, Instructions: $$instr)" | tee -a $$log_file; \
+					passed=$$((passed + 1)); \
+				else \
+					echo "FAIL (output mismatch)" | tee -a $$log_file; \
+					echo "    Expected: $$cur_ans" >> $$log_file; \
+					echo "    Got:      $$cur_out" >> $$log_file; \
+					echo "    Diff:" >> $$log_file; \
+					diff $$cur_ans $$cur_out | head -20 | sed 's/^/      /' >> $$log_file; \
+					failed=$$((failed + 1)); \
+					if [ "$(FAIL_FAST)" = "1" ]; then \
+						echo "Stopping due to FAIL_FAST=1" | tee -a $$log_file; \
+						exit 1; \
+					fi; \
+				fi; \
+			done; \
 		done; \
 		echo "  Category results: $$passed passed, $$failed failed" | tee -a $$log_file; \
 		total_passed=$$((total_passed + passed)); \

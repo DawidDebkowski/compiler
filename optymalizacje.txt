@@ -8,6 +8,7 @@
 
 5. Mnozenie przez stale na shiftach (na razie tylko 2)
 
+6. uzycie CLN do zrobienia najwiecej operacji jak sie da tutaj
 
 
 4. TAC ?

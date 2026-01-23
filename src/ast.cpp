@@ -603,8 +603,8 @@ void RootNode::codegen() {
           generate_mul();
           for(long long idx : calls_mul) code[idx].arg = addr_mul;
     }
-    if (!calls_div.empty() || !calls_mod.empty()) {
-          if (addr_div == -1) generate_div();
+    if (!calls_div.empty()) {
+          generate_div();
           for(long long idx : calls_div) code[idx].arg = addr_div;
     }
     if (!calls_mod.empty()) {

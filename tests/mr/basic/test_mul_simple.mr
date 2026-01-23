@@ -19,29 +19,25 @@ SWP b
 STORE 7
 WRITE
 HALT
-SWP d
-RST e
+SWP g
+RST d
 RST a
 ADD c
-JZERO 42
-RST a
-ADD c
-SWP f
+JZERO 37
 SHR c
+SHL c
+SUB c
+JZERO 34
 RST a
-ADD c
-SHL a
-SWP f
-SUB f
-JZERO 40
-RST a
-ADD e
+ADD d
 ADD b
-SWP e
+SWP d
+SHR c
 SHL b
 JUMP 23
 RST a
-ADD e
+ADD d
 SWP b
-SWP d
+RST a
+ADD g
 RTRN

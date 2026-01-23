@@ -23,9 +23,6 @@ STORE 7
 WRITE
 HALT
 SWP d
-RST a
-ADD c
-JZERO 67
 RST g
 RST f
 INC f
@@ -35,19 +32,19 @@ SWP e
 RST a
 ADD e
 SUB b
-JPOS 41
+JPOS 38
 SHL e
 SHL f
-JUMP 34
+JUMP 31
 SHR e
 SHR f
 RST a
 ADD f
-JZERO 59
+JZERO 56
 RST a
 ADD e
 SUB b
-JPOS 56
+JPOS 53
 SWP b
 SUB e
 SWP b
@@ -56,16 +53,10 @@ ADD f
 SWP g
 SHR e
 SHR f
-JUMP 43
-RST a
-ADD b
-SWP c
+JUMP 40
 RST a
 ADD g
 SWP b
-SWP d
-RTRN
-RST b
-RST c
-SWP d
+RST a
+ADD d
 RTRN
