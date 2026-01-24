@@ -21,10 +21,6 @@ struct Symbol {
     bool is_iterator = false;
     bool is_initialized = false;
     
-    // Address Optimization
-    bool use_fast_access = false; // true if base >= start and we can use static offset
-    long long constant_offset = 0; // base - start (if fast access)
-
     // Register Allocation
     int reg_in_use = -1; // -1 if in memory, 0-7 if in register
 };

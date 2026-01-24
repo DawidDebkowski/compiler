@@ -37,27 +37,21 @@ void IdentifierNode::codegen_address(int reg) {
         if (is_index_const) {
             // arr[num]
              if (s->is_param) {
-                 // Param Array: Address is in s->address parameter slot
-                 emit("LOAD", s->address, "Array param with const index"); // Load base address (at parameter slot)
-                 emit("RLOAD", 0);         // Load Header (Start Index) from Base Address
-                 
-                 // Calc Offset: Num - Start
-                 // BUT wait, we need: Base + 1 + (Num - HeaderStart)
-                 
-                 // Let's optimize: We loaded HeaderStart into r0.
-                 // We need: Base + 1 + Index - HeaderStart
-                 
-                 emit("SWP", 2);           // r2 = HeaderStart
-                 
-                 gen_const(0, index_val);  // r0 = Index
-                 emit("SUB", 2);           // r0 = Index - HeaderStart
-                 emit("INC", 0);           // r0 = Index - HeaderStart + 1
-                 
-                 emit("SWP", 2);           // r2 = Offset+1, r0 = junk
-                 
-                 emit("LOAD", s->address); // r0 = Base
-                 emit("ADD", 2, "loaded");           // r0 = Base + Offset + 1
-                 
+                 if (!unsafety_detected) {
+                     emit("LOAD", s->address, "Array param (fast)"); 
+                     gen_const(2, index_val);
+                     emit("ADD", 2);
+                 } else {
+                     emit("LOAD", s->address, "Array param with const index");
+                     emit("RLOAD", 0);         
+                     emit("SWP", 2);           
+                     gen_const(0, index_val);  
+                     emit("SUB", 2);           
+                     emit("INC", 0);           
+                     emit("SWP", 2);           
+                     emit("LOAD", s->address); 
+                     emit("ADD", 2, "loaded");           
+                 }
              } else {
                  // Global Array: Base + 1 + (Index - Start)
                  // Optimized: We know Start.
@@ -79,66 +73,34 @@ void IdentifierNode::codegen_address(int reg) {
             }
              
              if (s->is_param) {
-                 // Index in r0
-                 emit("SWP", 2, "Array param with variable index");           // r2 = Index
-                 
-                 emit("LOAD", s->address); // r0 = Base Address of Array
-                 
-                 // Get Header
-                 emit("RLOAD", 0);         // r0 = Header (Start)
-                 
-                 // We need: Base + 1 + Index - Start
-                 // Current: r0=Start, r2=Index
-                 
-                 emit("SWP", 2);           // r0=Index, r2=Start
-                 emit("SUB", 2);           // r0=Index - Start
-                 emit("INC", 0);           // r0=Index - Start + 1
-                 
-                 emit("SWP", 2);           // r2=Offset+1
-                 
-                 emit("LOAD", s->address); // r0=Base
-                 emit("ADD", 2, "loaded");           // r0=Base + Offset + 1
+                 if (!unsafety_detected) {
+                     emit("SWP", 2); 
+                     emit("LOAD", s->address); 
+                     emit("ADD", 2); 
+                 } else {
+                     emit("SWP", 2, "Array param with variable index");
+                     emit("LOAD", s->address);
+                     emit("RLOAD", 0);
+                     emit("SWP", 2);
+                     emit("SUB", 2);
+                     emit("INC", 0);
+                     emit("SWP", 2);
+                     emit("LOAD", s->address); 
+                     emit("ADD", 2, "loaded");
+                 }
              } else {
                  // Global Array
-                 if (s->use_fast_access) {
-                     // FAST ACCESS: Address = Index + ConstantOffset
-                     // Index is in r0 currently.
-                     
-                     // We need to add ConstantOffset.
-                     long long k = s->constant_offset;
-                     
-                     if (k != 0) {
-                         // Move Index to r2 safely (r2 is scratch in this context)
-                         emit("SWP", 2); 
-                         gen_const(0, k); // r0 = k
-                         emit("ADD", 2);  // r0 = k + Index
-                     }
-                     // If k==0, r0 is already Address (Index + 0)
+                 // Index in r0
+                 
+                 // We need: (Base + 1) + (Index - Start)
+                 
+                 if (s->start > 0) {
+                     gen_const(2, s->start);
+                     emit("SUB", 2);       // r0 = Index - Start
                  }
-                 else {
-                     // Slow/Safe Mode for Global Arrays (No Header Lookup)
-                     // Index is in r0.
-                     // Address = (Base + 1) + (Index - Start)
-                     // We compute: (Index - Start) + (Base + 1)
-                     
-                     // 1. Index - Start
-                     long long start = s->start;
-                     if (start != 0) {
-                         // Need to subtract Start
-                         // Move Index to r2
-                         emit("SWP", 2);      // r2 = Index
-                         gen_const(0, start); // r0 = Start
-                         emit("SWP", 2);      // r0 = Index, r2 = Start
-                         emit("SUB", 2);      // r0 = Index - Start
-                     }
-                     
-                     // 2. Add (Base + 1)
-                     long long base_addr = s->address + 1;
-                     // Move Result to r2
-                     emit("SWP", 2);          // r2 = (Index - Start)
-                     gen_const(0, base_addr); // r0 = Base + 1
-                     emit("ADD", 2);          // r0 = Base + 1 + (Index - Start)
-                 }
+                 
+                 gen_const(2, s->address + 1); // Base + 1
+                 emit("ADD", 2);
              }
         }
         
@@ -651,8 +613,15 @@ void ProcCallNode::codegen() {
                 emit("LOAD", s->address); 
                 emit("STORE", param_addr); 
             } else {
-                // Pass Base Address (Header Address)
-                gen_const(0, s->address);
+                if (s->is_array) {
+                    if (!unsafety_detected) {
+                        gen_const(0, s->address - s->start + 1);
+                    } else {
+                        gen_const(0, s->address);
+                    }
+                } else {
+                    gen_const(0, s->address);
+                }
                 emit("STORE", param_addr);
             }
         }
@@ -758,14 +727,14 @@ void RootNode::codegen() {
     // emit("INC", 7);
     // emit("INC", 7);
     // emit("INC", 7);
-
-    // Header Initialization for Global Arrays
-    // We always initialize headers because procedures expect them, and fallback mode uses them.
+    
+    // Header Initialization for Arrays passed to Procedures
+    if (unsafety_detected)
     for(auto& pair : symbol_table) {
         Symbol& s = pair.second;
-        if (s.is_array && !s.is_param) {
+        if (s.is_array && !s.is_param && s.is_passed_to_proc) {
              gen_const(0, s.start);
-             emit("STORE", s.address, "STORE GENERATED ARRAY ADDRESS"); // Store START at header address
+             emit("STORE", s.address); // Store START at header address
         }
     }
     for(auto s : main_block) s->codegen();

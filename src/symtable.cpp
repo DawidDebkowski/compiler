@@ -2,23 +2,20 @@
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
-#include <list>
 #include <algorithm>
 
 map<string, Symbol> symbol_table;
 map<string, ProcedureInfo> procedures_map;
 
+long long memory_offset = 5; // Start at 2. 0 unused. 1 reserved for LHS hold.
+long long lhs_hold_addr = 1;
+bool unsafety_detected = false;
+
 struct FreeBlock {
     long long start;
     long long size;
 };
-
-std::list<FreeBlock> memory_holes;
-long long memory_offset = 15; // Start a bit higher to give space for registers/scratch if needed
-long long lhs_hold_addr = 1;
-
-// Threshold to skip/fill: if gap is smaller than this, fill it with a hole and align array
-const long long GAP_ALIGN_THRESHOLD = 50000; 
+std::vector<FreeBlock> holes;
 
 string current_procedure = ""; 
 string current_call_proc = "";
@@ -29,42 +26,38 @@ int for_id_counter = 0;
 
 void add_hole(long long start, long long size) {
     if (size <= 0) return;
-    
-    // Insert sorted by start address
-    auto it = memory_holes.begin();
-    while (it != memory_holes.end() && it->start < start) {
-        it++;
-    }
-    memory_holes.insert(it, {start, size});
-    
-    // Merge contiguous holes
-    for (auto it = memory_holes.begin(); it != memory_holes.end(); ) {
-        auto next = std::next(it);
-        if (next != memory_holes.end()) {
-            if (it->start + it->size == next->start) {
-                // Merge
-                it->size += next->size;
-                memory_holes.erase(next);
-                continue; // Stay on 'it' to see if we can merge next one
-            }
+    holes.push_back({start, size});
+    sort(holes.begin(), holes.end(), [](const FreeBlock& a, const FreeBlock& b) {
+        return a.start < b.start;
+    });
+    for (size_t i = 0; i < holes.size() - 1; ) {
+        if (holes[i].start + holes[i].size >= holes[i+1].start) {
+            long long new_end = std::max(holes[i].start + holes[i].size, holes[i+1].start + holes[i+1].size);
+            holes[i].size = new_end - holes[i].start;
+            holes.erase(holes.begin() + i + 1);
+        } else {
+            i++;
         }
-        it++;
     }
 }
 
-long long alloc_hole(long long size, long long min_start) {
-    for (auto it = memory_holes.begin(); it != memory_holes.end(); ++it) {
-        if (it->size >= size && it->start >= min_start) {
-            long long addr = it->start;
-            
-            // Update hole
-            if (it->size > size) {
-                it->start += size;
-                it->size -= size;
+long long find_hole(long long size, long long min_start) {
+    for (size_t i = 0; i < holes.size(); ++i) {
+        long long h_start = holes[i].start;
+        long long h_end = holes[i].start + holes[i].size;
+        long long candidate = std::max(h_start, min_start);
+        if (candidate + size <= h_end) {
+            long long left_size = candidate - h_start;
+            long long right_start = candidate + size;
+            long long right_size = h_end - right_start;
+            if (left_size > 0) {
+                holes[i].size = left_size;
+                if (right_size > 0) holes.insert(holes.begin() + i + 1, {right_start, right_size});
             } else {
-                memory_holes.erase(it);
+                if (right_size > 0) holes[i] = {right_start, right_size};
+                else holes.erase(holes.begin() + i);
             }
-            return addr;
+            return candidate;
         }
     }
     return -1;
@@ -91,109 +84,74 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
     s.mod = mod;
     s.is_iterator = false;
     
-    // Default assumptions
-    s.use_fast_access = false;
-    s.constant_offset = 0;
-
+    // Point 5: O means undefined value.
     if (mod == "O") s.is_initialized = false;
     else s.is_initialized = true; 
 
-    // ---- MEMORY ALLOCATION STRATEGY ----
-    long long needed_size = 1;
+    // Allocation Logic
+    long long alloc_size = 1;
     if (is_array && !is_param) {
-         needed_size = (end - start + 1) + 1; // Always allocate Header
+         alloc_size = (end - start + 1) + 1; // +1 for Header
     }
 
-    if (is_param) {
-        long long addr = alloc_hole(1, 0);
-        if (addr == -1) {
-            addr = memory_offset;
-            memory_offset++;
-        }
-        s.address = addr;
-        s.use_fast_access = false; // Params are indirect
-    } 
-    else if (!is_array) {
-        long long addr = alloc_hole(1, 0);
-        if (addr == -1) {
-            addr = memory_offset;
-            memory_offset++;
-        }
-        s.address = addr;
-        s.use_fast_access = false; 
-    }
-    else {
-        // Global Array
-        // We ALWAYS allocate a header at s.address.
-        // Data starts at s.address + 1.
-        // Fast Access is possible if (s.address + 1) >= start.
-        // i.e., s.address >= start - 1.
-        
-        long long min_base_for_fast = start - 1;
-        if (min_base_for_fast < 0) min_base_for_fast = 0; // base must be valid
-        
-        // 1. Try to find a hole that satisfies fast access
-        long long good_hole = alloc_hole(needed_size, min_base_for_fast);
-        if (good_hole != -1) {
-            s.address = good_hole;
-            s.use_fast_access = true;
-            s.constant_offset = (s.address + 1) - start;
-        }
-        else {
-             // 2. Check linear memory
-             if (memory_offset >= min_base_for_fast) {
-                 // memory_offset is already high enough.
-                 s.address = memory_offset;
-                 s.use_fast_access = true;
-                 s.constant_offset = (s.address + 1) - start;
-                 
-                 memory_offset += needed_size;
-             } 
-             else {
-                 // memory_offset < min_base_for_fast.
-                 // Gap analysis
-                 long long gap = min_base_for_fast - memory_offset;
-                 if (gap <= GAP_ALIGN_THRESHOLD) {
-                     // Fill gap with hole
-                     add_hole(memory_offset, gap);
-                     
-                     s.address = min_base_for_fast;
-                     s.use_fast_access = true;
-                     s.constant_offset = (s.address + 1) - start; // Should be 0 usually
-                     
-                     memory_offset = s.address + needed_size;
-                 }
-                 else {
-                      // fallback: Gap too big. Use Safe/Slow Mode.
-                      // Just allocate anywhere.
-                      
-                      long long any_hole = alloc_hole(needed_size, 0);
-                      if (any_hole != -1) {
-                          s.address = any_hole;
-                      } else {
-                          s.address = memory_offset;
-                          memory_offset += needed_size;
-                      }
-                      
-                      s.use_fast_access = false; 
-                 }
-             }
-        }
-    }
-    // ------------------------------------
+    long long addr = -1;
 
+    // Step A: Try Holes
+    if (is_array && !is_param) {
+         // Arrays need base >= start
+         addr = find_hole(alloc_size, start);
+    } else {
+         // Scalars/Params can be anywhere (min_start=0)
+         addr = find_hole(alloc_size, 0);
+    }
+    
+    // Step B: Append if no hole
+    if (addr == -1) {
+        if (is_array && !is_param) {
+            // Strategy 2: Alignment
+            if (memory_offset >= start) {
+                // Natural fit
+                addr = memory_offset;
+                memory_offset += alloc_size;
+            } else {
+                long long gap = start - memory_offset;
+                if (gap < 1000) {
+                    // Fill gap with hole
+                    add_hole(memory_offset, gap);
+                    addr = start;
+                    memory_offset = start + alloc_size;
+                } else {
+                    // Gap too big -> Unsafe Alloc
+                    addr = memory_offset;
+                    memory_offset += alloc_size;
+                    unsafety_detected = true;
+                }
+            }
+        } else {
+            // Scalar/Param
+            addr = memory_offset;
+            memory_offset += alloc_size;
+        }
+    }
+    
+    s.address = addr;
     symbol_table[key] = s;
     
     if (current_procedure != "" && is_param) {
-        procedures_map[current_procedure].param_addresses.push_back(s.address);
+        procedures_map[current_procedure].param_addresses.push_back(addr);
         procedures_map[current_procedure].param_mods.push_back(mod);
         procedures_map[current_procedure].param_is_array.push_back(is_array);
         
-        if (mod == "T" && !is_array) yyerror(("Parameter " + name + " marked T must be an array").c_str());
-        if (mod != "T" && is_array) yyerror(("Array parameter " + name + " must be marked with T").c_str());
+        // Spec Check: T must be array
+         if (mod == "T" && !is_array) {
+            yyerror(("Parameter " + name + " marked T must be an array").c_str());
+         }
+         if (mod != "T" && is_array) {
+             // Spec point 3: "nazwa tablicy ... powinna być poprzedzona literą T"
+             yyerror(("Array parameter " + name + " must be marked with T").c_str());
+         }
     }
 }
-
 
 Symbol* get_variable(string name) {
     // Try local proc first

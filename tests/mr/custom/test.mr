@@ -3,88 +3,23 @@ INC a
 SHL a
 SHL a
 INC a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-SHL a
-SHL a
-SHL a
-SHL a
-SHL a
-SHL a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-SHL a
-SHL a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-STORE 1 # STORE GENERATED ARRAY ADDRESS
-RST a
-INC a
-SHL a
-SHL a
-INC a
-STORE 15
+STORE 5
 RST a
 INC a
 SHL a
 SHL a
 INC a
 SHL a
-STORE 16
-LOAD 15
+STORE 6
+LOAD 5
 WRITE
-LOAD 16
+LOAD 6
 WRITE
-LOAD 15
+LOAD 5
 SWP b
-LOAD 16
+LOAD 6
 SUB b
-JZERO 102 # <
+JZERO 37 # <
 RST a
 INC a
 SHL a
@@ -99,7 +34,7 @@ INC a
 SHL a
 INC a
 WRITE
-JUMP 104
+JUMP 39
 RST a
 WRITE
 HALT

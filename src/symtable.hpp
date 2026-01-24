@@ -14,6 +14,7 @@ extern map<string, ProcedureInfo> procedures_map;
 
 extern long long memory_offset;
 extern long long lhs_hold_addr;
+extern bool unsafety_detected; // Global flag for Unsafe Mode
 extern string current_procedure; 
 extern std::vector<int> current_for_stack;
 extern int for_id_counter;
