@@ -100,17 +100,45 @@ void IdentifierNode::codegen_address(int reg) {
                  emit("ADD", 2, "loaded");           // r0=Base + Offset + 1
              } else {
                  // Global Array
-                 // Index in r0
-                 
-                 // We need: (Base + 1) + (Index - Start)
-                 
-                 if (s->start > 0) {
-                     gen_const(2, s->start);
-                     emit("SUB", 2);       // r0 = Index - Start
+                 if (s->use_fast_access) {
+                     // FAST ACCESS: Address = Index + ConstantOffset
+                     // Index is in r0 currently.
+                     
+                     // We need to add ConstantOffset.
+                     long long k = s->constant_offset;
+                     
+                     if (k != 0) {
+                         // Move Index to r2 safely (r2 is scratch in this context)
+                         emit("SWP", 2); 
+                         gen_const(0, k); // r0 = k
+                         emit("ADD", 2);  // r0 = k + Index
+                     }
+                     // If k==0, r0 is already Address (Index + 0)
                  }
-                 
-                 gen_const(2, s->address + 1); // Base + 1
-                 emit("ADD", 2);
+                 else {
+                     // Slow/Safe Mode for Global Arrays (No Header Lookup)
+                     // Index is in r0.
+                     // Address = (Base + 1) + (Index - Start)
+                     // We compute: (Index - Start) + (Base + 1)
+                     
+                     // 1. Index - Start
+                     long long start = s->start;
+                     if (start != 0) {
+                         // Need to subtract Start
+                         // Move Index to r2
+                         emit("SWP", 2);      // r2 = Index
+                         gen_const(0, start); // r0 = Start
+                         emit("SWP", 2);      // r0 = Index, r2 = Start
+                         emit("SUB", 2);      // r0 = Index - Start
+                     }
+                     
+                     // 2. Add (Base + 1)
+                     long long base_addr = s->address + 1;
+                     // Move Result to r2
+                     emit("SWP", 2);          // r2 = (Index - Start)
+                     gen_const(0, base_addr); // r0 = Base + 1
+                     emit("ADD", 2);          // r0 = Base + 1 + (Index - Start)
+                 }
              }
         }
         
@@ -730,13 +758,14 @@ void RootNode::codegen() {
     // emit("INC", 7);
     // emit("INC", 7);
     // emit("INC", 7);
-    
-    // Header Initialization for Arrays passed to Procedures
+
+    // Header Initialization for Global Arrays
+    // We always initialize headers because procedures expect them, and fallback mode uses them.
     for(auto& pair : symbol_table) {
         Symbol& s = pair.second;
-        if (s.is_array && !s.is_param && s.is_passed_to_proc) {
+        if (s.is_array && !s.is_param) {
              gen_const(0, s.start);
-             emit("STORE", s.address); // Store START at header address
+             emit("STORE", s.address, "STORE GENERATED ARRAY ADDRESS"); // Store START at header address
         }
     }
     for(auto s : main_block) s->codegen();
