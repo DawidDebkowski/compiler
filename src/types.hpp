@@ -12,6 +12,7 @@ struct Symbol {
     long long address;
     bool is_array;
     bool is_param;
+    bool is_passed_to_proc; 
     long long start;
     long long end;
     
@@ -26,6 +27,7 @@ struct Symbol {
 
 struct ProcedureInfo {
     long long address;
+    long long times_called;
     long long ra_address; // Return address storage location
     vector<long long> param_addresses;
     vector<string> param_mods;     // "T", "I", "O", ""

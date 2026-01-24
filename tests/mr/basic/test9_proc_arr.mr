@@ -1,17 +1,25 @@
-JUMP 14
-STORE 14
+JUMP 20
+STORE 15
 LOAD 7
 RLOAD a
 SWP d
 LOAD 6
 RLOAD a
+SWP c # Array param with variable index
+LOAD 5
+RLOAD a
+SWP c
+SUB c
+INC a
 SWP c
 LOAD 5
-ADD c
+ADD c # loaded
 SWP d
 RSTORE d
-LOAD 14
+LOAD 15
 RTRN
+RST a
+STORE 8
 RST a
 INC a
 SHL a
@@ -19,15 +27,13 @@ SHL a
 SHL a
 STORE 5
 RST a
-STORE 15
+STORE 16
 RST a
 INC a
 SHL a
-INC a
 SHL a
-INC a
 SHL a
-INC a
+SHL a
 STORE 6
 RST a
 INC a
@@ -40,26 +46,6 @@ SHL a
 INC a
 SHL a
 INC a
-SHL a
-INC a
-STORE 16
-RST a
-INC a
-SHL a
-SHL a
-SHL a
-SHL a
-STORE 7
-CALL 1
-RST a
-INC a
-SHL a
-SHL a
-SHL a
-STORE 5
-RST a
-INC a
-SHL a
 SHL a
 INC a
 STORE 17
@@ -70,6 +56,27 @@ SHL a
 SHL a
 SHL a
 INC a
+STORE 7
+CALL 1
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+STORE 5
+RST a
+INC a
+SHL a
+SHL a
+INC a
+STORE 18
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
 STORE 6
 RST a
 INC a
@@ -85,7 +92,7 @@ INC a
 SHL a
 INC a
 SHL a
-STORE 18
+STORE 19
 RST a
 INC a
 SHL a
@@ -93,6 +100,7 @@ SHL a
 SHL a
 INC a
 SHL a
+INC a
 STORE 7
 CALL 1
 RST a
@@ -100,6 +108,7 @@ INC a
 SHL a
 SHL a
 SHL a
+INC a
 RLOAD a
 WRITE
 RST a
@@ -107,8 +116,8 @@ INC a
 SHL a
 INC a
 SHL a
-SHL a
 INC a
+SHL a
 RLOAD a
 WRITE
 HALT

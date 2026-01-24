@@ -12,27 +12,6 @@ SWP d
 RST a
 INC a
 SHL a
-SHL a
-INC a
-SWP d
-RSTORE d
-RST a
-INC a
-SHL a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-SWP d
-RST a
-INC a
-SHL a
-SHL a
 INC a
 SHL a
 SWP d
@@ -41,7 +20,29 @@ RST a
 INC a
 SHL a
 SHL a
+SHL a
 INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SWP d
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SWP d
+RSTORE d
+RST a
+INC a
+SHL a
+INC a
+SHL a
 RLOAD a
 WRITE
 RST a
@@ -50,6 +51,7 @@ SHL a
 SHL a
 INC a
 SHL a
+INC a
 RLOAD a
 WRITE
 HALT

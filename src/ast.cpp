@@ -36,13 +36,33 @@ void IdentifierNode::codegen_address(int reg) {
         // Array Access
         if (is_index_const) {
             // arr[num]
-            long long offset = index_val - s->start;
              if (s->is_param) {
-                 emit("LOAD", s->address); // Load base address
-                 gen_const(2, offset);
-                 emit("ADD", 2); // Base + Offset
+                 // Param Array: Address is in s->address parameter slot
+                 emit("LOAD", s->address, "Array param with const index"); // Load base address (at parameter slot)
+                 emit("RLOAD", 0);         // Load Header (Start Index) from Base Address
+                 
+                 // Calc Offset: Num - Start
+                 // BUT wait, we need: Base + 1 + (Num - HeaderStart)
+                 
+                 // Let's optimize: We loaded HeaderStart into r0.
+                 // We need: Base + 1 + Index - HeaderStart
+                 
+                 emit("SWP", 2);           // r2 = HeaderStart
+                 
+                 gen_const(0, index_val);  // r0 = Index
+                 emit("SUB", 2);           // r0 = Index - HeaderStart
+                 emit("INC", 0);           // r0 = Index - HeaderStart + 1
+                 
+                 emit("SWP", 2);           // r2 = Offset+1, r0 = junk
+                 
+                 emit("LOAD", s->address); // r0 = Base
+                 emit("ADD", 2, "loaded");           // r0 = Base + Offset + 1
+                 
              } else {
-                 gen_const(0, s->address + offset); // Static address
+                 // Global Array: Base + 1 + (Index - Start)
+                 // Optimized: We know Start.
+                 long long offset = index_val - s->start;
+                 gen_const(0, s->address + 1 + offset); 
              }
         } else {
              // arr[var]
@@ -58,19 +78,38 @@ void IdentifierNode::codegen_address(int reg) {
                 emit("LOAD", idx->address);
             }
              
-             // Calc offset
-             if (s->start > 0) {
-                 gen_const(2, s->start);
-                 emit("SUB", 2);
-             }
-             
              if (s->is_param) {
-                 // Param is address of array start
-                 emit("SWP", 2); // r2 = Index - Start
-                 emit("LOAD", s->address); // r0 = Base Address
-                 emit("ADD", 2); // r0 = Base + Index - Start
+                 // Index in r0
+                 emit("SWP", 2, "Array param with variable index");           // r2 = Index
+                 
+                 emit("LOAD", s->address); // r0 = Base Address of Array
+                 
+                 // Get Header
+                 emit("RLOAD", 0);         // r0 = Header (Start)
+                 
+                 // We need: Base + 1 + Index - Start
+                 // Current: r0=Start, r2=Index
+                 
+                 emit("SWP", 2);           // r0=Index, r2=Start
+                 emit("SUB", 2);           // r0=Index - Start
+                 emit("INC", 0);           // r0=Index - Start + 1
+                 
+                 emit("SWP", 2);           // r2=Offset+1
+                 
+                 emit("LOAD", s->address); // r0=Base
+                 emit("ADD", 2, "loaded");           // r0=Base + Offset + 1
              } else {
-                 gen_const(2, s->address);
+                 // Global Array
+                 // Index in r0
+                 
+                 // We need: (Base + 1) + (Index - Start)
+                 
+                 if (s->start > 0) {
+                     gen_const(2, s->start);
+                     emit("SUB", 2);       // r0 = Index - Start
+                 }
+                 
+                 gen_const(2, s->address + 1); // Base + 1
                  emit("ADD", 2);
              }
         }
@@ -554,6 +593,7 @@ void ForNode::validate() {
     s.address = memory_offset++;
     s.is_array = false;
     s.is_param = false;
+    s.is_passed_to_proc = false;
     s.start = 0;
     s.end = 0;
     s.mod = "";
@@ -583,13 +623,8 @@ void ProcCallNode::codegen() {
                 emit("LOAD", s->address); 
                 emit("STORE", param_addr); 
             } else {
-                // Pass Address
-                // Subtract start index to ensure 0-based indexing inside procedure matches real memory layout
-                long long adjusted_addr = s->address;
-                if (s->is_array) {
-                    adjusted_addr -= s->start;
-                }
-                gen_const(0, adjusted_addr);
+                // Pass Base Address (Header Address)
+                gen_const(0, s->address);
                 emit("STORE", param_addr);
             }
         }
@@ -622,6 +657,11 @@ void ProcCallNode::validate() {
              if (!s) { yyerror("Undefined arg variable"); exit(1); }
              if (info.param_is_array[i] && !s->is_array) { yyerror("Expected array"); exit(1); }
              if (!info.param_is_array[i] && s->is_array) { yyerror("Expected scalar"); exit(1); }
+             
+             // Mark array as passed to procedure
+             if (s->is_array && !s->is_param) {
+                 s->is_passed_to_proc = true;
+             }
          } 
          else if (dynamic_cast<NumberNode*>(args[i])) {
              if (info.param_is_array[i]) { yyerror("Expected array, got number"); exit(1); }
@@ -653,6 +693,8 @@ void ProcedureNode::validate() {
 
 void RootNode::codegen() {
     emit("JUMP", 0);
+    
+    
     // Gen Procs
     for(auto p : procedures) p->codegen();
     
@@ -688,6 +730,15 @@ void RootNode::codegen() {
     // emit("INC", 7);
     // emit("INC", 7);
     // emit("INC", 7);
+    
+    // Header Initialization for Arrays passed to Procedures
+    for(auto& pair : symbol_table) {
+        Symbol& s = pair.second;
+        if (s.is_array && !s.is_param && s.is_passed_to_proc) {
+             gen_const(0, s.start);
+             emit("STORE", s.address); // Store START at header address
+        }
+    }
     for(auto s : main_block) s->codegen();
     
     emit("HALT");

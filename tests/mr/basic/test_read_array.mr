@@ -1,8 +1,8 @@
 RST a
 INC a
 SHL a
-SHL a
 INC a
+SHL a
 SWP b
 READ
 RSTORE b
@@ -13,7 +13,7 @@ SHL a
 INC a
 SHL a
 INC a
-STORE 11
+STORE 12
 RST c
 INC c
 SHL c
@@ -24,8 +24,8 @@ SUB c
 RST c
 INC c
 SHL c
-SHL c
 INC c
+SHL c
 ADD c
 SWP b
 READ
@@ -33,8 +33,8 @@ RSTORE b
 RST a
 INC a
 SHL a
-SHL a
 INC a
+SHL a
 RLOAD a
 WRITE
 RST a
@@ -42,9 +42,10 @@ INC a
 SHL a
 INC a
 SHL a
+INC a
 RLOAD a
 WRITE
-LOAD 11
+LOAD 12
 RST c
 INC c
 SHL c
@@ -55,8 +56,8 @@ SUB c
 RST c
 INC c
 SHL c
-SHL c
 INC c
+SHL c
 ADD c
 RLOAD a
 WRITE

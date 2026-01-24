@@ -32,6 +32,7 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
     s.address = memory_offset;
     s.is_array = is_array;
     s.is_param = is_param;
+    s.is_passed_to_proc = false;
     s.start = start;
     s.end = end;
     s.mod = mod;
@@ -58,7 +59,7 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
          }
     }
 
-    if (is_array) memory_offset += (end - start + 1);
+    if (is_array && !is_param) memory_offset += (end - start + 1 + 1); // +1 for Header
     else memory_offset++;
 }
 
@@ -69,9 +70,9 @@ Symbol* get_variable(string name) {
         return &symbol_table[key];
     }
     
-    // Try current FOR scope (innermost)
-    if (!current_for_stack.empty()) {
-        string for_key = "for_" + std::to_string(current_for_stack.back()) + "_" + name;
+    // Try current FOR scope (Iterate from innermost to outermost)
+    for (int i = current_for_stack.size() - 1; i >= 0; i--) {
+        string for_key = "for_" + std::to_string(current_for_stack[i]) + "_" + name;
         if (symbol_table.find(for_key) != symbol_table.end()) {
             return &symbol_table[for_key];
         }
