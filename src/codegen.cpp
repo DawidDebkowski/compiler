@@ -32,6 +32,15 @@ void emit(string opcode, long long arg, string comment) {
     code.push_back({opcode, arg, true, comment});
 }
 
+// I
+void add_comment(string comment) {
+    if(code[code.size()-1].comment == "") {
+        code[code.size()-1].comment = comment;
+    } else {
+        code[code.size()-1].comment += comment;
+    }
+}
+
 // generates const to reg, uses only reg
 void gen_const(int reg, long long value) {
     if (value < 0) value = 0; 

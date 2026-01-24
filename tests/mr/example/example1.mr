@@ -1,7 +1,7 @@
 READ
 STORE 19
 READ
-STORE 20
+STORE 20 # next line inlining de
 LOAD 19
 STORE 10
 LOAD 20

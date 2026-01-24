@@ -8,7 +8,7 @@ SHL a
 INC a
 SHL a
 SHL a
-STORE 10
+STORE 10 # next line inlining licz
 RST a
 INC a
 SHL a
@@ -113,7 +113,7 @@ STORE 115
 LOAD 112
 INC a
 STORE 112
-JUMP 59
+JUMP 59 # next line inlining wypisz
 LOAD 10
 STORE 113
 RST b

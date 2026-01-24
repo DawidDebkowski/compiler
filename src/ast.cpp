@@ -11,6 +11,13 @@ static std::map<std::string, ProcedureNode*> procedure_defs;
 static std::map<std::string, int> proc_usage_count;
 static std::map<std::string, bool> proc_has_array_params;
 
+// Cache: Maps "Parameter Slot Address" -> "Symbol currently stored there"
+static std::map<long long, Symbol*> param_cache;
+
+void reset_param_cache() {
+    param_cache.clear();
+}
+
 bool should_inline(std::string name) {
     int count = proc_usage_count[name];
     bool has_array = proc_has_array_params[name]; 
@@ -497,13 +504,16 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
 }
 
 void IfNode::codegen() {
+    reset_param_cache();
     // Condition
     long long jump_idx_pos;
     condition->codegen_jump_false(0);
+    reset_param_cache();
     jump_idx_pos = code.size() - 1;
     
     // Then Block
     for(auto s : then_block) s->codegen();
+    reset_param_cache();
     
     long long jump_over_else = -1;
     if (!else_block.empty()) {
@@ -517,6 +527,7 @@ void IfNode::codegen() {
     // Else
     if (!else_block.empty()) {
         for(auto s : else_block) s->codegen();
+        reset_param_cache();
         code[jump_over_else].arg = code.size();
     }
 }
@@ -530,12 +541,15 @@ void IfNode::validate() {
 // --- Loops ---
 
 void WhileNode::codegen() {
+    reset_param_cache();
     long long start = code.size();
     
     condition->codegen_jump_false(0);
+    reset_param_cache();
     long long jump_out = code.size()-1;
     
     for(auto s : body) s->codegen();
+    reset_param_cache();
     
     emit("JUMP", start);
     code[jump_out].arg = code.size();
@@ -547,10 +561,13 @@ void WhileNode::validate() {
 }
 
 void RepeatNode::codegen() {
+     reset_param_cache();
      long long start = code.size();
      for(auto s : body) s->codegen();
+     reset_param_cache();
      
      condition->codegen_jump_false(0);
+     reset_param_cache();
      long long jump_instr = code.size()-1;
      code[jump_instr].arg = start;
 }
@@ -564,6 +581,7 @@ void RepeatNode::validate() {
 // FOR i FROM start TO end DO ...
 // FOR i FROM start DOWNTO end DO ...
 void ForNode::codegen() {
+    reset_param_cache();
     current_for_stack.push_back(for_id);
     
     Symbol* iter = get_variable(iterator);
@@ -601,6 +619,7 @@ void ForNode::codegen() {
     
     // Body
     for(auto s : body) s->codegen();
+    reset_param_cache();
     
     // Decrement Count
     emit("LOAD", count_addr);
@@ -616,6 +635,7 @@ void ForNode::codegen() {
     code[jump_out].arg = code.size();
     
     current_for_stack.pop_back();
+    reset_param_cache();
 }
 
 void ForNode::validate() {
@@ -646,6 +666,7 @@ void ForNode::validate() {
 
 void ProcCallNode::codegen() {
     if (should_inline(proc_name)) {
+        add_comment("next line inlining " + proc_name);
         ProcedureInfo& info = procedures_map[proc_name];
         
         // 1. Argument Resolution & Substitution
@@ -705,6 +726,13 @@ void ProcCallNode::codegen() {
         // Handle Identifier
         if (auto* arg = dynamic_cast<IdentifierNode*>(args[i])) {
             Symbol* s = get_variable(arg->name);
+
+            // Check Cache
+            if (param_cache.count(param_addr) && param_cache[param_addr] == s) {
+                continue; // Optimized
+            }
+            param_cache[param_addr] = s;
+
             if (s->is_param) {
                 emit("LOAD", s->address); 
                 emit("STORE", param_addr); 
@@ -712,7 +740,7 @@ void ProcCallNode::codegen() {
                 if (s->is_array) {
 
                     if (!unsafety_detected) {
-                        emit("#", 1, "emitting base - start");
+                        add_comment("emmiting base - start");
                         gen_const(0, s->address - s->start + 1);
                     } else {
                         gen_const(0, s->address);
@@ -725,6 +753,7 @@ void ProcCallNode::codegen() {
         }
         // Handle Number
         else if (auto* num = dynamic_cast<NumberNode*>(args[i])) {
+             param_cache.erase(param_addr);
              long long temp_addr = memory_offset++;
              gen_const(0, num->value);
              emit("STORE", temp_addr);
@@ -767,6 +796,7 @@ void ProcCallNode::validate() {
 // --- Procedure & Root ---
 
 void ProcedureNode::codegen() {
+    reset_param_cache();
     current_procedure = name;
     procedures_map[name].address = code.size();
     long long ra = memory_offset++;
@@ -774,6 +804,7 @@ void ProcedureNode::codegen() {
     emit("STORE", ra);
     
     for(auto s : body) s->codegen();
+    reset_param_cache();
     
     emit("LOAD", ra);
     emit("RTRN");
@@ -788,7 +819,7 @@ void ProcedureNode::validate() {
 
 void RootNode::codegen() {
     emit("JUMP", 0);
-    
+    reset_param_cache();
     
     // Gen Procs
     for(auto p : procedures) {

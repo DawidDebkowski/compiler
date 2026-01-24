@@ -14,7 +14,7 @@ LOAD 9
 SWP b
 LOAD 10
 SUB b
-JPOS 70 # >=
+JPOS 70 # >=next line inlining check
 RST a
 STORE 11
 LOAD 9

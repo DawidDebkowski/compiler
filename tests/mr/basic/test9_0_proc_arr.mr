@@ -24,7 +24,7 @@ SHL c
 INC c
 ADD c
 SWP d
-RSTORE d
+RSTORE d # next line inlining set
 RST a
 INC a
 SHL a

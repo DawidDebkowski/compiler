@@ -74,7 +74,7 @@ RTRN
 READ
 STORE 15
 READ
-STORE 16
+STORE 16 # next line inlining bc
 RST a
 INC a
 SHL a

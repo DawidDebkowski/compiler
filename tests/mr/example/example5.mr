@@ -3,7 +3,7 @@ STORE 12
 READ
 STORE 13
 READ
-STORE 14
+STORE 14 # next line inlining power
 RST a
 INC a
 STORE 15

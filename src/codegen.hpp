@@ -32,6 +32,7 @@ void emit(string opcode, string comment);
 void emit(string opcode, long long arg, string comment);
 void emit(string opcode);
 void emit(string opcode, long long arg);
+void add_comment(string comment);
 void gen_const(int reg, long long value);
 void optimize_code();
 

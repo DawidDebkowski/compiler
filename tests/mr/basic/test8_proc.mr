@@ -12,7 +12,7 @@ SHL a
 INC a
 SHL a
 SHL a
-STORE 9
+STORE 9 # next line inlining sum
 LOAD 8
 SWP b
 LOAD 9

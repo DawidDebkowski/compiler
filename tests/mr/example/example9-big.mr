@@ -1,7 +1,7 @@
 READ
 STORE 114
 READ
-STORE 115
+STORE 115 # next line inlining bcnext line inlining factorial
 RST a
 INC a
 SWP d
