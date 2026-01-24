@@ -1,0 +1,12 @@
+PROCEDURE mult(I a, I b, O o) IS
+IN
+    o := a * b;
+END
+
+PROGRAM IS
+    a, b, c
+IN
+    a := 123 * 124;
+    mult(a, 16, c);
+    WRITE c;
+END

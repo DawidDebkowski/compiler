@@ -12,7 +12,6 @@
     b. łączenie bloków kodu?
 
 TODO:
-6. uzycie CLN do zrobienia najwiecej operacji jak sie da tutaj
 
 4. Smart Accumulator Management (Sethi-Ullman labeling)
 The VM is accumulator-based (ADD, SUB, SHL all operate on register ra). A pure AST traversal allows you to reorder instructions to minimize register spilling (saving intermediate results to memory).
@@ -26,3 +25,4 @@ DONE:
 3. opt mnożenia przez stałe
 4. Inlinowanie procedur przy 1-2 callach
 5. dead code elimination
+6. uzycie CLN do zrobienia najwiecej operacji jak sie da tutaj
