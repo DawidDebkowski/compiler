@@ -22,7 +22,7 @@ void generate_mul() {
     
     // 1. Zapisz adres powrotu (RA jest w 'ra', chowamy do rejestru pomocniczego np. r6)
     // Uwaga: zakładam, że r3 to rejestr wyniku, więc RA chowamy np. do r6
-    emit("SWP", 6); 
+    emit("SWP", 4); 
 
     // 2. Zerowanie wyniku (rd = 0)
     emit("RST", 3); 
@@ -77,8 +77,8 @@ void generate_mul() {
     // Przenieś wynik rd -> rb (zgodnie z konwencją zwracania)
     emit("RST", 0); emit("ADD", 3); emit("SWP", 1);
     
-    // Przywróć RA z r6
-    emit("RST", 0); emit("ADD", 6);
+    // Przywróć RA z r4
+    emit("RST", 0); emit("ADD", 4);
 
     emit("RTRN");
 }
@@ -86,7 +86,6 @@ void generate_mul() {
 void generate_div() {
     addr_div = code.size();
     
-    // Opcjonalnie: Zapisz RA (SWP 3) - pomijam dla czystej wydajności, jeśli to "inline"
     emit("SWP", 3); 
 
     // r1(rb) = Dzielna / Reszta

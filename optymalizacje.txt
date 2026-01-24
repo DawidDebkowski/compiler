@@ -12,7 +12,6 @@
     b. łączenie bloków kodu?
 
 TODO:
-4. Inlinowanie procedur przy 1-2 callach
 6. uzycie CLN do zrobienia najwiecej operacji jak sie da tutaj
 a. dead code elimination
 
@@ -22,3 +21,4 @@ DONE:
 1. działające procedury
 2. opt mul, div mod
 3. opt mnożenia przez stałe
+4. Inlinowanie procedur przy 1-2 callach
