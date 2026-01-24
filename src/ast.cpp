@@ -615,6 +615,7 @@ void ProcCallNode::codegen() {
             } else {
                 if (s->is_array) {
                     if (!unsafety_detected) {
+                        emit("#", 1, "emitting base - start");
                         gen_const(0, s->address - s->start + 1);
                     } else {
                         gen_const(0, s->address);
@@ -729,12 +730,13 @@ void RootNode::codegen() {
     // emit("INC", 7);
     
     // Header Initialization for Arrays passed to Procedures
-    if (unsafety_detected)
-    for(auto& pair : symbol_table) {
-        Symbol& s = pair.second;
-        if (s.is_array && !s.is_param && s.is_passed_to_proc) {
-             gen_const(0, s.start);
-             emit("STORE", s.address); // Store START at header address
+    if (unsafety_detected) {
+        for(auto& pair : symbol_table) {
+            Symbol& s = pair.second;
+            if (s.is_array && !s.is_param && s.is_passed_to_proc) {
+                gen_const(0, s.start);
+                emit("STORE", s.address, "because unsafe arrays"); // Store START at header address
+            }
         }
     }
     for(auto s : main_block) s->codegen();

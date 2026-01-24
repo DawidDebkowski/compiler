@@ -12,6 +12,7 @@ SWP d
 RSTORE d
 LOAD 15
 RTRN
+# 1 # emitting base - start
 RST a
 INC a
 SHL a
@@ -51,6 +52,7 @@ SHL a
 INC a
 STORE 7
 CALL 1
+# 1 # emitting base - start
 RST a
 INC a
 SHL a

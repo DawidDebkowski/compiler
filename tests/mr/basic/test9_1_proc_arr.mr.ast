@@ -1,0 +1,32 @@
+Program
+  Procedures:
+    Procedure set
+      Assignment
+        Identifier(arr[idx])
+        Identifier(val)
+  Main:
+    Read
+      Identifier(b)
+    ProcCall(set)
+      Identifier(tab)
+      Number(4611686018427387904)
+      Number(111)
+    ProcCall(set)
+      Identifier(tab)
+      Number(4611686018427387905)
+      Number(222)
+    Write
+      Identifier(tab[4611686018427387904])
+    Write
+      Identifier(tab[4611686018427387905])
+    Assignment
+      Identifier(a[4611686018427387911])
+      Number(333)
+    Write
+      Identifier(a[4611686018427387911])
+    ProcCall(set)
+      Identifier(a)
+      Number(4611686018427387911)
+      Identifier(b)
+    Write
+      Identifier(a[4611686018427387911])
