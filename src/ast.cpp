@@ -320,6 +320,25 @@ void BinaryOpNode::codegen_to_reg(int reg) {
     if (reg != 0) emit("SWP", reg);
 }
 
+bool BinaryOpNode::try_evaluate(long long& out_val) {
+    long long linfo, rinfo;
+    if (left->try_evaluate(linfo) && right->try_evaluate(rinfo)) {
+        if (op == BinaryOp::PLUS) out_val = linfo + rinfo;
+        if (op == BinaryOp::MINUS) out_val = linfo - rinfo;
+        if (op == BinaryOp::MULT) out_val = linfo * rinfo;
+        if (op == BinaryOp::DIV) {
+             if (rinfo == 0) return false;
+             out_val = linfo / rinfo;
+        }
+        if (op == BinaryOp::MOD) {
+             if (rinfo == 0) return false;
+             out_val = linfo % rinfo;
+        }
+        return true;
+    }
+    return false;
+}
+
 void BinaryOpNode::validate() {
     left->validate();
     right->validate();
@@ -503,7 +522,36 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
      }
 }
 
+bool ConditionNode::try_evaluate(bool& out_val) {
+    long long left_val, right_val;
+    if (left->try_evaluate(left_val) && right->try_evaluate(right_val)) {
+        switch (op) {
+            case ConditionOp::EQ: out_val = (left_val == right_val); break;
+            case ConditionOp::NEQ: out_val = (left_val != right_val); break;
+            case ConditionOp::LT: out_val = (left_val < right_val); break;
+            case ConditionOp::GT: out_val = (left_val > right_val); break;
+            case ConditionOp::LEQ: out_val = (left_val <= right_val); break;
+            case ConditionOp::GEQ: out_val = (left_val >= right_val); break;
+        }
+        return true;
+    }
+    return false;
+}
+
 void IfNode::codegen() {
+    bool cond_val;
+    if (condition->try_evaluate(cond_val)) {
+        add_comment("Compiling constant IF (dead code elim)");
+        reset_param_cache();
+        if (cond_val) {
+             for(auto s : then_block) s->codegen();
+        } else {
+             for(auto s : else_block) s->codegen();
+        }
+        reset_param_cache();
+        return;
+    }
+
     reset_param_cache();
     // Condition
     long long jump_idx_pos;
@@ -541,6 +589,24 @@ void IfNode::validate() {
 // --- Loops ---
 
 void WhileNode::codegen() {
+    bool cond_val;
+    if (condition->try_evaluate(cond_val)) {
+         if (!cond_val) {
+             add_comment("Dead WHILE loop (condition false)");
+             return;
+         }
+         // Infinite Loop
+         add_comment("Infinite WHILE loop (condition true)");
+         reset_param_cache();
+         long long start = code.size();
+         // No condition check
+         reset_param_cache();
+         for(auto s : body) s->codegen();
+         emit("JUMP", start);
+         reset_param_cache();
+         return;
+    }
+
     reset_param_cache();
     long long start = code.size();
     
@@ -561,6 +627,28 @@ void WhileNode::validate() {
 }
 
 void RepeatNode::codegen() {
+    bool cond_val;
+    if (condition->try_evaluate(cond_val)) {
+         if (cond_val) { // REPEAT ... UNTIL TRUE -> Runs once
+             add_comment("REPEAT UNTIL TRUE (runs once)");
+             reset_param_cache();
+             for(auto s : body) s->codegen();
+             reset_param_cache();
+             return;
+         }
+         // REPEAT ... UNTIL FALSE -> Infinite Loop
+         add_comment("REPEAT UNTIL FALSE (infinite loop)");
+         reset_param_cache();
+         long long start = code.size();
+         
+         reset_param_cache();
+         for(auto s : body) s->codegen();
+         
+         emit("JUMP", start);
+         reset_param_cache();
+         return;
+    }
+
      reset_param_cache();
      long long start = code.size();
      for(auto s : body) s->codegen();
@@ -821,10 +909,18 @@ void RootNode::codegen() {
     emit("JUMP", 0);
     reset_param_cache();
     
+    // Analyze Usage
+    std::set<std::string> used_procs;
+    collect_reachable_procedures(used_procs);
+
     // Gen Procs
     for(auto p : procedures) {
         if (!should_inline(p->name)) {
-            p->codegen();
+            if (used_procs.count(p->name)) {
+                p->codegen();
+            } else {
+                add_comment("Procedure " + p->name + " is dead code (unused).");
+            }
         }
     }
     
@@ -1032,4 +1128,82 @@ void RootNode::print(std::ostream& out, int indent) const {
     }
     out << indent_str(indent + 1) << "Main:" << std::endl;
     for(auto s : main_block) s->print(out, indent + 2);
+}
+
+// --- Analyze Usage ---
+
+void ProcCallNode::collect_reachable_procedures(std::set<std::string>& used_procs) {
+    used_procs.insert(proc_name);
+}
+
+void IfNode::collect_reachable_procedures(std::set<std::string>& used_procs) {
+    bool res;
+    if (condition->try_evaluate(res)) {
+        if (res) { // True -> Then
+             for(auto s : then_block) s->collect_reachable_procedures(used_procs);
+        } else { // False -> Else
+             for(auto s : else_block) s->collect_reachable_procedures(used_procs);
+        }
+    } else {
+        // Unknown logic
+        for(auto s : then_block) s->collect_reachable_procedures(used_procs);
+        for(auto s : else_block) s->collect_reachable_procedures(used_procs);
+    }
+}
+
+void WhileNode::collect_reachable_procedures(std::set<std::string>& used_procs) {
+    bool res;
+    if (condition->try_evaluate(res)) {
+        if (!res) {
+             // Condition False -> Loop never runs (Dead)
+             return; 
+        }
+    }
+    // Loop might run
+    for(auto s : body) s->collect_reachable_procedures(used_procs);
+}
+
+void RepeatNode::collect_reachable_procedures(std::set<std::string>& used_procs) {
+    // Body always runs at least once
+    for(auto s : body) s->collect_reachable_procedures(used_procs);
+}
+
+void ForNode::collect_reachable_procedures(std::set<std::string>& used_procs) {
+    for(auto s : body) s->collect_reachable_procedures(used_procs);
+}
+
+void ProcedureNode::collect_reachable_procedures(std::set<std::string>& used_procs) {
+    for(auto s : body) s->collect_reachable_procedures(used_procs);
+}
+
+void RootNode::collect_reachable_procedures(std::set<std::string>& used_procs) {
+    // 1. Scan Main
+    for (auto s : main_block) s->collect_reachable_procedures(used_procs);
+
+    // 2. Closure
+    std::set<std::string> analyzed;
+    bool changed = true;
+    while(changed) {
+        changed = false;
+        
+        std::string target = "";
+        for(const auto& name : used_procs) {
+            if (analyzed.find(name) == analyzed.end()) {
+                target = name;
+                break;
+            }
+        }
+        
+        if (target != "") {
+             analyzed.insert(target);
+             // Find proc node
+             for(auto p : procedures) {
+                 if (p->name == target) {
+                     p->collect_reachable_procedures(used_procs);
+                     changed = true;
+                     break;
+                 }
+             }
+        }
+    }
 }

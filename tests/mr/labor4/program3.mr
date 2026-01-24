@@ -88,7 +88,7 @@ RST a
 INC a
 WRITE
 HALT
-SWP g
+SWP e
 RST d
 RST a
 ADD c
@@ -108,7 +108,7 @@ RST a
 ADD d
 SWP b
 RST a
-ADD g
+ADD e
 RTRN
 SWP d
 RST g

@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <set>
 #include "types.hpp"
 
 // Forward declaration
@@ -23,6 +24,7 @@ public:
     virtual void codegen() = 0;
     virtual void validate() {} 
     virtual void print(std::ostream& out, int indent = 0) const = 0;
+    virtual void collect_reachable_procedures(std::set<std::string>& used_procs) {}
 };
 
 class StatementNode : public ASTNode {
@@ -43,6 +45,8 @@ public:
     
     // Default codegen puts result in r[0]
     void codegen() override { codegen_to_reg(0); }
+
+    virtual bool try_evaluate(long long& out_val) { return false; }
 };
 
 // --- Values ---
@@ -60,6 +64,7 @@ public:
     long long evaluate() const override { return value; }
     void codegen_to_reg(int reg) override;
     void print(std::ostream& out, int indent = 0) const override;
+    bool try_evaluate(long long& out_val) override { out_val = value; return true; }
 };
 
 class IdentifierNode : public ValueNode {
@@ -108,6 +113,7 @@ public:
     void codegen_to_reg(int reg) override;
     void validate() override;
     void print(std::ostream& out, int indent = 0) const override;
+    bool try_evaluate(long long& out_val) override;
     ~BinaryOpNode() { delete left; delete right; }
 };
 
@@ -126,6 +132,7 @@ public:
     void codegen() override {}
     void validate() override;
     void print(std::ostream& out, int indent = 0) const override;
+    bool try_evaluate(bool& out_val);
     ~ConditionNode() { delete left; delete right; }
 };
 
@@ -153,6 +160,7 @@ public:
         : StatementNode(ln), condition(cond), then_block(tb), else_block(eb) {}
     void codegen() override;
     void validate() override;
+    void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
     ~IfNode() { delete condition; for(auto s: then_block) delete s; for(auto s: else_block) delete s; }
 };
@@ -166,6 +174,7 @@ public:
         : StatementNode(ln), condition(cond), body(b) {}
     void codegen() override;
     void validate() override;
+    void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
     ~WhileNode() { delete condition; for(auto s: body) delete s; }
 };
@@ -179,6 +188,7 @@ public:
         : StatementNode(ln), condition(cond), body(b) {}
     void codegen() override;
     void validate() override;
+    void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
     ~RepeatNode() { delete condition; for(auto s: body) delete s; }
 };
@@ -196,6 +206,7 @@ public:
         : StatementNode(ln), iterator(iter), start_val(start), end_val(end), downto(down), body(b) {}
     void codegen() override;
     void validate() override;
+    void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
     ~ForNode() { delete start_val; delete end_val; for(auto s: body) delete s; }
 };
@@ -209,6 +220,7 @@ public:
         : StatementNode(ln), proc_name(name), args(a) {}
     void codegen() override;
     void validate() override;
+    void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
     ~ProcCallNode() { for(auto a: args) delete a; }
 };
@@ -246,6 +258,7 @@ public:
         : ASTNode(ln), name(n), body(std::move(b)) {}
     void codegen() override;
     void validate() override;
+    void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
     ~ProcedureNode() { for(auto s: body) delete s; }
 };
@@ -258,6 +271,7 @@ public:
         : ASTNode(ln), procedures(procs), main_block(main) {}
     void codegen() override;
     void validate() override;
+    void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
     ~RootNode() { for(auto p: procedures) delete p; for(auto s: main_block) delete s; }
 };

@@ -35,7 +35,7 @@ clean:
 # CATEGORY - test category name (required, e.g., example, labor4, custom, standard)
 # FAIL_FAST - if set to 1, stops on first failed test (optional, default: 0)
 
-VM ?= ./mw2025/maszyna-wirtualna
+VM ?= ./mw2025/maszyna-wirtualna-cln
 TESTS_DIR = tests
 CASES_DIR = $(TESTS_DIR)/cases
 IN_DIR = $(TESTS_DIR)/in

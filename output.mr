@@ -1,30 +1,15 @@
-
-
-READ
-STORE 5
-LOAD 5
-SHR a # optimizing left div 2
-STORE 6
-
-SHL a # optimizing left mult 2
-STORE 6
-LOAD 5
-SWP b
-LOAD 6
-SWP b !!!
-SUB b
-JZERO 17
 RST a
 INC a
-WRITE
-JUMP 19
+SHL a
+SHL a
+INC a
+STORE 8
 RST a
-WRITE
-LOAD 5
-SHR a # optimizing left div 2
-STORE 5
+INC a
+STORE 9 # Compiling constant IF (dead code elim) next line inlining pa
+LOAD 8
 SWP b
-RST a
-SWP b # optimized var=0
-JPOS 2
+LOAD 9
+ADD b
+STORE 8 # Dead WHILE loop (condition false)
 HALT
