@@ -14,6 +14,10 @@
 TODO:
 6. uzycie CLN do zrobienia najwiecej operacji jak sie da tutaj
 
+4. Smart Accumulator Management (Sethi-Ullman labeling)
+The VM is accumulator-based (ADD, SUB, SHL all operate on register ra). A pure AST traversal allows you to reorder instructions to minimize register spilling (saving intermediate results to memory).
+• The Logic: In an expression A + (B * C), a naive parser might load A, see it needs B*C, save A to memory (cost 50), compute B*C, then load A back (cost 50).
+• Optimization: An AST walker can calculate the "depth" of each side. It sees that (B * C) requires more registers/work. It can choose to generate code for (B * C) first, leaving the result in the accumulator, and then add A. This avoids the expensive 50-cycle STORE and LOAD of the temporary result.
 
 
 DONE:

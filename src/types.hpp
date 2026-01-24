@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cln/cln.h>
 
 using namespace std;
+using BigInt = cln::cl_I;
 
 // Forward declaration if needed, or included here
 struct Symbol {

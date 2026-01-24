@@ -5,104 +5,117 @@
 
 using namespace std;
 
-// Spill Memory Locations - not working now
 const long long SPILL_RE = 2;
 const long long SPILL_RF = 3;
 const long long SPILL_RG = 4;
 
-// poprzec na liste laboratoryjna
-// w program 0 jest mnozenie
-
-// Input: rb (left-side), rc (right-side)
-// Output: rb (Result)
-// Clobbers: ra, rb, rc, rd, re, rf,
-// Preserves: re, rf, rg (via Spill), rh
+// Registers used:
+//  r0 (ra): Scratch / Accumulator
+//  r1 (rb): Multiplicand (Left)
+//  r2 (rc): Multiplier (Right)
+//  r3 (rd): Result
+//  r4 (re): Return Address Backup
 void generate_mul() {
+    // Pseudocode:
+    //  Result = 0
+    //  While Multiplier > 0:
+    //      If Multiplier is Odd:
+    //          Result += Multiplicand
+    //      Multiplicand << 1
+    //      Multiplier >> 1
     addr_mul = code.size();
     
-    // 1. Zapisz adres powrotu (RA jest w 'ra', chowamy do rejestru pomocniczego np. r6)
-    // Uwaga: zakładam, że r3 to rejestr wyniku, więc RA chowamy np. do r6
+    // 1. Save Return Address to r4
     emit("SWP", 4); 
 
-    // 2. Zerowanie wyniku (rd = 0)
+    // 2. Initialize Result (r3) to 0
     emit("RST", 3); 
 
     long long loop_start = code.size();
 
-    // 3. Pobierz Mnożnik (rc) do Akumulatora
-    //    To jest początek Twojego triku: ra = rc
+    // 3. Load Multiplier (r2) to Check Zero/Parity
     emit("RST", 0); 
     emit("ADD", 2); 
     
-    // 4. Warunek końca: Jeśli rc == 0, koniec
+    // 4. Check Termination: If Multiplier == 0, End
     emit("JZERO", 0);
     long long jump_end = code.size() - 1;
 
-    // 5. Trik Parzystości: Sprawdź LSB i przygotuj rc
-    //    W tym momencie ra = rc (stare)
+    // 5. Parity Check (Is r2 Odd?)
+    //    r2 = floor(r2 / 2) * 2;
+    //    Bit = Old_r2 - New_r2;
     
-    emit("SHR", 2); // rc = floor(rc / 2)
-    emit("SHL", 2); // rc = floor(rc / 2) * 2 (wyzerowany LSB)
+    emit("SHR", 2); // r2 = floor(r2 / 2)
+    emit("SHL", 2); // r2 = floor(r2 / 2) * 2 (LSB cleared)
     
-    // 6. Oblicz bit parzystości: ra = ra - rc
-    //    Jeśli było nieparzyste: ra = 1. Jeśli parzyste: ra = 0.
+    // r0 (Old r2) - r2 (Even part) = LSB
     emit("SUB", 2); 
     
-    emit("JZERO", 0); 
+    emit("JZERO", 0); // If LSB is 0, Skip Addition
     long long jump_even = code.size() - 1;
 
-    // 7. JEŚLI NIEPARZYSTA (ra > 0): Dodaj rb do wyniku rd
+    // 6. Odd Case: Result (r3) += Multiplicand (r1)
     emit("RST", 0);
-    emit("ADD", 3); // ra = rd
-    emit("ADD", 1); // ra = rd + rb
-    emit("SWP", 3); // Zapisz nowy wynik do rd
+    emit("ADD", 3); // r0 = Result
+    emit("ADD", 1); // r0 = Result + Multiplicand
+    emit("SWP", 3); // Store back in r3
 
-    // Etykieta: jump_even (omijamy dodawanie)
+    // Label: jump_even
     code[jump_even].arg = code.size();
 
-    // 8. Przywróć stan dzielenia dla rc (Dokończenie Twojego triku)
-    //    Wcześniej zrobiliśmy SHR, potem SHL. Teraz rc jest parzyste.
-    //    Musimy zrobić SHR jeszcze raz, żeby rc było faktycznie podzielone przez 2 na nowo.
+    // 7. Prepare Multiplier (r2) for next iteration
+    //    Actually do the division by 2
     emit("SHR", 2); 
 
-    // 9. Podwój Mnożną (rb = rb * 2)
+    // 8. Double the Multiplicand (r1)
     emit("SHL", 1);
 
-    // 10. Skok do pętli
+    // 9. Loop
     emit("JUMP", loop_start);
 
-    // --- KONIEC ---
+    // --- END ---
     code[jump_end].arg = code.size();
     
-    // Przenieś wynik rd -> rb (zgodnie z konwencją zwracania)
+    // Move Result (r3) to Output (r1)
     emit("RST", 0); emit("ADD", 3); emit("SWP", 1);
     
-    // Przywróć RA z r4
+    // Restore RA from r4
     emit("RST", 0); emit("ADD", 4);
 
     emit("RTRN");
 }
 
+// Registers:
+//  r0 (ra): Scratch
+//  r1 (rb): Dividend (Input) -> Remainder
+//  r2 (rc): Divisor (Constant)
+//  r3 (rd): Return Address Backup
+//  r4 (re): Shifted Divisor
+//  r5 (rf): Bit Mask
+//  r6 (rg): Quotient
 void generate_div() {
+    // Pseudocode:
+    //  Align Shifted_Divisor (r4) with Dividend (r1)
+    //  While Mask > 0:
+    //     Quotient << 1
+    //     If Shifted_Divisor <= Remainder:
+    //        Remainder -= Shifted_Divisor
+    //        Quotient++
+    //     Shifted_Divisor >> 1
+    //     Mask >> 1
     addr_div = code.size();
     
     emit("SWP", 3); 
 
-    // r1(rb) = Dzielna / Reszta
-    // r2(rc) = Dzielnik (stały)
-    // r4(re) = Przesuwany Dzielnik
-    // r5(rf) = Licznik pętli (tylko maska do sprawdzania końca)
-    // r6(rg) = Wynik
+    // 1. Initialize
+    emit("RST", 6); // rg = 0 (Quotient)
+    emit("RST", 5); emit("INC", 5); // rf = 1 (Mask)
+    emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc (Divisor copy)
 
-    // 1. Init
-    emit("RST", 6); // rg = 0
-    emit("RST", 5); emit("INC", 5); // rf = 1 (tylko do liczenia iteracji)
-    emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc
-
-    // 2. ALIGN (W górę) - bez zmian, bo musimy znaleźć sufit
+    // 2. Align (Scale Up)
     long long loop_up = code.size();
 
-    // Czy re > rb?
+    // Check: r4 > r1 ?
     emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
     emit("JPOS", 0); 
     long long jump_peak = code.size() - 1;
@@ -111,78 +124,79 @@ void generate_div() {
     emit("SHL", 5); // rf << 1
     emit("JUMP", loop_up);
 
-    // 3. KOREKTA
+    // 3. Correction (Overshoot)
     code[jump_peak].arg = code.size();
     emit("SHR", 4);
     emit("SHR", 5);
 
-    // 4. COMPUTE (W dół) - TU JEST OPTYMALIZACJA
+    // 4. Compute (Scale Down)
     long long loop_down = code.size();
 
-    // A. Czy koniec pętli? (rf == 0) - koszt 7 cykli
+    // A. Check Termination (rf == 0)
     emit("RST", 0); emit("ADD", 5);
     emit("JZERO", 0);
     long long jump_end = code.size() - 1;
 
-    // B. Przesuń dotychczasowy wynik w lewo (rg << 1) - koszt 1 cykl
-    // To robi miejsce na nowy bit.
+    // B. Shift Quotient
     emit("SHL", 6);
 
-    // C. Sprawdź dopasowanie (re > rb?) - koszt 12 cykli
+    // C. Compare (r4 <= r1 ?)
+    // If r4 - r1 > 0, Jump
     emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
-    emit("JPOS", 0); // Jeśli nie pasuje, skaczemy
+    emit("JPOS", 0);
     long long jump_skip = code.size() - 1;
 
-    // D. JEŚLI PASUJE:
-    // Odejmij (rb -= re) - koszt 15 cykli
-    emit("SWP", 1); emit("SUB", 4); emit("SWP", 1);
-    
-    // Wstaw bit 1 (INC rg) - koszt 1 cykl!
-    // Ponieważ zrobiliśmy SHL na początku, LSB jest 0. INC robi z niego 1.
-    emit("INC", 6);
+    // D. Subtract and Set Bit
+    emit("SWP", 1); emit("SUB", 4); emit("SWP", 1); // r1 -= r4
+    emit("INC", 6); // Set LSB
 
     code[jump_skip].arg = code.size();
 
-    // E. Przesuń okno w dół - koszt 2 cykle
+    // E. Shift Down
     emit("SHR", 4);
     emit("SHR", 5);
     emit("JUMP", loop_down);
 
-    // 5. FINALIZE
+    // 5. Finalize
     code[jump_end].arg = code.size();
     
-    // Ustawienie wyników: rc = Reszta, rb = Iloraz
-    // emit("RST", 0); emit("ADD", 1); emit("SWP", 2); // rc = stara reszta
-    emit("RST", 0); emit("ADD", 6); emit("SWP", 1); // rb = wynik
+    // Result: Quotient in r6 -> r1
+    emit("RST", 0); emit("ADD", 6); emit("SWP", 1); 
     
-    // Restore RA
+    // Restore RA from r3
     emit("RST", 0); emit("ADD", 3);
     emit("RTRN");
 }
 
 // addr_mod = code.size();
 
-// Wejście: rb (Liczba), rc (Modulo)
-// Wyjście: rb (Wynik rb % rc)
+// Registers:
+//  r0 (ra): Scratch
+//  r1 (rb): Dividend (Input) -> Remainder (Result)
+//  r2 (rc): Divisor (Constant)
+//  r3 (rd): Return Address Backup
+//  r4 (re): Shifted Divisor
+//  r5 (rf): Bit Mask
 void generate_mod() {
+    // Pseudocode:
+    //  Align Shifted_Divisor (r4) with Dividend (r1)
+    //  While Mask > 0:
+    //     If Shifted_Divisor <= Remainder:
+    //        Remainder -= Shifted_Divisor
+    //     Shifted_Divisor >> 1
+    //     Mask >> 1
     addr_mod = code.size();
-    // 1. Init
-    // rb = Dzielna
-    // rc = Dzielnik
-    // re = Temp (przesuwany dzielnik)
-    // rf = Maska (licznik pętli)
     
-    // Nie potrzebujemy rg (wyniku dzielenia)!
-
-    emit("SWP", 3); // Zapis RA (opcjonalnie)
+    emit("SWP", 3);
     
-    emit("RST", 5); emit("INC", 5); // rf = 1
-    emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc
+    // 1. Initialize
+    emit("RST", 5); emit("INC", 5); // rf = 1 (Mask)
+    emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc (Divisor copy)
 
-    // --- ALIGN (W górę) ---
+    // 2. Align (Scale Up)
     long long loop_up = code.size();
 
-    // Czy re > rb?
+    // Check: r4 > r1 ?
     emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
     emit("JPOS", 0); 
     long long jump_peak = code.size() - 1;
@@ -191,44 +205,39 @@ void generate_mod() {
     emit("SHL", 5); // rf << 1
     emit("JUMP", loop_up);
 
-    // --- KOREKTA ---
+    // 3. Correction (Overshoot)
     code[jump_peak].arg = code.size();
     emit("SHR", 4);
     emit("SHR", 5);
 
-    // --- COMPUTE (W dół) ---
+    // 4. Compute (Scale Down)
     long long loop_down = code.size();
 
-    // Koniec pętli? (rf == 0)
+    // A. Check Termination (rf == 0)
     emit("RST", 0); emit("ADD", 5);
     emit("JZERO", 0);
     long long jump_end = code.size() - 1;
 
-    // Czy re > rb? (Czy można odjąć?)
+    // B. Compare (r4 <= r1 ?)
+    // If r4 - r1 > 0, Jump
     emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
-    emit("JPOS", 0); // Jeśli za duże, pomiń
+    emit("JPOS", 0); // If too large, skip
     long long jump_skip = code.size() - 1;
 
-    // Wykonaj odejmowanie (rb -= re)
-    // To jest jedyna operacja, która nas interesuje! Zmniejszamy liczbę.
+    // C. Correction (rb -= re)
     emit("SWP", 1); emit("SUB", 4); emit("SWP", 1);
     
-    // TU BYŁA OPTYMALIZACJA "INC rg" - TERAZ JEST USUNIĘTA.
-    // Nie liczymy ile razy się zmieściło. Po prostu odejmujemy.
-
     code[jump_skip].arg = code.size();
 
-    // Przesuń w dół
+    // D. Shift Down
     emit("SHR", 4);
     emit("SHR", 5);
     emit("JUMP", loop_down);
 
-    // --- KONIEC ---
+    // 5. Finalize
     code[jump_end].arg = code.size();
 
-    // Wynik jest już w rb!
-    // (W dzieleniu musieliśmy zamieniać rc z rb, tutaj rb to już wynik)
-
-    emit("RST", 0); emit("ADD", 3); // RA
+    // Restore RA from r3
+    emit("RST", 0); emit("ADD", 3); 
     emit("RTRN");
 }

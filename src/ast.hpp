@@ -38,7 +38,7 @@ public:
     
     // Check if expression is a compile-time constant
     virtual bool is_constant() const { return false; }
-    virtual long long evaluate() const { return 0; }
+    virtual BigInt evaluate() const { return 0; }
     
     // Helper to load result into a specific register
     virtual void codegen_to_reg(int reg) = 0; 
@@ -46,7 +46,7 @@ public:
     // Default codegen puts result in r[0]
     void codegen() override { codegen_to_reg(0); }
 
-    virtual bool try_evaluate(long long& out_val) { return false; }
+    virtual bool try_evaluate(BigInt& out_val) { return false; }
 };
 
 // --- Values ---
@@ -58,13 +58,13 @@ public:
 
 class NumberNode : public ValueNode {
 public:
-    long long value;
+    BigInt value;
     NumberNode(long long val, int ln) : ValueNode(ln), value(val) {}
     bool is_constant() const override { return true; }
-    long long evaluate() const override { return value; }
+    BigInt evaluate() const override { return value; }
     void codegen_to_reg(int reg) override;
     void print(std::ostream& out, int indent = 0) const override;
-    bool try_evaluate(long long& out_val) override { out_val = value; return true; }
+    bool try_evaluate(BigInt& out_val) override { out_val = value; return true; }
 };
 
 class IdentifierNode : public ValueNode {
@@ -113,7 +113,7 @@ public:
     void codegen_to_reg(int reg) override;
     void validate() override;
     void print(std::ostream& out, int indent = 0) const override;
-    bool try_evaluate(long long& out_val) override;
+    bool try_evaluate(BigInt& out_val) override;
     ~BinaryOpNode() { delete left; delete right; }
 };
 

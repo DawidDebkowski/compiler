@@ -181,12 +181,21 @@ void IdentifierNode::codegen_to_reg(int reg) {
 // --- BinaryOpNode ---
 
 void BinaryOpNode::codegen_to_reg(int reg) {
+    // Constant Folding
+    BigInt const_val;
+    
+    if (try_evaluate(const_val)) {
+        gen_const(reg, const_val);
+        add_comment("Folded constant expression");
+        return;
+    }
+
     // Standard BinOp: Left in r1, Right in r0
     
     // Optimize MULT
     if (op == BinaryOp::MULT) {
         ExpressionNode* operand = nullptr;
-        long long val = 0;
+        BigInt val = 0;
         
         if (right->is_constant()) {
              val = right->evaluate(); 
@@ -205,33 +214,34 @@ void BinaryOpNode::codegen_to_reg(int reg) {
                  operand->codegen_to_reg(reg);
                  return;
              }
+             // Optimizations for power of 2
              if (val > 0 && (val & (val - 1)) == 0) {
                  operand->codegen_to_reg(0); 
-                 int shifts = 0;
-                 while (val > 1) { val >>= 1; shifts++; }
+                 int shifts = cln::integer_length(val) - 1;
                  for(int k=0; k<shifts; k++) emit("SHL", 0, "mul by 2^k");
                  if (reg != 0) emit("SWP", reg, "optimizing mult 2 with wrong register");
                  return;
              }
              
-             // Small Constants Optimizations
+             // Small Constants Optimizations (limited to small values to avoid huge code explotion)
              if (val > 0 && val <= 10) {
+                 long long v_small = cln::cl_I_to_long(val);
                  operand->codegen_to_reg(0);
                  
                  // Copy r0 to r1
                  emit("RST", 1); emit("SWP", 1); emit("ADD", 1);
                  
-                 if (val == 3) { // x*2 + x
+                 if (v_small == 3) { // x*2 + x
                      emit("SHL", 0); emit("ADD", 1);
-                 } else if (val == 5) { // x*4 + x
+                 } else if (v_small == 5) { // x*4 + x
                      emit("SHL", 0); emit("SHL", 0); emit("ADD", 1);
-                 } else if (val == 6) { // (x*2 + x)*2
+                 } else if (v_small == 6) { // (x*2 + x)*2
                      emit("SHL", 0); emit("ADD", 1); emit("SHL", 0);
-                 } else if (val == 7) { // x*8 - x
+                 } else if (v_small == 7) { // x*8 - x
                      emit("SHL", 0); emit("SHL", 0); emit("SHL", 0); emit("SUB", 1);
-                 } else if (val == 9) { // x*8 + x
+                 } else if (v_small == 9) { // x*8 + x
                      emit("SHL", 0); emit("SHL", 0); emit("SHL", 0); emit("ADD", 1);
-                 } else if (val == 10) { // (x*4 + x)*2
+                 } else if (v_small == 10) { // (x*4 + x)*2
                      emit("SHL", 0); emit("SHL", 0); emit("ADD", 1); emit("SHL", 0);
                  }
                  
@@ -243,7 +253,7 @@ void BinaryOpNode::codegen_to_reg(int reg) {
     
     // Optimize DIV
     if (op == BinaryOp::DIV && right->is_constant()) {
-         long long val = right->evaluate();
+         BigInt val = right->evaluate();
          if (val == 0) {
              emit("RST", reg, "div by 0");
              return;
@@ -254,8 +264,7 @@ void BinaryOpNode::codegen_to_reg(int reg) {
          }
          if (val > 0 && (val & (val - 1)) == 0) {
              left->codegen_to_reg(0);
-             int shifts = 0;
-             while (val > 1) { val >>= 1; shifts++; }
+             int shifts = cln::integer_length(val) - 1;
              for(int k=0; k<shifts; k++) emit("SHR", 0, "optimizing left div 2");
              if (reg != 0) emit("SWP", reg, "with wrong register DIV");
              return;
@@ -264,7 +273,7 @@ void BinaryOpNode::codegen_to_reg(int reg) {
 
     // Optimize MOD
     if (op == BinaryOp::MOD && right->is_constant()) {
-        long long val = right->evaluate();
+        BigInt val = right->evaluate();
         if (val > 0 && (val & (val - 1)) == 0) {
             // x % 2^k = x - (x / 2^k) * 2^k
             left->codegen_to_reg(0); // r0 = x
@@ -273,9 +282,8 @@ void BinaryOpNode::codegen_to_reg(int reg) {
             emit("RST", 1); emit("SWP", 1); emit("ADD", 1);
             
             // r1 = x / 2^k
-            int shifts = 0;
-            long long temp_v = val;
-            while (temp_v > 1) { temp_v >>= 1; shifts++; }
+            int shifts = cln::integer_length(val) - 1;
+            BigInt temp_v = val;
             for(int k=0; k<shifts; k++) emit("SHR", 1, "mod optim shift");
             
             // r1 = (x / 2^k) * 2^k
@@ -320,19 +328,22 @@ void BinaryOpNode::codegen_to_reg(int reg) {
     if (reg != 0) emit("SWP", reg);
 }
 
-bool BinaryOpNode::try_evaluate(long long& out_val) {
-    long long linfo, rinfo;
+bool BinaryOpNode::try_evaluate(BigInt& out_val) {
+    BigInt linfo, rinfo;
     if (left->try_evaluate(linfo) && right->try_evaluate(rinfo)) {
         if (op == BinaryOp::PLUS) out_val = linfo + rinfo;
-        if (op == BinaryOp::MINUS) out_val = linfo - rinfo;
+        if (op == BinaryOp::MINUS) {
+             out_val = linfo - rinfo;
+             if (out_val < 0) out_val = 0; // Natural numbers
+        }
         if (op == BinaryOp::MULT) out_val = linfo * rinfo;
         if (op == BinaryOp::DIV) {
-             if (rinfo == 0) return false;
-             out_val = linfo / rinfo;
+             if (rinfo == 0) out_val = 0;
+             else out_val = cln::truncate1(linfo, rinfo); // Integer division
         }
         if (op == BinaryOp::MOD) {
-             if (rinfo == 0) return false;
-             out_val = linfo % rinfo;
+             if (rinfo == 0) out_val = 0;
+             else out_val = cln::rem(linfo, rinfo);
         }
         return true;
     }
@@ -523,7 +534,7 @@ void ConditionNode::codegen_jump_false(long long target_instruction_index) {
 }
 
 bool ConditionNode::try_evaluate(bool& out_val) {
-    long long left_val, right_val;
+    BigInt left_val, right_val;
     if (left->try_evaluate(left_val) && right->try_evaluate(right_val)) {
         switch (op) {
             case ConditionOp::EQ: out_val = (left_val == right_val); break;

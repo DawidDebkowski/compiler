@@ -1,39 +1,9 @@
 Program
-  Procedures:
-    Procedure pa
-      Assignment
-        Identifier(a)
-        BinaryOp(+)
-          Identifier(a)
-          Identifier(b)
-    Procedure pb
-      Assignment
-        Identifier(a)
-        BinaryOp(+)
-          Identifier(a)
-          Number(1)
   Main:
     Assignment
-      Identifier(a)
-      Number(5)
-    Assignment
-      Identifier(b)
-      Number(1)
-    If
-      Condition(>)
-        Number(1)
-        Number(0)
-    Then
-      ProcCall(pa)
-        Identifier(a)
-        Identifier(b)
-    Else
-      ProcCall(pb)
-        Identifier(a)
-    While
-      Condition(<)
-        Number(10)
-        Number(5)
-    Do
-      ProcCall(pb)
-        Identifier(a)
+      Identifier(x)
+      BinaryOp(*)
+        Number(1000000000000)
+        Number(1000000000000)
+    Write
+      Identifier(x)

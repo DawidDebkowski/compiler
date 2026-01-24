@@ -12,7 +12,7 @@ OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 all: $(TARGET)
 
 $(TARGET): $(BUILD_DIR)/parser.tab.cpp $(BUILD_DIR)/lex.yy.c $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -lm
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lm -lcln
 
 # Compile C++ source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
@@ -42,7 +42,7 @@ IN_DIR = $(TESTS_DIR)/in
 OUT_DIR = $(TESTS_DIR)/out
 ANS_DIR = $(TESTS_DIR)/ans
 MR_DIR = $(TESTS_DIR)/mr
-LOGS_DIR = test_logs
+LOGS_DIR = logs
 FAIL_FAST ?= 0
 
 test:
@@ -188,8 +188,8 @@ run: $(TARGET)
 
 test-all: $(TARGET)
 	@mkdir -p $(LOGS_DIR)
-	@timestamp=$$(date +"%Y-%m-%d_%H-%M-%S"); \
-	log_file=$(LOGS_DIR)/test_run_$$timestamp.log; \
+	@timestamp=$$(date +"%d%S%M%H"); \
+	log_file=$(LOGS_DIR)/$${timestamp}_test.log; \
 	echo "Running tests for all categories..."; \
 	echo "Log file: $$log_file"; \
 	echo "==========================================" | tee $$log_file; \

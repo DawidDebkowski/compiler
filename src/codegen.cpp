@@ -42,26 +42,19 @@ void add_comment(string comment) {
 }
 
 // generates const to reg, uses only reg
-void gen_const(int reg, long long value) {
+void gen_const(int reg, BigInt value) {
     if (value < 0) value = 0; 
     
     emit("RST", reg);
     if (value == 0) return;
     
-    unsigned long long v = value;
-    int msb = 0;
-    for(int i=63; i>=0; i--) {
-        if ((v >> i) & 1) {
-            msb = i;
-            break;
-        }
-    }
+    unsigned int len = cln::integer_length(value);
     
-    emit("INC", reg); // First 1
+    emit("INC", reg); // First 1 (MSB)
     
-    for(int i=msb-1; i>=0; i--) {
+    for(int i = len - 2; i >= 0; i--) {
         emit("SHL", reg);
-        if ((v >> i) & 1) {
+        if (cln::logbitp(i, value)) {
             emit("INC", reg);
         }
     }
