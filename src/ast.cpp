@@ -103,48 +103,116 @@ void IdentifierNode::codegen_to_reg(int reg) {
 void BinaryOpNode::codegen_to_reg(int reg) {
     // Standard BinOp: Left in r1, Right in r0
     
-    // Check for Constant Power of 2
-    // TODO: special cases for 1-10
+    // Optimize MULT
     if (op == BinaryOp::MULT) {
+        ExpressionNode* operand = nullptr;
+        long long val = 0;
+        
         if (right->is_constant()) {
-             long long v = right->evaluate();
-             if (v > 0 && (v & (v - 1)) == 0) {
-                 left->codegen_to_reg(0);
+             val = right->evaluate(); 
+             operand = left;
+        } else if (left->is_constant()) {
+             val = left->evaluate(); 
+             operand = right;
+        }
+        
+        if (operand) {
+             if (val == 0) {
+                 emit("RST", reg, "mul by 0");
+                 return;
+             }
+             if (val == 1) {
+                 operand->codegen_to_reg(reg);
+                 return;
+             }
+             if (val > 0 && (val & (val - 1)) == 0) {
+                 operand->codegen_to_reg(0); 
                  int shifts = 0;
-                 while (v > 1) { v >>= 1; shifts++; }
-                 for(int k=0; k<shifts; k++) emit("SHL", 0, "optimizing right mult 2");
+                 while (val > 1) { val >>= 1; shifts++; }
+                 for(int k=0; k<shifts; k++) emit("SHL", 0, "mul by 2^k");
                  if (reg != 0) emit("SWP", reg, "optimizing mult 2 with wrong register");
                  return;
              }
-        }
-        if (left->is_constant()) {
-             long long v = left->evaluate();
-             if (v > 0 && (v & (v - 1)) == 0) {
-                 right->codegen_to_reg(0);
-                 int shifts = 0;
-                 while (v > 1) { v >>= 1; shifts++; }
-                 for(int k=0; k<shifts; k++) emit("SHL", 0, "optimizing left mult 2");
-                 if (reg != 0) emit("SWP", reg, "optimizing mult 2 with wrong register");
+             
+             // Small Constants Optimizations
+             if (val > 0 && val <= 10) {
+                 operand->codegen_to_reg(0);
+                 
+                 // Copy r0 to r1
+                 emit("RST", 1); emit("SWP", 1); emit("ADD", 1);
+                 
+                 if (val == 3) { // x*2 + x
+                     emit("SHL", 0); emit("ADD", 1);
+                 } else if (val == 5) { // x*4 + x
+                     emit("SHL", 0); emit("SHL", 0); emit("ADD", 1);
+                 } else if (val == 6) { // (x*2 + x)*2
+                     emit("SHL", 0); emit("ADD", 1); emit("SHL", 0);
+                 } else if (val == 7) { // x*8 - x
+                     emit("SHL", 0); emit("SHL", 0); emit("SHL", 0); emit("SUB", 1);
+                 } else if (val == 9) { // x*8 + x
+                     emit("SHL", 0); emit("SHL", 0); emit("SHL", 0); emit("ADD", 1);
+                 } else if (val == 10) { // (x*4 + x)*2
+                     emit("SHL", 0); emit("SHL", 0); emit("ADD", 1); emit("SHL", 0);
+                 }
+                 
+                 if (reg != 0) emit("SWP", reg);
                  return;
              }
         }
     }
+    
+    // Optimize DIV
     if (op == BinaryOp::DIV && right->is_constant()) {
-         long long v = right->evaluate();
-         if (v > 0 && (v & (v - 1)) == 0) {
+         long long val = right->evaluate();
+         if (val == 0) {
+             emit("RST", reg, "div by 0");
+             return;
+         }
+         if (val == 1) {
+             left->codegen_to_reg(reg);
+             return;
+         }
+         if (val > 0 && (val & (val - 1)) == 0) {
              left->codegen_to_reg(0);
              int shifts = 0;
-             while (v > 1) { v >>= 1; shifts++; }
+             while (val > 1) { val >>= 1; shifts++; }
              for(int k=0; k<shifts; k++) emit("SHR", 0, "optimizing left div 2");
              if (reg != 0) emit("SWP", reg, "with wrong register DIV");
              return;
          }
     }
-    left->codegen_to_reg(1);
-    right->codegen_to_reg(0);
+
+    // Optimize MOD
+    if (op == BinaryOp::MOD && right->is_constant()) {
+        long long val = right->evaluate();
+        if (val > 0 && (val & (val - 1)) == 0) {
+            // x % 2^k = x - (x / 2^k) * 2^k
+            left->codegen_to_reg(0); // r0 = x
+            
+            // r1 = x
+            emit("RST", 1); emit("SWP", 1); emit("ADD", 1);
+            
+            // r1 = x / 2^k
+            int shifts = 0;
+            long long temp_v = val;
+            while (temp_v > 1) { temp_v >>= 1; shifts++; }
+            for(int k=0; k<shifts; k++) emit("SHR", 1, "mod optim shift");
+            
+            // r1 = (x / 2^k) * 2^k
+            for(int k=0; k<shifts; k++) emit("SHL", 1, "mod optim shift");
+            
+            // r0 = r0 - r1
+            emit("SUB", 1, "mod optim sub");
+            
+            if (reg != 0) emit("SWP", reg);
+            return;
+        }
+    }
     
     switch(op) {
         case BinaryOp::PLUS:
+            left->codegen_to_reg(1);
+            right->codegen_to_reg(0);
             emit("ADD", 1); 
             break;
         case BinaryOp::MINUS:
