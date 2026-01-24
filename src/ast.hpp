@@ -144,6 +144,7 @@ public:
 };
 
 class IfNode : public StatementNode {
+public:
     ConditionNode* condition;
     std::vector<StatementNode*> then_block;
     std::vector<StatementNode*> else_block;
@@ -157,6 +158,7 @@ public:
 };
 
 class WhileNode : public StatementNode {
+public:
     ConditionNode* condition;
     std::vector<StatementNode*> body;
 public:
@@ -169,6 +171,7 @@ public:
 };
 
 class RepeatNode : public StatementNode {
+public:
     ConditionNode* condition;
     std::vector<StatementNode*> body;
 public:
@@ -181,6 +184,7 @@ public:
 };
 
 class ForNode : public StatementNode {
+public:
     std::string iterator;
     ExpressionNode* start_val;
     ExpressionNode* end_val;
@@ -197,6 +201,7 @@ public:
 };
 
 class ProcCallNode : public StatementNode {
+public:
     std::string proc_name;
     std::vector<ValueNode*> args;
 public:
@@ -231,6 +236,7 @@ public:
 // --- Root ---
 
 class ProcedureNode : public ASTNode {
+public:
     std::string name;
     // Args declaration info is stored in Symbol Table, not here
     // but AST should own the body.

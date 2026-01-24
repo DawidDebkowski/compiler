@@ -25,4 +25,8 @@ void yyerror(const char *s);
 void add_symbol(string name, bool is_array, bool is_param, string mod, long long start, long long end);
 Symbol* get_variable(string name);
 
+// Inlining Support
+void add_substitution(string key, Symbol* s);
+void remove_substitution(string key);
+
 #endif

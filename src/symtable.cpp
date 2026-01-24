@@ -24,6 +24,18 @@ int current_arg_idx = 0;
 std::vector<int> current_for_stack;
 int for_id_counter = 0;
 
+static map<string, Symbol*> substitution_map;
+
+void add_substitution(string key, Symbol* s) {
+    substitution_map[key] = s;
+}
+
+void remove_substitution(string key) {
+    if (substitution_map.count(key)) {
+        substitution_map.erase(key);
+    }
+}
+
 void add_hole(long long start, long long size) {
     if (size <= 0) return;
     holes.push_back({start, size});
@@ -141,6 +153,7 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
         procedures_map[current_procedure].param_addresses.push_back(addr);
         procedures_map[current_procedure].param_mods.push_back(mod);
         procedures_map[current_procedure].param_is_array.push_back(is_array);
+        procedures_map[current_procedure].param_names.push_back(name);
         
         // Spec Check: T must be array
          if (mod == "T" && !is_array) {
@@ -154,6 +167,12 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
 }
 
 Symbol* get_variable(string name) {
+    // Check substitution (Inlining)
+    string sub_key = current_procedure + "_" + name;
+    if (substitution_map.count(sub_key)) {
+        return substitution_map[sub_key];
+    }
+
     // Try local proc first
     string key = current_procedure + "_" + name;
     if (symbol_table.find(key) != symbol_table.end()) {

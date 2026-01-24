@@ -32,6 +32,7 @@ struct ProcedureInfo {
     vector<long long> param_addresses;
     vector<string> param_mods;     // "T", "I", "O", ""
     vector<bool> param_is_array;
+    vector<string> param_names; // Names of parameters for inlining
 };
 
 struct Instruction {

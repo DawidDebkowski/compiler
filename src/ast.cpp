@@ -3,8 +3,52 @@
 #include "symtable.hpp"
 #include "math_kernel.hpp"
 #include <iostream>
+#include <map>
 
 extern void yyerror(const char* s);
+
+static std::map<std::string, ProcedureNode*> procedure_defs;
+static std::map<std::string, int> proc_usage_count;
+static std::map<std::string, bool> proc_has_array_params;
+
+bool should_inline(std::string name) {
+    int count = proc_usage_count[name];
+    bool has_array = proc_has_array_params[name]; 
+    if (count == 1) return true;
+    if (count == 2 && has_array) return true;
+    return false;
+}
+
+void analyze_usage(std::vector<StatementNode*>& body) {
+    for (auto stmt : body) {
+        if (auto* call = dynamic_cast<ProcCallNode*>(stmt)) {
+            proc_usage_count[call->proc_name]++;
+            
+            // Check for array params
+            for(auto* arg : call->args) {
+                if (auto* id = dynamic_cast<IdentifierNode*>(arg)) {
+                    Symbol* s = get_variable(id->name);
+                    if (s && s->is_array) {
+                        proc_has_array_params[call->proc_name] = true;
+                    }
+                }
+            }
+        }
+        else if (auto* loop = dynamic_cast<ForNode*>(stmt)) {
+            analyze_usage(loop->body);
+        }
+        else if (auto* loop = dynamic_cast<WhileNode*>(stmt)) {
+            analyze_usage(loop->body);
+        }
+        else if (auto* loop = dynamic_cast<RepeatNode*>(stmt)) {
+            analyze_usage(loop->body);
+        }
+        else if (auto* if_node = dynamic_cast<IfNode*>(stmt)) {
+            analyze_usage(if_node->then_block);
+            analyze_usage(if_node->else_block);
+        }
+    }
+}
 
 void NumberNode::codegen_to_reg(int reg) {
     gen_const(reg, value);
@@ -601,7 +645,59 @@ void ForNode::validate() {
 // --- ProcCall ---
 
 void ProcCallNode::codegen() {
-    // Push Args
+    if (should_inline(proc_name)) {
+        ProcedureInfo& info = procedures_map[proc_name];
+        
+        // 1. Argument Resolution & Substitution
+        for (size_t i=0; i < args.size(); i++) {
+            string param_name = info.param_names[i];
+            string sub_key = proc_name + "_" + param_name;
+            
+            if (auto* arg = dynamic_cast<IdentifierNode*>(args[i])) {
+                 Symbol* src = get_variable(arg->name);
+                 add_substitution(sub_key, src);
+            }
+            else if (auto* num = dynamic_cast<NumberNode*>(args[i])) {
+                 long long temp_addr = memory_offset++;
+                 gen_const(0, num->value);
+                 emit("STORE", temp_addr);
+                 
+                 // Create temp symbol
+                 // We intentionally leak this for now as it persists for compilation
+                 Symbol* s = new Symbol();
+                 s->address = temp_addr;
+                 s->is_array = false;
+                 s->is_param = false; 
+                 s->is_initialized = true;
+                 s->mod = "";
+                 
+                 add_substitution(sub_key, s);
+            }
+        }
+        
+        // 2. Generate Body
+        string old_proc = current_procedure;
+        current_procedure = proc_name;
+        
+        ProcedureNode* p_node = procedure_defs[proc_name];
+        
+        // We need to iterate body. p_node->body is visible due to friend/public update.
+        for(auto s : p_node->body) {
+            s->codegen();
+        }
+        
+        current_procedure = old_proc;
+        
+        // 3. Cleanup
+        for (size_t i=0; i < args.size(); i++) {
+             string sub_key = proc_name + "_" + info.param_names[i];
+             remove_substitution(sub_key);
+        }
+        
+        return; // Done inlining
+    }
+
+    // Standard Call Logic
     ProcedureInfo& info = procedures_map[proc_name];
     for (size_t i=0; i<args.size(); i++) {
         long long param_addr = info.param_addresses[i];
@@ -614,6 +710,7 @@ void ProcCallNode::codegen() {
                 emit("STORE", param_addr); 
             } else {
                 if (s->is_array) {
+
                     if (!unsafety_detected) {
                         emit("#", 1, "emitting base - start");
                         gen_const(0, s->address - s->start + 1);
@@ -694,7 +791,11 @@ void RootNode::codegen() {
     
     
     // Gen Procs
-    for(auto p : procedures) p->codegen();
+    for(auto p : procedures) {
+        if (!should_inline(p->name)) {
+            p->codegen();
+        }
+    }
     
     // Main
     long long main_start = code.size();
@@ -759,6 +860,21 @@ void RootNode::codegen() {
 }
 
 void RootNode::validate() {
+    proc_usage_count.clear();
+    proc_has_array_params.clear();
+    procedure_defs.clear();
+    
+    // Register procedures for lookups
+    for(auto p : procedures) {
+        procedure_defs[p->name] = p;
+    }
+
+    // Analyze usage
+    analyze_usage(main_block);
+    for(auto p : procedures) {
+        analyze_usage(p->body);
+    }
+    
     for(auto p : procedures) p->validate();
     for(auto s : main_block) s->validate();
 }
