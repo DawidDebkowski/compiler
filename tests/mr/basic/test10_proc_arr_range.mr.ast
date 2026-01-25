@@ -5,15 +5,27 @@ Program
         Identifier(arr[idx])
         Identifier(val)
   Main:
-    ProcCall(set)
-      Identifier(tab)
+    Assignment
+      Identifier(a)
       Number(10)
+    Assignment
+      Identifier(b)
+      Number(15)
+    Assignment
+      Identifier(c)
       Number(333)
     ProcCall(set)
       Identifier(tab)
-      Number(15)
+      Identifier(a)
+      Identifier(c)
+    Assignment
+      Identifier(c)
       Number(444)
+    ProcCall(set)
+      Identifier(tab)
+      Identifier(b)
+      Identifier(c)
     Write
-      Identifier(tab[10])
+      Identifier(tab[a])
     Write
-      Identifier(tab[15])
+      Identifier(tab[b])

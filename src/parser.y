@@ -161,14 +161,6 @@ args : args COMMA pidentifier {
         $$ = new std::vector<ValueNode*>();
         $$->push_back(new IdentifierNode(string($1), yylineno));
     }
-    | args COMMA num {
-        $1->push_back(new NumberNode($3, yylineno));
-        $$ = $1;
-    }
-    | num {
-        $$ = new std::vector<ValueNode*>();
-        $$->push_back(new NumberNode($1, yylineno));
-    }
     ;
 
 declarations : declarations COMMA pidentifier {

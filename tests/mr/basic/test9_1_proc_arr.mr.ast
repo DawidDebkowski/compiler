@@ -5,28 +5,45 @@ Program
         Identifier(arr[idx])
         Identifier(val)
   Main:
+    Assignment
+      Identifier(maxint)
+      Number(4611686018427387904)
+    Assignment
+      Identifier(e)
+      BinaryOp(+)
+        Number(4611686018427387904)
+        Number(1)
+    Assignment
+      Identifier(c)
+      Number(111)
+    Assignment
+      Identifier(d)
+      Number(222)
     Read
       Identifier(b)
     ProcCall(set)
       Identifier(tab)
-      Number(4611686018427387904)
-      Number(111)
+      Identifier(maxint)
+      Identifier(c)
     ProcCall(set)
       Identifier(tab)
-      Number(4611686018427387905)
-      Number(222)
+      Identifier(e)
+      Identifier(d)
     Write
-      Identifier(tab[4611686018427387904])
+      Identifier(tab[maxint])
     Write
-      Identifier(tab[4611686018427387905])
+      Identifier(tab[e])
     Assignment
-      Identifier(a[4611686018427387911])
+      Identifier(far)
+      Number(4611686018427387911)
+    Assignment
+      Identifier(a[far])
       Number(333)
     Write
-      Identifier(a[4611686018427387911])
+      Identifier(a[far])
     ProcCall(set)
       Identifier(a)
-      Number(4611686018427387911)
+      Identifier(far)
       Identifier(b)
     Write
-      Identifier(a[4611686018427387911])
+      Identifier(a[far])

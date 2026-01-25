@@ -4,15 +4,29 @@ Program
       Assignment
         Identifier(arr[idx])
         Identifier(val)
+      Assignment
+        Identifier(val)
+        BinaryOp(*)
+          Identifier(val)
+          Number(2)
   Main:
-    ProcCall(set)
-      Identifier(tab)
+    Assignment
+      Identifier(z)
       Number(0)
+    Assignment
+      Identifier(f)
+      Number(5)
+    Assignment
+      Identifier(one)
       Number(111)
     ProcCall(set)
       Identifier(tab)
-      Number(5)
-      Number(222)
+      Identifier(z)
+      Identifier(one)
+    ProcCall(set)
+      Identifier(tab)
+      Identifier(f)
+      Identifier(one)
     Write
       Identifier(tab[0])
     Write

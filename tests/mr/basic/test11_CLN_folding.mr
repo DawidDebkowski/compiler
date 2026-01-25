@@ -1,0 +1,61 @@
+RST a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a # Folded constant expression
+STORE 8
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+STORE 11 # next line inlining mult
+LOAD 8
+SWP b
+LOAD 11
+SWP c
+CALL 39
+SWP b
+STORE 10
+WRITE
+HALT
+SWP e
+RST d
+RST a
+ADD c
+JZERO 55
+SHR c
+SHL c
+SUB c
+JZERO 52
+RST a
+ADD d
+ADD b
+SWP d
+SHR c
+SHL b
+JUMP 41
+RST a
+ADD d
+SWP b
+RST a
+ADD e
+RTRN

@@ -4,9 +4,10 @@ IN
 END
 
 PROGRAM IS
-    a, b, c
+    a, b, c, sixseven
 IN
     a := 123 * 124;
-    mult(a, 16, c);
+    sixseven := 16;
+    mult(a, sixseven, c);
     WRITE c;
 END

@@ -1,13 +1,17 @@
 PROCEDURE set(T arr, idx, val) IS
 IN
     arr[idx] := val;
+    val := val * 2;
 END
 
 PROGRAM IS
-    tab[0:5]
+    tab[0:5], z, f, one
 IN
-    set(tab, 0, 111);
-    set(tab, 5, 222);
+    z := 0;
+    f := 5;
+    one := 111;
+    set(tab, z, one);
+    set(tab, f, one);
     WRITE tab[0];
     WRITE tab[5];
 END
