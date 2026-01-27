@@ -1,0 +1,23 @@
+Program
+  Procedures:
+    Procedure mult
+      Assignment
+        Identifier(o)
+        BinaryOp(*)
+          Identifier(a)
+          Identifier(b)
+  Main:
+    Assignment
+      Identifier(a)
+      BinaryOp(*)
+        Number(123)
+        Number(124)
+    Assignment
+      Identifier(sixseven)
+      Number(16)
+    ProcCall(mult)
+      Identifier(a)
+      Identifier(sixseven)
+      Identifier(c)
+    Write
+      Identifier(c)

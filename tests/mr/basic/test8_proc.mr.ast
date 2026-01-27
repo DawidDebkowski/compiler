@@ -1,18 +1,34 @@
 Program
   Procedures:
     Procedure sum
+      Write
+        Identifier(a)
+      Write
+        Identifier(b)
+      Write
+        Identifier(out)
       Assignment
         Identifier(out)
         BinaryOp(+)
           Identifier(a)
           Identifier(b)
+      Write
+        Identifier(a)
+      Write
+        Identifier(b)
+      Write
+        Identifier(out)
   Main:
     Assignment
       Identifier(x)
       Number(10)
+    Write
+      Identifier(x)
     Assignment
       Identifier(y)
       Number(20)
+    Write
+      Identifier(y)
     ProcCall(sum)
       Identifier(x)
       Identifier(y)

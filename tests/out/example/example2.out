@@ -1,1 +1,2 @@
-Linia 177: syntax error
+? ? ? terminate called after throwing an instance of 'cln::read_number_eof_exception'
+  what():  read_number: end of stream encountered

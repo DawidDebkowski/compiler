@@ -1,0 +1,15 @@
+Program
+  Main:
+    Assignment
+      Identifier(i)
+      Number(5)
+    For(i DOWNTO)
+      From:
+        Number(10)
+      To:
+        Number(0)
+    Do
+      Write
+        Identifier(i)
+    Write
+      Identifier(i)

@@ -1,0 +1,9 @@
+PROGRAM IS
+    i
+IN
+    i := 5;
+    FOR i FROM 10 DOWNTO 0 DO
+        WRITE i;
+    ENDFOR
+    WRITE i;
+END

@@ -1241,11 +1241,14 @@ void RootNode::genTAC(Operand dest) {
 void ProcedureNode::genTAC(Operand dest) {
     current_procedure = name;
     emitTAC(TACOp::LABEL, Operand::makeLabel("proc_" + name), Operand(), Operand(), "Procedure " + name);
-    emitTAC(TACOp::PROLOGUE, Operand(), Operand(), Operand());
+    
+    long long ra_slot = procedures_map[name].ra_address;
+    emitTAC(TACOp::PROLOGUE, Operand::makeConst(ra_slot), Operand(), Operand());
+    
     for (auto* stmt : body) {
         stmt->genTAC();
     }
-    emitTAC(TACOp::RETURN, Operand(), Operand(), Operand());
+    emitTAC(TACOp::RETURN, Operand::makeConst(ra_slot), Operand(), Operand());
     current_procedure = "";
 }
 
@@ -1258,11 +1261,13 @@ void AssignmentNode::genTAC(Operand dest) {
     
     if (!target->is_array) {
         if (s->is_param) {
-            // Store to ref param
-            Operand ptr = makeTemp();
-            emitTAC(TACOp::LOAD, ptr, lhsVar, Operand());
-            emitTAC(TACOp::STORE, ptr, rhs, Operand());
+            // Write to Scalar Parameter (Pass-by-reference)
+            // 'lhsVar' holds the address (pointer)
+            // We store 'rhs' into the address pointed to by 'lhsVar'
+            emitTAC(TACOp::STORE, lhsVar, rhs, Operand());
         } else {
+            // Write to Global Variable
+            // 'lhsVar' holds the val (symbol address logic handled in backend)
             emitTAC(TACOp::COPY, lhsVar, rhs, Operand());
         }
     } else {
@@ -1276,7 +1281,6 @@ void AssignmentNode::genTAC(Operand dest) {
             if (idxSym->is_param) {
                 idx = makeTemp();
                 emitTAC(TACOp::LOAD, idx, idxVar, Operand());
-                emitTAC(TACOp::LOAD, idx, idx, Operand()); 
             } else {
                 idx = idxVar;
             }
@@ -1284,26 +1288,25 @@ void AssignmentNode::genTAC(Operand dest) {
         
          Operand base = makeTemp();
          if (s->is_param) {
-              emitTAC(TACOp::LOAD, base, lhsVar, Operand());
+              // Array Parameter: 'lhsVar' holds the Virtual Base Address
+              // We want the value of the pointer, so we COPY it.
+              emitTAC(TACOp::COPY, base, lhsVar, Operand());
          } else {
-              emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
+              // Global Array: Constant Virtual Base
+              long long vb = s->address - s->start;
+              emitTAC(TACOp::COPY, base, Operand::makeConst(vb), Operand());
          }
 
          Operand addr = makeTemp();
-         emitTAC(TACOp::COPY, addr, base, Operand());
-         emitTAC(TACOp::ADD, addr, addr, idx);
+         emitTAC(TACOp::ADD, addr, base, idx);
+         // Note: Global logic included +1 for header if handled via sym address.
+         // Here we construct manually.
+         // If s->is_param, we trust caller provided correct VB.
+         // But wait, global arrays s->address includes header offset?
+         // symtable allocates size+1. s->address is start of data? No, usually s->address is base.
+         // Let's assume s->address IS the location of index 'start'.
          
-         if (s->is_param) {
-             if (unsafety_detected) {
-                 emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
-                 emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
-             }
-         } else {
-              emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
-              emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
-         }
-        
-        emitTAC(TACOp::STORE, addr, rhs, Operand());
+         emitTAC(TACOp::STORE, addr, rhs, Operand());
     }
 }
 
@@ -1397,9 +1400,7 @@ void ReadNode::genTAC(Operand dest) {
     
     if (!target->is_array) {
         if (s->is_param) {
-            Operand ptr = makeTemp();
-            emitTAC(TACOp::LOAD, ptr, var, Operand());
-            emitTAC(TACOp::STORE, ptr, val, Operand());
+            emitTAC(TACOp::STORE, var, val, Operand());
         } else {
              emitTAC(TACOp::COPY, var, val, Operand());
         }
@@ -1413,7 +1414,6 @@ void ReadNode::genTAC(Operand dest) {
              if (idxSym->is_param) {
                  idx = makeTemp();
                  emitTAC(TACOp::LOAD, idx, idxVar, Operand());
-                 emitTAC(TACOp::LOAD, idx, idx, Operand()); 
              } else {
                  idx = idxVar;
              }
@@ -1421,25 +1421,14 @@ void ReadNode::genTAC(Operand dest) {
          
          Operand base = makeTemp();
          if (s->is_param) {
-              emitTAC(TACOp::LOAD, base, var, Operand());
+              emitTAC(TACOp::COPY, base, var, Operand());
          } else {
-              emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
+              long long vb = s->address - s->start;
+              emitTAC(TACOp::COPY, base, Operand::makeConst(vb), Operand());
          }
 
          Operand addr = makeTemp();
-         emitTAC(TACOp::COPY, addr, base, Operand());
-         emitTAC(TACOp::ADD, addr, addr, idx);
-         
-         if (s->is_param) {
-             if (unsafety_detected) {
-                 emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
-                 emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
-             }
-         } else {
-              emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
-              emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
-         }
-
+         emitTAC(TACOp::ADD, addr, base, idx);
          emitTAC(TACOp::STORE, addr, val, Operand());
     }
 }
@@ -1546,9 +1535,7 @@ void IdentifierNode::genTAC(Operand dest) {
     
     if (!is_array) {
         if (s->is_param) {
-             Operand ptr = makeTemp();
-             emitTAC(TACOp::LOAD, ptr, var, Operand());
-             emitTAC(TACOp::LOAD, dest, ptr, Operand());
+             emitTAC(TACOp::LOAD, dest, var, Operand());
         } else {
              emitTAC(TACOp::COPY, dest, var, Operand());
         }
@@ -1562,7 +1549,6 @@ void IdentifierNode::genTAC(Operand dest) {
              if (idxSym->is_param) {
                  idx = makeTemp();
                  emitTAC(TACOp::LOAD, idx, idxVar, Operand());
-                 emitTAC(TACOp::LOAD, idx, idx, Operand()); 
              } else {
                  idx = idxVar;
              }
@@ -1570,25 +1556,15 @@ void IdentifierNode::genTAC(Operand dest) {
          
          Operand base = makeTemp();
          if (s->is_param) {
-              emitTAC(TACOp::LOAD, base, var, Operand());
+              emitTAC(TACOp::COPY, base, var, Operand());
          } else {
-              emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
+              long long vb = s->address - s->start;
+              emitTAC(TACOp::COPY, base, Operand::makeConst(vb), Operand());
          }
 
          Operand addr = makeTemp();
-         emitTAC(TACOp::COPY, addr, base, Operand());
-         emitTAC(TACOp::ADD, addr, addr, idx);
+         emitTAC(TACOp::ADD, addr, base, idx);
          
-         if (s->is_param) {
-             if (unsafety_detected) {
-                 emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
-                 emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
-             }
-         } else {
-              emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
-              emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
-         }
-
          emitTAC(TACOp::LOAD, dest, addr, Operand());
     }
 }

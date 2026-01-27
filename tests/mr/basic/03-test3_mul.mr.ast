@@ -1,0 +1,15 @@
+Program
+  Main:
+    Assignment
+      Identifier(a)
+      Number(10)
+    Assignment
+      Identifier(b)
+      Number(10)
+    Assignment
+      Identifier(c)
+      BinaryOp(*)
+        Identifier(a)
+        Identifier(b)
+    Write
+      Identifier(c)

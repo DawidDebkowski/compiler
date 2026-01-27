@@ -1,0 +1,33 @@
+Program
+  Procedures:
+    Procedure set
+      Assignment
+        Identifier(arr[idx])
+        Identifier(val)
+      Assignment
+        Identifier(val)
+        BinaryOp(*)
+          Identifier(val)
+          Number(2)
+  Main:
+    Assignment
+      Identifier(z)
+      Number(0)
+    Assignment
+      Identifier(f)
+      Number(5)
+    Assignment
+      Identifier(one)
+      Number(111)
+    ProcCall(set)
+      Identifier(tab)
+      Identifier(z)
+      Identifier(one)
+    ProcCall(set)
+      Identifier(tab)
+      Identifier(f)
+      Identifier(one)
+    Write
+      Identifier(tab[0])
+    Write
+      Identifier(tab[5])

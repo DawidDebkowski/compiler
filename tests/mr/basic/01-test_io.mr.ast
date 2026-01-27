@@ -1,0 +1,6 @@
+Program
+  Main:
+    Read
+      Identifier(a)
+    Write
+      Identifier(a)

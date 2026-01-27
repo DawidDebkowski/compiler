@@ -4,15 +4,6 @@ SHL a
 SHL a
 INC a
 SHL a
-INC a
-SHL a
-STORE 0 # Entry Jump
-RST a
-INC a
-SHL a
-SHL a
-INC a
-SHL a
 STORE 7
 STORE 5
 RST a
@@ -30,7 +21,7 @@ LOAD 5
 LOAD 9
 SWP b
 SUB b
-JPOS 42
+JPOS 33
 LOAD 5
 STORE 10
 WRITE # Inc iter
@@ -39,7 +30,7 @@ RST b
 INC b
 ADD b
 STORE 5
-JUMP 28 # For End
+JUMP 19 # For End
 LOAD 5
 STORE 11
 WRITE # HALT

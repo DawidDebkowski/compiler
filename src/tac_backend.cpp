@@ -13,8 +13,8 @@ void TACBackend::process() {
     // Initialize Stack Pointer (mem[0]) to strict memory_offset + 1000 or similar
     // Actually, memory_offset is the next free address for variables.
     // Stack can grow from there.
-    gen_const(0, memory_offset + 10);
-    emit("STORE", 0);
+    // gen_const(0, memory_offset + 10);
+    // emit("STORE", 0);
 
     label_defs.clear();
     label_refs.clear();
@@ -106,6 +106,9 @@ void TACBackend::emitLoad(int reg, Operand op) {
         gen_const(reg, op.val);
     } else if (op.type == Operand::VAR) {
         emit("LOAD", op.sym->address);
+        // if(op.sym->is_param) {
+        //     emit("RLOAD", 0);
+        // }
         if (reg != 0) emit("SWP", reg);
     }
 }
@@ -120,16 +123,16 @@ void TACBackend::emitStore(int reg, Operand op) {
 
 void TACBackend::emitAdd(TACInstruction& instr) {
     // dest = src1 + src2
-    emitLoad(0, instr.src1); // ra
-    emitLoad(1, instr.src2); // rb
+    emitLoad(1, instr.src1); // rb = src1
+    emitLoad(0, instr.src2); // ra = src2
     emit("ADD", 1);          // ra += rb
     emitStore(0, instr.dest);
 }
 
 void TACBackend::emitSub(TACInstruction& instr) {
     // dest = src1 - src2
-    emitLoad(0, instr.src1); // ra
-    emitLoad(1, instr.src2); // rb
+    emitLoad(1, instr.src2); // rb = src2
+    emitLoad(0, instr.src1); // ra = src1
     emit("SUB", 1);
     emitStore(0, instr.dest);
 }
@@ -369,7 +372,11 @@ void TACBackend::emitJumpCond(TACInstruction& instr) {
 }
 
 void TACBackend::emitCall(TACInstruction& instr) {
-    std::string procName = instr.src1.name;
+    std::string procLabel = instr.src1.name;
+    std::string procName = procLabel;
+    if (procName.rfind("proc_", 0) == 0) {
+        procName = procName.substr(5);
+    }
 
     if (procedures_map.count(procName)) {
         ProcedureInfo& info = procedures_map[procName];
@@ -383,7 +390,7 @@ void TACBackend::emitCall(TACInstruction& instr) {
     
     long long dummy = 0;
     emit("CALL", dummy);
-    label_refs[procName].push_back(code.size() - 1);
+    label_refs[procLabel].push_back(code.size() - 1);
 }
 
 void TACBackend::emitParam(TACInstruction& instr) {
@@ -391,34 +398,17 @@ void TACBackend::emitParam(TACInstruction& instr) {
 }
 
 void TACBackend::emitReturn(TACInstruction& instr) {
-    // Pop RA -> r0
-    // r0 = mem[SP]; SP--
-    emit("LOAD", 0); // r0 = SP
-    emit("SWP", 1);  // r1 = SP
-    emit("RLOAD", 1); // r0 = mem[SP] (Return Address)
+    long long ra_slot = cln::cl_I_to_long(instr.src1.val);
     
-    emit("SWP", 2);  // r2 = ra (Saved)
-    
-    // Decrement SP
-    emit("RST", 0); emit("ADD", 1); // r0 = SP
-    emit("DEC", 0); 
-    emit("STORE", 0); // SP--
-    
-    // Restore RA
-    emit("RST", 0); emit("ADD", 2); 
-    
+    // Restore RA from valid slot
+    emit("LOAD", ra_slot); // ra <- mem[ra_slot]
     emit("RTRN");
 }
 
 void TACBackend::emitPrologue(TACInstruction& instr) {
-    // Push RA (r0)
-    // SP++; mem[SP] = RA
-    emit("SWP", 1);  // r1 = RA
+    long long ra_slot = cln::cl_I_to_long(instr.src1.val);
     
-    emit("LOAD", 0); // r0 = SP
-    emit("INC", 0);
-    emit("STORE", 0); // SP++ (Save new SP)
-    
-    emit("SWP", 1); // r1 = SP, r0 = RA
-    emit("RSTORE", 1); // mem[SP] = RA
+    // Store RA (currently in ra/r0) to slot
+    // RA is pushed to r0 at CALL time by 'r[0] = lr+1' in VM
+    emit("STORE", ra_slot);
 }

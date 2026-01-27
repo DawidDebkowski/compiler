@@ -1,0 +1,21 @@
+Program
+  Procedures:
+    Procedure sum
+      Assignment
+        Identifier(out)
+        BinaryOp(+)
+          Identifier(a)
+          Identifier(b)
+  Main:
+    Assignment
+      Identifier(x)
+      Number(10)
+    Assignment
+      Identifier(y)
+      Number(20)
+    ProcCall(sum)
+      Identifier(x)
+      Identifier(y)
+      Identifier(z)
+    Write
+      Identifier(z)

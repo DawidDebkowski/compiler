@@ -1,0 +1,12 @@
+Program
+  Main:
+    Assignment
+      Identifier(a)
+      Number(10)
+    Assignment
+      Identifier(b)
+      Number(20)
+    Write
+      Identifier(a)
+    Write
+      Identifier(b)

@@ -1,15 +1,6 @@
 RST a
 INC a
 SHL a
-INC a
-SHL a
-SHL a
-SHL a
-INC a
-STORE 0 # Entry Jump
-RST a
-INC a
-SHL a
 SHL a
 INC a
 STORE 7
@@ -37,7 +28,7 @@ LOAD 12
 SWP b
 SWP b
 SUB b
-JZERO 56
+JZERO 47
 RST a
 INC a
 SHL a
@@ -53,7 +44,7 @@ SHL a
 INC a
 STORE 13
 WRITE
-JUMP 59
+JUMP 50
 RST a
 STORE 14
 WRITE # HALT
