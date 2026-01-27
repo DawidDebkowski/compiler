@@ -1,0 +1,122 @@
+==========================================
+Test Run Report - 26413122
+==========================================
+
+
+### Category: basic ###
+==========================================
+  div_0...                       PASS (Cost: 1 415, Instructions: 96)
+  funny...                       FAIL (output mismatch)
+    Expected: tests/ans/basic/funny.ans
+    Got:      tests/out/basic/funny.out
+    Diff:
+      1,6c1,6
+      < > 5
+      < > 5
+      < > 7
+      < > 7
+      < > 12
+      < > 12
+      ---
+      > > 0
+      > > 0
+      > > 0
+      > > 0
+      > > 0
+      > > 0
+  read...                        PASS (Cost: 350, Instructions: 6)
+  test10_proc_arr_range...       FAIL (compilation error)
+  test11_CLN_folding...          FAIL (compilation error)
+  test1_io...                    PASS (Cost: 350, Instructions: 6)
+  test2_vars...                  PASS (Cost: 613, Instructions: 24)
+  test3_mul...                   PASS (Cost: 913, Instructions: 53)
+  test4_div...                   PASS (Cost: 1 025, Instructions: 69)
+  test5_mod...                   PASS (Cost: 933, Instructions: 67)
+  test6_arr...                   FAIL (output mismatch)
+    Expected: tests/ans/basic/test6_arr.ans
+    Got:      tests/out/basic/test6_arr.out
+    Diff:
+      1,2c1,2
+      < > 5
+      < > 10
+      ---
+      > > 0
+      > > 0
+  test7_arr_range...             FAIL (output mismatch)
+    Expected: tests/ans/basic/test7_arr_range.ans
+    Got:      tests/out/basic/test7_arr_range.out
+    Diff:
+      1,2c1,2
+      < > 100
+      < > 150
+      ---
+      > > 0
+      > > 0
+  test8_proc...                  FAIL (compilation error)
+  test9_0_proc_arr...            FAIL (compilation error)
+  test9_1_proc_arr...            FAIL (compilation error)
+  test_if_conditions...          FAIL (output mismatch)
+    Expected: tests/ans/basic/test_if_conditions.ans
+    Got:      tests/out/basic/test_if_conditions.out
+    Diff:
+      1d0
+      < > 1
+      4d2
+      < > 4
+      6d3
+      < > 6
+      14c11
+      < > 14
+      ---
+      > > 0
+      16c13
+      < > 16
+      ---
+      > > 0
+      18c15
+      < > 18
+      ---
+      > > 0
+  test_if_nested...              FAIL (output mismatch)
+    Expected: tests/ans/basic/test_if_nested.ans
+    Got:      tests/out/basic/test_if_nested.out
+    Diff:
+      1,3c1
+      < > 1
+      < > 2
+      < > 3
+      ---
+      > > 0
+  test_mul_opt...                PASS (Cost: 15 745, Instructions: 641)
+  test_mul_simple...             PASS (Cost: 872, Instructions: 48)
+  test_nested_for...             FAIL (compilation error)
+  test_read_array...             FAIL (output mismatch)
+    Expected: tests/ans/basic/test_read_array.ans
+    Got:      tests/out/basic/test_read_array.out
+    Diff:
+      1,3c1,3
+      < ? ? > 42
+      < > 123
+      < > 123
+      ---
+      > ? ? > 0
+      > > 0
+      > > 0
+  test_simple_for...             FAIL (output mismatch)
+    Expected: tests/ans/basic/test_simple_for.ans
+    Got:      tests/out/basic/test_simple_for.out
+    Diff:
+      2,3d1
+      < > 3
+      < > 10
+  Category results: 9 passed, 13 failed
+
+### Category: custom ###
+==========================================
+  test...                        SKIP (no answer file)
+  Category results: 0 passed, 0 failed
+
+### Category: example ###
+==========================================
+  example1...                    FAIL (compilation error)
+  example2...                    

@@ -1,4 +1,14 @@
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+STORE 0 # Entry Jump
 READ
+STORE 6
 STORE 5
-WRITE
+STORE 7
+WRITE # HALT
 HALT

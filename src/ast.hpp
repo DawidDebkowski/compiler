@@ -6,6 +6,7 @@
 #include <iostream>
 #include <set>
 #include "types.hpp"
+#include "tac.hpp"
 
 // Forward declaration
 struct Symbol;
@@ -22,6 +23,7 @@ public:
     
     // Abstract interface
     virtual void codegen() = 0;
+    virtual void genTAC(Operand dest = Operand()) {} // New TAC generation interface
     virtual void validate() {} 
     virtual void print(std::ostream& out, int indent = 0) const = 0;
     virtual void collect_reachable_procedures(std::set<std::string>& used_procs) {}
@@ -39,7 +41,8 @@ public:
     // Check if expression is a compile-time constant
     virtual bool is_constant() const { return false; }
     virtual BigInt evaluate() const { return 0; }
-    
+    virtual void genTAC(Operand dest = Operand()) {}
+
     // Helper to load result into a specific register
     virtual void codegen_to_reg(int reg) = 0; 
     
@@ -54,6 +57,7 @@ public:
 class ValueNode : public ExpressionNode {
 public:
     ValueNode(int ln) : ExpressionNode(ln) {}
+    virtual void genTAC(Operand dest = Operand()) {}
 };
 
 class NumberNode : public ValueNode {
@@ -63,6 +67,7 @@ public:
     bool is_constant() const override { return true; }
     BigInt evaluate() const override { return value; }
     void codegen_to_reg(int reg) override;
+    void genTAC(Operand dest = Operand()) override;
     void print(std::ostream& out, int indent = 0) const override;
     bool try_evaluate(BigInt& out_val) override { out_val = value; return true; }
 };
@@ -94,6 +99,7 @@ public:
     }
 
     void codegen_to_reg(int reg) override;
+    void genTAC(Operand dest = Operand()) override;
     
     // Helper to get address into register (for WRITE / READ / ASSIGN)
     void codegen_address(int reg); 
@@ -111,6 +117,7 @@ public:
         : ExpressionNode(ln), left(l), right(r), op(o) {}
         
     void codegen_to_reg(int reg) override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void print(std::ostream& out, int indent = 0) const override;
     bool try_evaluate(BigInt& out_val) override;
@@ -129,6 +136,7 @@ public:
         
     // Generates code that Jumps to `target_label` if condition is FALSE
     void codegen_jump_false(long long target_instruction_index);
+    void genTAC_cond(std::string labelTarget, bool jumpIfTrue); // New TAC cond
     void codegen() override {}
     void validate() override;
     void print(std::ostream& out, int indent = 0) const override;
@@ -145,6 +153,7 @@ public:
     AssignmentNode(IdentifierNode* t, ExpressionNode* e, int ln)
         : StatementNode(ln), target(t), expr(e) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void print(std::ostream& out, int indent = 0) const override;
     ~AssignmentNode() { delete target; delete expr; }
@@ -159,6 +168,7 @@ public:
     IfNode(ConditionNode* cond, std::vector<StatementNode*>& tb, std::vector<StatementNode*>& eb, int ln)
         : StatementNode(ln), condition(cond), then_block(tb), else_block(eb) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
@@ -173,6 +183,7 @@ public:
     WhileNode(ConditionNode* cond, std::vector<StatementNode*>& b, int ln)
         : StatementNode(ln), condition(cond), body(b) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
@@ -187,6 +198,7 @@ public:
     RepeatNode(ConditionNode* cond, std::vector<StatementNode*>& b, int ln)
         : StatementNode(ln), condition(cond), body(b) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
@@ -205,6 +217,7 @@ public:
     ForNode(std::string iter, ExpressionNode* start, ExpressionNode* end, bool down, std::vector<StatementNode*>& b, int ln)
         : StatementNode(ln), iterator(iter), start_val(start), end_val(end), downto(down), body(b) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
@@ -219,6 +232,7 @@ public:
     ProcCallNode(std::string name, std::vector<ValueNode*>& a, int ln)
         : StatementNode(ln), proc_name(name), args(a) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
@@ -230,6 +244,7 @@ class ReadNode : public StatementNode {
 public:
     ReadNode(IdentifierNode* t, int ln) : StatementNode(ln), target(t) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void print(std::ostream& out, int indent = 0) const override;
     ~ReadNode() { delete target; }
@@ -240,6 +255,7 @@ class WriteNode : public StatementNode {
 public:
     WriteNode(ExpressionNode* e, int ln) : StatementNode(ln), expr(e) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void print(std::ostream& out, int indent = 0) const override;
     ~WriteNode() { delete expr; }
@@ -257,6 +273,7 @@ public:
     ProcedureNode(std::string n, std::vector<StatementNode*> b, int ln)
         : ASTNode(ln), name(n), body(std::move(b)) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;
@@ -270,6 +287,7 @@ public:
     RootNode(std::vector<ProcedureNode*>& procs, std::vector<StatementNode*>& main, int ln)
         : ASTNode(ln), procedures(procs), main_block(main) {}
     void codegen() override;
+    void genTAC(Operand dest = Operand()) override;
     void validate() override;
     void collect_reachable_procedures(std::set<std::string>& used_procs) override;
     void print(std::ostream& out, int indent = 0) const override;

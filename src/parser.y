@@ -14,6 +14,7 @@
 #include "symtable.hpp"
 #include "math_kernel.hpp"
 #include "ast.hpp"
+#include "tac_backend.hpp"
 
 using namespace std;
 
@@ -260,8 +261,25 @@ int main(int argc, char* argv[]) {
              }
         }
         
-        parsed_root->codegen();
+        TACBackend backend;
+        cerr << "GenTAC..." << endl;
+        parsed_root->genTAC();
+
+        if (argc > 2) {
+             string out_name = argv[2];
+             string tac_name = out_name + ".tac";
+             ofstream tac_file(tac_name);
+             if (tac_file.is_open()) {
+                 printTAC(tac_file);
+                 tac_file.close();
+             }
+        }
+
+        cerr << "Backend Processing..." << endl;
+        backend.process();
+        cerr << "Optimizing..." << endl;
         optimize_code();
+        cerr << "Clean..." << endl;
         
         FILE* out = stdout;
         if (argc > 2) {

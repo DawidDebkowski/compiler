@@ -34,6 +34,7 @@ void emit(string opcode, long long arg, string comment) {
 
 // I
 void add_comment(string comment) {
+    if (code.empty()) return;
     if(code[code.size()-1].comment == "") {
         code[code.size()-1].comment = comment;
     } else {

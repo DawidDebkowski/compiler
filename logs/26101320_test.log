@@ -1,0 +1,62 @@
+==========================================
+Test Run Report - 26101320
+==========================================
+
+
+### Category: basic ###
+==========================================
+  div_0...                       FAIL (runtime error, exit code: 255)
+  funny...                       FAIL (runtime error, exit code: 255)
+  read...                        FAIL (runtime error, exit code: 255)
+  test10_proc_arr_range...       FAIL (compilation error)
+  test11_CLN_folding...          FAIL (compilation error)
+  test1_io...                    FAIL (runtime error, exit code: 255)
+  test2_vars...                  FAIL (runtime error, exit code: 255)
+  test3_mul...                   FAIL (runtime error, exit code: 255)
+  test4_div...                   FAIL (runtime error, exit code: 255)
+  test5_mod...                   FAIL (runtime error, exit code: 255)
+  test6_arr...                   FAIL (runtime error, exit code: 255)
+  test7_arr_range...             FAIL (runtime error, exit code: 255)
+  test8_proc...                  FAIL (compilation error)
+  test9_0_proc_arr...            FAIL (compilation error)
+  test9_1_proc_arr...            FAIL (compilation error)
+  test_if_conditions...          FAIL (runtime error, exit code: 255)
+  test_if_nested...              FAIL (runtime error, exit code: 255)
+  test_mul_opt...                FAIL (runtime error, exit code: 255)
+  test_mul_simple...             FAIL (runtime error, exit code: 255)
+  test_nested_for...             FAIL (compilation error)
+  test_read_array...             FAIL (runtime error, exit code: 255)
+  test_simple_for...             FAIL (runtime error, exit code: 255)
+  Category results: 0 passed, 22 failed
+
+### Category: custom ###
+==========================================
+  test...                        FAIL (runtime error, exit code: 255)
+  Category results: 0 passed, 1 failed
+
+### Category: example ###
+==========================================
+  example1...                    FAIL (compilation error)
+  example2...                    FAIL (runtime error, exit code: 255)
+  example3...                    FAIL (runtime error, exit code: 255)
+  example4...                    FAIL (compilation error)
+  example5...                    FAIL (compilation error)
+  example6...                    FAIL (compilation error)
+  example7...                    FAIL (runtime error, exit code: 255)
+  example8...                    FAIL (compilation error)
+  example9-big...                FAIL (compilation error)
+  example9...                    FAIL (compilation error)
+  exampleA...                    FAIL (compilation error)
+  Category results: 0 passed, 11 failed
+
+### Category: labor4 ###
+==========================================
+  program0...                    FAIL (runtime error, exit code: 255)
+  program1...                    FAIL (runtime error, exit code: 255)
+  program2...                    FAIL (compilation error)
+  program3...                    FAIL (compilation error)
+  Category results: 0 passed, 4 failed
+
+==========================================
+TOTAL RESULTS: 0 passed, 38 failed
+==========================================

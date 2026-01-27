@@ -980,7 +980,7 @@ void RootNode::codegen() {
     }
     for(auto s : main_block) s->codegen();
     
-    emit("HALT");
+    // emit("HALT");
     
     // Kernel Gen
     if (!calls_mul.empty()) {
@@ -1218,3 +1218,429 @@ void RootNode::collect_reachable_procedures(std::set<std::string>& used_procs) {
         }
     }
 }
+
+// --- TAC Generation Implementation ---
+
+void RootNode::genTAC(Operand dest) {
+    // Jump to Main
+    emitTAC(TACOp::JUMP, Operand::makeLabel("main"), Operand(), Operand(), "Entry Jump");
+
+    for (auto* proc : procedures) {
+        proc->genTAC();
+    }
+
+    emitTAC(TACOp::LABEL, Operand::makeLabel("main"), Operand(), Operand(), "Main Program");
+    
+    for (auto* stmt : main_block) {
+        stmt->genTAC();
+    }
+    
+    emitTAC(TACOp::HALT, Operand(), Operand(), Operand(), "HALT");
+}
+
+void ProcedureNode::genTAC(Operand dest) {
+    current_procedure = name;
+    emitTAC(TACOp::LABEL, Operand::makeLabel("proc_" + name), Operand(), Operand(), "Procedure " + name);
+    emitTAC(TACOp::PROLOGUE, Operand(), Operand(), Operand());
+    for (auto* stmt : body) {
+        stmt->genTAC();
+    }
+    emitTAC(TACOp::RETURN, Operand(), Operand(), Operand());
+    current_procedure = "";
+}
+
+void AssignmentNode::genTAC(Operand dest) {
+    Operand rhs = makeTemp();
+    expr->genTAC(rhs);
+    
+    Symbol* s = get_variable(target->name);
+    Operand lhsVar = Operand::makeVar(target->name, s);
+    
+    if (!target->is_array) {
+        if (s->is_param) {
+            // Store to ref param
+            Operand ptr = makeTemp();
+            emitTAC(TACOp::LOAD, ptr, lhsVar, Operand());
+            emitTAC(TACOp::STORE, ptr, rhs, Operand());
+        } else {
+            emitTAC(TACOp::COPY, lhsVar, rhs, Operand());
+        }
+    } else {
+        Operand idx;
+        if (target->is_index_const) {
+            idx = Operand::makeConst(target->index_val);
+        } else {
+            Symbol* idxSym = get_variable(target->index_name);
+            Operand idxVar = Operand::makeVar(target->index_name, idxSym);
+            
+            if (idxSym->is_param) {
+                idx = makeTemp();
+                emitTAC(TACOp::LOAD, idx, idxVar, Operand());
+                emitTAC(TACOp::LOAD, idx, idx, Operand()); 
+            } else {
+                idx = idxVar;
+            }
+        }
+        
+         Operand base = makeTemp();
+         if (s->is_param) {
+              emitTAC(TACOp::LOAD, base, lhsVar, Operand());
+         } else {
+              emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
+         }
+
+         Operand addr = makeTemp();
+         emitTAC(TACOp::COPY, addr, base, Operand());
+         emitTAC(TACOp::ADD, addr, addr, idx);
+         
+         if (s->is_param) {
+             if (unsafety_detected) {
+                 emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
+                 emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+             }
+         } else {
+              emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
+              emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+         }
+        
+        emitTAC(TACOp::STORE, addr, rhs, Operand());
+    }
+}
+
+void IfNode::genTAC(Operand dest) {
+    std::string labelTrue = makeLabel();
+    std::string labelEnd = makeLabel();
+    std::string labelElse = makeLabel();
+    
+    if (else_block.empty()) {
+        condition->genTAC_cond(labelEnd, false); 
+        for(auto* s : then_block) s->genTAC();
+        emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand());
+    } else {
+        condition->genTAC_cond(labelElse, false);
+        for(auto* s : then_block) s->genTAC();
+        emitTAC(TACOp::JUMP, Operand::makeLabel(labelEnd), Operand(), Operand());
+        
+        emitTAC(TACOp::LABEL, Operand::makeLabel(labelElse), Operand(), Operand());
+        for(auto* s : else_block) s->genTAC();
+        
+        emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand());
+    }
+}
+
+void WhileNode::genTAC(Operand dest) {
+    std::string labelStart = makeLabel();
+    std::string labelEnd = makeLabel();
+    
+    emitTAC(TACOp::LABEL, Operand::makeLabel(labelStart), Operand(), Operand(), "While Start");
+    
+    condition->genTAC_cond(labelEnd, false);
+    
+    for(auto* s : body) s->genTAC();
+    
+    emitTAC(TACOp::JUMP, Operand::makeLabel(labelStart), Operand(), Operand());
+    emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand(), "While End");
+}
+
+void RepeatNode::genTAC(Operand dest) {
+    std::string labelStart = makeLabel();
+    
+    emitTAC(TACOp::LABEL, Operand::makeLabel(labelStart), Operand(), Operand(), "Repeat Start");
+    
+    for(auto* s : body) s->genTAC();
+    
+    condition->genTAC_cond(labelStart, false);
+}
+
+void ForNode::genTAC(Operand dest) {
+    Symbol* s = get_variable(iterator);
+    Operand iter = Operand::makeVar(iterator, s);
+    
+    Operand startOp = makeTemp();
+    start_val->genTAC(startOp);
+    
+    Operand endOp = makeTemp();
+    end_val->genTAC(endOp);
+    
+    emitTAC(TACOp::COPY, iter, startOp, Operand(), "For Init");
+    
+    std::string labelStart = makeLabel();
+    std::string labelEnd = makeLabel();
+    
+    emitTAC(TACOp::LABEL, Operand::makeLabel(labelStart), Operand(), Operand());
+    
+    if (downto) {
+        emitTAC(TACOp::JUMP_LT, Operand::makeLabel(labelEnd), iter, endOp);
+    } else {
+        emitTAC(TACOp::JUMP_GT, Operand::makeLabel(labelEnd), iter, endOp);
+    }
+    
+    for(auto* s : body) s->genTAC();
+    
+    if (downto) {
+        emitTAC(TACOp::SUB, iter, iter, Operand::makeConst(1), "Dec iter");
+    } else {
+        emitTAC(TACOp::ADD, iter, iter, Operand::makeConst(1), "Inc iter");
+    }
+    
+    emitTAC(TACOp::JUMP, Operand::makeLabel(labelStart), Operand(), Operand());
+    emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand(), "For End");
+}
+
+void ReadNode::genTAC(Operand dest) {
+    Symbol* s = get_variable(target->name);
+    Operand var = Operand::makeVar(target->name, s);
+    
+    Operand val = makeTemp();
+    
+    emitTAC(TACOp::READ, val, Operand(), Operand());
+    
+    if (!target->is_array) {
+        if (s->is_param) {
+            Operand ptr = makeTemp();
+            emitTAC(TACOp::LOAD, ptr, var, Operand());
+            emitTAC(TACOp::STORE, ptr, val, Operand());
+        } else {
+             emitTAC(TACOp::COPY, var, val, Operand());
+        }
+    } else {
+         Operand idx;
+         if (target->is_index_const) {
+             idx = Operand::makeConst(target->index_val);
+         } else {
+             Symbol* idxSym = get_variable(target->index_name);
+             Operand idxVar = Operand::makeVar(target->index_name, idxSym);
+             if (idxSym->is_param) {
+                 idx = makeTemp();
+                 emitTAC(TACOp::LOAD, idx, idxVar, Operand());
+                 emitTAC(TACOp::LOAD, idx, idx, Operand()); 
+             } else {
+                 idx = idxVar;
+             }
+         }
+         
+         Operand base = makeTemp();
+         if (s->is_param) {
+              emitTAC(TACOp::LOAD, base, var, Operand());
+         } else {
+              emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
+         }
+
+         Operand addr = makeTemp();
+         emitTAC(TACOp::COPY, addr, base, Operand());
+         emitTAC(TACOp::ADD, addr, addr, idx);
+         
+         if (s->is_param) {
+             if (unsafety_detected) {
+                 emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
+                 emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+             }
+         } else {
+              emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
+              emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+         }
+
+         emitTAC(TACOp::STORE, addr, val, Operand());
+    }
+}
+
+void WriteNode::genTAC(Operand dest) {
+    Operand val = makeTemp();
+    expr->genTAC(val);
+    
+    emitTAC(TACOp::WRITE, Operand(), val, Operand());
+}
+
+void ProcCallNode::genTAC(Operand dest) {
+    for (auto* arg : args) {
+         IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg);
+         if (!id) continue;
+         
+         Symbol* s = get_variable(id->name);
+         Operand argOp = Operand::makeVar(id->name, s);
+         
+         if (id->is_array) {
+             // Passing Array Element by Reference
+             Operand idx;
+             if (id->is_index_const) {
+                 idx = Operand::makeConst(id->index_val);
+             } else {
+                 Symbol* idxSym = get_variable(id->index_name);
+                 Operand idxVar = Operand::makeVar(id->index_name, idxSym);
+                 if (idxSym->is_param) {
+                     idx = makeTemp();
+                     emitTAC(TACOp::LOAD, idx, idxVar, Operand());
+                     emitTAC(TACOp::LOAD, idx, idx, Operand()); 
+                 } else {
+                     idx = idxVar;
+                 }
+             }
+             
+             Operand base = makeTemp();
+             if (s->is_param) {
+                  emitTAC(TACOp::LOAD, base, argOp, Operand());
+             } else {
+                  emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
+             }
+
+             Operand addr = makeTemp();
+             emitTAC(TACOp::COPY, addr, base, Operand());
+             emitTAC(TACOp::ADD, addr, addr, idx);
+             
+             if (s->is_param) {
+                 if (unsafety_detected) {
+                     emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
+                     emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+                 }
+             } else {
+                  emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
+                  emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+             }
+             
+             emitTAC(TACOp::PARAM, Operand(), addr, Operand());
+             
+         } else {
+             // Passing Variable/Array
+             if (s->is_array) {
+                 // Passing whole array
+                 Operand val = makeTemp();
+                 if (s->is_param) {
+                      emitTAC(TACOp::LOAD, val, argOp, Operand());
+                 } else {
+                      // Global Array
+                      long long vbase = s->address - s->start; // Virtual
+                      long long rbase = s->address; // Real
+                      if (!unsafety_detected) {
+                           emitTAC(TACOp::COPY, val, Operand::makeConst(vbase), Operand());
+                      } else {
+                           emitTAC(TACOp::COPY, val, Operand::makeConst(rbase), Operand());
+                      }
+                 }
+                 emitTAC(TACOp::PARAM, Operand(), val, Operand());
+             } else {
+                 // Passing Scalar Variable
+                 if (s->is_param) {
+                     // Pass the pointer (Pass-through)
+                     Operand p = makeTemp();
+                     emitTAC(TACOp::LOAD, p, argOp, Operand());
+                     emitTAC(TACOp::PARAM, Operand(), p, Operand());
+                 } else {
+                     // Pass address of global
+                     Operand addr = Operand::makeConst(s->address);
+                     emitTAC(TACOp::PARAM, Operand(), addr, Operand());
+                 }
+             }
+         }
+    }
+    
+    emitTAC(TACOp::CALL, Operand(), Operand::makeLabel("proc_" + proc_name), Operand());
+}
+
+void NumberNode::genTAC(Operand dest) {
+    emitTAC(TACOp::COPY, dest, Operand::makeConst(value), Operand());
+}
+
+void IdentifierNode::genTAC(Operand dest) {
+    Symbol* s = get_variable(name);
+    Operand var = Operand::makeVar(name, s);
+    
+    if (!is_array) {
+        if (s->is_param) {
+             Operand ptr = makeTemp();
+             emitTAC(TACOp::LOAD, ptr, var, Operand());
+             emitTAC(TACOp::LOAD, dest, ptr, Operand());
+        } else {
+             emitTAC(TACOp::COPY, dest, var, Operand());
+        }
+    } else {
+        Operand idx;
+         if (is_index_const) {
+             idx = Operand::makeConst(index_val);
+         } else {
+             Symbol* idxSym = get_variable(index_name);
+             Operand idxVar = Operand::makeVar(index_name, idxSym);
+             if (idxSym->is_param) {
+                 idx = makeTemp();
+                 emitTAC(TACOp::LOAD, idx, idxVar, Operand());
+                 emitTAC(TACOp::LOAD, idx, idx, Operand()); 
+             } else {
+                 idx = idxVar;
+             }
+         }
+         
+         Operand base = makeTemp();
+         if (s->is_param) {
+              emitTAC(TACOp::LOAD, base, var, Operand());
+         } else {
+              emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
+         }
+
+         Operand addr = makeTemp();
+         emitTAC(TACOp::COPY, addr, base, Operand());
+         emitTAC(TACOp::ADD, addr, addr, idx);
+         
+         if (s->is_param) {
+             if (unsafety_detected) {
+                 emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
+                 emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+             }
+         } else {
+              emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
+              emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+         }
+
+         emitTAC(TACOp::LOAD, dest, addr, Operand());
+    }
+}
+
+void BinaryOpNode::genTAC(Operand dest) {
+    Operand l = makeTemp();
+    Operand r = makeTemp();
+    
+    left->genTAC(l);
+    right->genTAC(r);
+    
+    TACOp opc = TACOp::NOPE;
+    switch(op) {
+        case BinaryOp::PLUS: opc = TACOp::ADD; break;
+        case BinaryOp::MINUS: opc = TACOp::SUB; break;
+        case BinaryOp::MULT: opc = TACOp::MUL; break;
+        case BinaryOp::DIV: opc = TACOp::DIV; break;
+        case BinaryOp::MOD: opc = TACOp::MOD; break;
+    }
+    
+    emitTAC(opc, dest, l, r);
+}
+
+void ConditionNode::genTAC_cond(std::string labelTarget, bool jumpIfTrue) {
+    Operand l = makeTemp();
+    Operand r = makeTemp();
+    
+    left->genTAC(l);
+    right->genTAC(r);
+    
+    TACOp jumpOp = TACOp::NOPE;
+    
+    if (jumpIfTrue) {
+        switch(op) {
+            case ConditionOp::EQ: jumpOp = TACOp::JUMP_EQ; break;
+            case ConditionOp::NEQ: jumpOp = TACOp::JUMP_NEQ; break;
+            case ConditionOp::LT: jumpOp = TACOp::JUMP_LT; break;
+            case ConditionOp::GT: jumpOp = TACOp::JUMP_GT; break;
+            case ConditionOp::LEQ: jumpOp = TACOp::JUMP_LEQ; break;
+            case ConditionOp::GEQ: jumpOp = TACOp::JUMP_GEQ; break;
+        }
+    } else {
+        switch(op) {
+            case ConditionOp::EQ: jumpOp = TACOp::JUMP_NEQ; break;
+            case ConditionOp::NEQ: jumpOp = TACOp::JUMP_EQ; break;
+            case ConditionOp::LT: jumpOp = TACOp::JUMP_GEQ; break;
+            case ConditionOp::GT: jumpOp = TACOp::JUMP_LEQ; break;
+            case ConditionOp::LEQ: jumpOp = TACOp::JUMP_GT; break;
+            case ConditionOp::GEQ: jumpOp = TACOp::JUMP_LT; break;
+        }
+    }
+    
+    emitTAC(jumpOp, Operand::makeLabel(labelTarget), l, r);
+}
+

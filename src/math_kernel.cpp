@@ -26,7 +26,7 @@ void generate_mul() {
     addr_mul = code.size();
     
     // 1. Save Return Address to r4
-    emit("SWP", 4); 
+    emit("SWP", 4, "MULTIPLICATION"); 
 
     // 2. Initialize Result (r3) to 0
     emit("RST", 3); 
@@ -105,12 +105,16 @@ void generate_div() {
     //     Mask >> 1
     addr_div = code.size();
     
-    emit("SWP", 3); 
+    emit("SWP", 3, "DIVISION"); 
 
     // 1. Initialize
     emit("RST", 6); // rg = 0 (Quotient)
     emit("RST", 5); emit("INC", 5); // rf = 1 (Mask)
     emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc (Divisor copy)
+
+    // CHECK ZERO DIVISOR
+    emit("RST", 0); emit("ADD", 2); emit("JZERO", 0);
+    long long jump_zero = code.size() - 1;
 
     // 2. Align (Scale Up)
     long long loop_up = code.size();
@@ -159,6 +163,7 @@ void generate_div() {
 
     // 5. Finalize
     code[jump_end].arg = code.size();
+    code[jump_zero].arg = code.size();
     
     // Result: Quotient in r6 -> r1
     emit("RST", 0); emit("ADD", 6); emit("SWP", 1); 
@@ -187,11 +192,15 @@ void generate_mod() {
     //     Mask >> 1
     addr_mod = code.size();
     
-    emit("SWP", 3);
+    emit("SWP", 3, "MODULO");
     
     // 1. Initialize
     emit("RST", 5); emit("INC", 5); // rf = 1 (Mask)
     emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc (Divisor copy)
+
+    // CHECK ZERO DIVISOR
+    emit("RST", 0); emit("ADD", 2); emit("JZERO", 0);
+    long long jump_zero = code.size() - 1;
 
     // 2. Align (Scale Up)
     long long loop_up = code.size();
@@ -239,5 +248,11 @@ void generate_mod() {
 
     // Restore RA from r3
     emit("RST", 0); emit("ADD", 3); 
+    emit("RTRN");
+
+    // Zero Divisor Handler (Return 0)
+    code[jump_zero].arg = code.size();
+    emit("RST", 1); // Remainder = 0
+    emit("RST", 0); emit("ADD", 3);
     emit("RTRN");
 }
