@@ -107,6 +107,14 @@ void generate_div() {
     
     emit("SWP", 3); 
 
+    emit("SWP", 2);
+    emit("JPOS", code.size() + 4, "DIV 0 CHECK");
+    emit("RST", 1);
+    emit("SWP", 3);
+    emit("RTRN");
+    
+    emit("SWP", 2);
+
     // 1. Initialize
     emit("RST", 6); // rg = 0 (Quotient)
     emit("RST", 5); emit("INC", 5); // rf = 1 (Mask)
@@ -187,8 +195,14 @@ void generate_mod() {
     //     Mask >> 1
     addr_mod = code.size();
     
+    emit("SWP", 3); // RA IN 3
+    emit("SWP", 2);
+    emit("JPOS", code.size() + 4, "DIV 0 CHECK");
+    emit("RST", 1);
     emit("SWP", 3);
+    emit("RTRN");
     
+    emit("SWP", 2);
     // 1. Initialize
     emit("RST", 5); emit("INC", 5); // rf = 1 (Mask)
     emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc (Divisor copy)

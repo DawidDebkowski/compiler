@@ -1,0 +1,88 @@
+==========================================
+Test Run Report (BS) - 28154808
+==========================================
+
+
+### Category: basic ###
+==========================================
+  01-test_io...                  PASS (Cost: 211, Instructions: 6)
+  02-test2_vars...               PASS (Cost: 235, Instructions: 22)
+  03-test3_mul...                PASS (Cost: 306, Instructions: 51)
+  04-test4_div...                PASS (Cost: 395, Instructions: 70)
+  05-test5_mod...                PASS (Cost: 321, Instructions: 70)
+  06-test6_arr...                PASS (Cost: 509, Instructions: 52)
+  07-test7_arr_range...          PASS (Cost: 536, Instructions: 79)
+  08-test8_proc...               PASS (Cost: 852, Instructions: 44)
+  09-0test9_0_proc_arr...        PASS (Cost: 2 538, Instructions: 143)
+  09-1test9_1_proc_arr...        PASS (Cost: 4 337, Instructions: 808)
+  10-test10_proc_arr_range...    PASS (Cost: 2 108, Instructions: 137)
+  11-test11_CLN_folding...       SKIP (no answer file)
+  12-test_if_conditions...       PASS (Cost: 3 283, Instructions: 521)
+  13-test_if_nested...           PASS (Cost: 866, Instructions: 205)
+  14-rafal...                    PASS (Cost: 1 550, Instructions: 146)
+  15-div_0...                    PASS (Cost: 363, Instructions: 138)
+  16-test_nested_for...          FAIL (compilation error)
+  17-test_read_array...          PASS (Cost: 1 116, Instructions: 77)
+  18-test_simple_for...          FAIL (output mismatch)
+    Expected: tests/ans/basic/18-test_simple_for.ans
+    Got:      tests/out/basic/18-test_simple_for.out
+    Diff:
+      3c3
+      < > 10
+      ---
+      > > 4
+  19-test_mul_simple...          PASS (Cost: 255, Instructions: 46)
+  20-test_mul_opt...             PASS (Cost: 6 584, Instructions: 1129)
+  21-zero_loops...               FAIL (output mismatch)
+    Expected: tests/ans/basic/21-zero_loops.ans
+    Got:      tests/out/basic/21-zero_loops.out
+    Diff:
+      12d11
+      < > 5
+  Category results: 18 passed, 3 failed
+
+### Category: custom ###
+==========================================
+  downto_zero...                 SKIP (no answer file)
+  example4_small...              SKIP (no answer file)
+  test...                        SKIP (no answer file)
+  to_ten...                      SKIP (no answer file)
+  unsafe_proc...                 SKIP (no answer file)
+  Category results: 0 passed, 0 failed
+
+### Category: example ###
+==========================================
+  example1...                    PASS (Cost: 8 449, Instructions: 378)
+  example2...                    PASS (Cost: 29 221, Instructions: 187)
+  example3...                    PASS (Cost: 1 134, Instructions: 249)
+  example4...                    PASS (Cost: 30 434, Instructions: 400)
+  example5...                    PASS (Cost: 381 337, Instructions: 400)
+  example6...                    PASS (Cost: 22 094, Instructions: 334)
+  example7...                    PASS (Cost: 765 638, Instructions: 183)
+  example8...                    PASS (Cost: 152 638, Instructions: 436)
+  example9-big...                PASS (Cost: 17 420, Instructions: 370)
+  example9...                    PASS (Cost: 17 420, Instructions: 370)
+  exampleA...                    FAIL (output mismatch)
+    Expected: tests/ans/example/exampleA.ans
+    Got:      tests/out/example/exampleA.out
+    Diff:
+      1c1
+      < > 25
+      ---
+      > > 0
+  Category results: 10 passed, 1 failed
+
+### Category: labor4 ###
+==========================================
+  program0...                    PASS (Cost: 3 168, Instructions: 171)
+  program1...                    PASS (Cost: 4 710, Instructions: 129)
+  program2...                    PASS (Cost: 127 094, Instructions: 239)
+  program3 (input#1)...          PASS (Cost: 15 944, Instructions: 331)
+  program3 (input#2)...          PASS (Cost: 8 143 832, Instructions: 331)
+  program3 (input#3)...          PASS (Cost: 8 936 382, Instructions: 331)
+  program3 (input#4)...          PASS (Cost: 164 472 353, Instructions: 331)
+  Category results: 7 passed, 0 failed
+
+==========================================
+TOTAL RESULTS: 35 passed, 4 failed
+==========================================

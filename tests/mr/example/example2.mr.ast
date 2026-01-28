@@ -1,0 +1,55 @@
+Program
+  Procedures:
+    Procedure pa
+      Assignment
+        Identifier(a)
+        BinaryOp(+)
+          Identifier(a)
+          Identifier(b)
+      Assignment
+        Identifier(b)
+        BinaryOp(-)
+          Identifier(a)
+          Identifier(b)
+    Procedure pb
+      ProcCall(pa)
+        Identifier(a)
+        Identifier(b)
+      ProcCall(pa)
+        Identifier(a)
+        Identifier(b)
+    Procedure pc
+      ProcCall(pb)
+        Identifier(a)
+        Identifier(b)
+      ProcCall(pb)
+        Identifier(a)
+        Identifier(b)
+      ProcCall(pb)
+        Identifier(a)
+        Identifier(b)
+    Procedure pd
+      ProcCall(pc)
+        Identifier(a)
+        Identifier(b)
+      ProcCall(pc)
+        Identifier(a)
+        Identifier(b)
+      ProcCall(pc)
+        Identifier(a)
+        Identifier(b)
+      ProcCall(pc)
+        Identifier(a)
+        Identifier(b)
+  Main:
+    Read
+      Identifier(a)
+    Read
+      Identifier(b)
+    ProcCall(pd)
+      Identifier(a)
+      Identifier(b)
+    Write
+      Identifier(a)
+    Write
+      Identifier(b)

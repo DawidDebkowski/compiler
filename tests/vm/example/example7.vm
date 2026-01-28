@@ -1,0 +1,183 @@
+READ
+STORE 0 # a
+READ
+SWP e # store to b
+READ
+SWP d # store to c
+RST a # Building 111091
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SWP g # store to i
+RST a # load i from g to B
+ADD g
+SWP b
+RST a # Building 111110
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SUB b
+JPOS 66 #  Jump: L1
+JUMP 174 #  Jump: L2
+RST a # Building 209
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+INC a
+SWP f # store to j
+RST b # Building 200
+INC b
+SHL b
+INC b
+SHL b
+SHL b
+SHL b
+INC b
+SHL b
+SHL b
+SHL b
+RST a # load j from f
+ADD f
+INC a
+SUB b
+JPOS 96 #  Jump: L4
+JUMP 154 #  Jump: L5
+RST a # Building 11
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+STORE 1 # k
+LOAD 1
+SWP b
+RST a # Building 20
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SUB b
+JPOS 117 #  Jump: L7
+JUMP 134 #  Jump: L8
+LOAD 1
+SWP b
+LOAD 0
+ADD b
+SWP h # store to t0
+RST a # load t0 from h
+ADD h
+STORE 0 # a
+RST b # Building 1
+INC b
+LOAD 1
+ADD b
+SWP h # store to t1
+RST a # load t1 from h
+ADD h
+STORE 1 # k
+JUMP 104 #  Jump: L6
+RST a # load j from f to B
+ADD f
+SWP b
+RST a # load b from e
+ADD e
+ADD b
+SWP e # store to t2
+RST a # load t2 from e
+ADD e
+SWP e # store to b
+RST b # Building 1
+INC b
+RST a # load j from f
+ADD f
+SUB b
+SWP f # store to t3
+RST a # load t3 from f
+ADD f
+SWP f # store to j
+JUMP 79 #  Jump: L3
+RST a # load i from g to B
+ADD g
+SWP b
+RST a # load c from d
+ADD d
+ADD b
+SWP d # store to t4
+RST a # load t4 from d
+ADD d
+SWP d # store to c
+RST b # Building 1
+INC b
+RST a # load i from g
+ADD g
+ADD b
+SWP f # store to t5
+RST a # load t5 from f
+ADD f
+SWP g # store to i
+JUMP 35 #  Jump: L0
+LOAD 0
+WRITE
+RST a # load b from e
+ADD e
+WRITE
+RST a # load c from d
+ADD d
+WRITE
+HALT

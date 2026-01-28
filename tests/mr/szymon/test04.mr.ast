@@ -1,0 +1,9 @@
+Program
+  Main:
+    Assignment
+      Identifier(v)
+      BinaryOp(-)
+        Number(4)
+        Number(5)
+    Write
+      Identifier(v)

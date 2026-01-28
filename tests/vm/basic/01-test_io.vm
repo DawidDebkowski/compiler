@@ -1,0 +1,6 @@
+READ
+SWP d # store to a
+RST a # load a from d
+ADD d
+WRITE
+HALT

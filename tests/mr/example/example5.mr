@@ -1,0 +1,135 @@
+READ
+STORE 12
+READ
+STORE 13
+READ
+STORE 14 # next line inlining power
+RST a
+INC a
+STORE 15
+LOAD 13
+STORE 10
+LOAD 12
+SWP b
+LOAD 14
+SWP c
+CALL 98
+SWP b
+STORE 9
+RST b
+LOAD 10
+SUB b # >
+JZERO 73
+LOAD 10
+RST b
+SWP b
+ADD b
+SHR b # mod optim shift
+SHL b # mod optim shift
+SUB b # mod optim sub
+STORE 11
+SWP b
+RST a
+INC a
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JPOS 56
+LOAD 15
+SWP b
+LOAD 9
+SWP c
+CALL 76
+SWP b
+STORE 15
+SWP b
+LOAD 14
+SWP c
+CALL 98
+SWP b
+STORE 15
+LOAD 10
+SHR a # optimizing left div 2
+STORE 10
+LOAD 9
+SWP b
+LOAD 9
+SWP c
+CALL 76
+SWP b
+STORE 9
+SWP b
+LOAD 14
+SWP c
+CALL 98
+SWP b
+STORE 9
+JUMP 18
+LOAD 15
+WRITE
+HALT
+SWP e
+RST d
+RST a
+ADD c
+JZERO 92
+SHR c
+SHL c
+SUB c
+JZERO 89
+RST a
+ADD d
+ADD b
+SWP d
+SHR c
+SHL b
+JUMP 78
+RST a
+ADD d
+SWP b
+RST a
+ADD e
+RTRN
+SWP d
+SWP c
+JPOS 104 # DIV 0 CHECK
+RST b
+SWP d
+RTRN
+SWP c
+RST f
+INC f
+RST a
+ADD c
+SWP e
+RST a
+ADD e
+SUB b
+JPOS 117
+SHL e
+SHL f
+JUMP 110
+SHR e
+SHR f
+RST a
+ADD f
+JZERO 132
+RST a
+ADD e
+SUB b
+JPOS 129
+SWP b
+SUB e
+SWP b
+SHR e
+SHR f
+JUMP 119
+RST a
+ADD d
+RTRN

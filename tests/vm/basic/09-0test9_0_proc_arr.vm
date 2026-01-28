@@ -1,0 +1,143 @@
+RST a # Building 0
+STORE 6 # z
+RST a # Building 5
+INC a
+SHL a
+SHL a
+INC a
+STORE 7 # f
+RST a # Building 111
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+STORE 8 # one
+RST a # Building 8
+INC a
+SHL a
+SHL a
+SHL a
+STORE 9 # set.val
+RST a # Building 6
+INC a
+SHL a
+INC a
+SHL a
+STORE 10 # set.idx
+RST a # Building 0
+STORE 11 # set.arr
+RST a # save d before call
+ADD d
+STORE 12
+CALL 88 # proc_set Jump: proc_set
+LOAD 12 # restore d after call
+SWP d
+RST a # Building 8
+INC a
+SHL a
+SHL a
+SHL a
+STORE 9 # set.val
+RST a # Building 7
+INC a
+SHL a
+INC a
+SHL a
+INC a
+STORE 10 # set.idx
+RST a # Building 0
+STORE 11 # set.arr
+RST a # save d before call
+ADD d
+STORE 12
+CALL 88 # proc_set Jump: proc_set
+LOAD 12 # restore d after call
+SWP d
+RST b # Building 0
+RST c # Building 0
+SWP c
+ADD b
+SWP c
+RLOAD c
+SWP d # store to t0
+RST a # load t0 from d
+ADD d
+WRITE
+RST b # Building 5
+INC b
+SHL b
+SHL b
+INC b
+RST c # Building 0
+SWP c
+ADD b
+SWP c
+RLOAD c
+SWP d # store to t1
+RST a # load t1 from d
+ADD d
+WRITE
+HALT
+STORE 13
+LOAD 10
+RLOAD a
+SWP b
+RST c # Building 11
+INC c
+SHL c
+SHL c
+INC c
+SHL c
+INC c
+RLOAD c
+ADD b
+SWP c
+LOAD 9
+RLOAD a
+RSTORE c
+LOAD 9
+RLOAD a
+SWP b
+RST c # Building 2
+INC c
+SHL c
+RST d
+RST a
+ADD c
+SUB b
+JZERO 119 #  Jump: _end_mul_if1_0
+SWP b
+SWP c
+SWP b #  Label: _end_mul_if1_0
+RST a # begin mul loop d << 1
+ADD c
+SHR c
+SHL c
+SUB c
+JZERO 128 #  Jump: _end_mul_if2_1
+SWP d
+ADD b
+SWP d #  Label: _end_mul_if2_1
+SHR c
+SHL b
+RST a
+ADD c
+JPOS 119 #  Jump: _end_mul_if1_0
+SWP d
+SWP f # store to t2
+RST a # load t2 from f
+ADD f
+SWP b
+LOAD 9
+SWP b
+RSTORE b
+LOAD 13
+RTRN

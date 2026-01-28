@@ -1,0 +1,129 @@
+READ
+STORE 0 # a
+READ
+STORE 1 # b
+READ
+STORE 2 # c
+READ
+STORE 3 # d
+RST a # Building 4
+INC a
+SHL a
+SHL a
+STORE 5 # gcd.c
+RST a # Building 1
+INC a
+STORE 6 # gcd.b
+RST a # Building 0
+STORE 7 # gcd.a
+CALL 57 # proc_gcd Jump: proc_gcd
+RST a # Building 8
+INC a
+SHL a
+SHL a
+SHL a
+STORE 5 # gcd.c
+RST a # Building 3
+INC a
+SHL a
+INC a
+STORE 6 # gcd.b
+RST a # Building 2
+INC a
+SHL a
+STORE 7 # gcd.a
+CALL 57 # proc_gcd Jump: proc_gcd
+RST a # Building 9
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+STORE 5 # gcd.c
+RST a # Building 8
+INC a
+SHL a
+SHL a
+SHL a
+STORE 6 # gcd.b
+RST a # Building 4
+INC a
+SHL a
+SHL a
+STORE 7 # gcd.a
+CALL 57 # proc_gcd Jump: proc_gcd
+LOAD 9
+WRITE
+HALT
+STORE 10
+LOAD 7
+RLOAD a
+SWP d # store to gcd.x
+LOAD 6
+RLOAD a
+SWP e # store to gcd.y
+RST b # Building 0
+RST a # load gcd.y from e
+ADD e
+SUB b
+JPOS 70 #  Jump: L1
+JUMP 121 #  Jump: L2
+RST a # load gcd.y from e to B
+ADD e
+SWP b
+RST a # load gcd.x from d
+ADD d
+INC a
+SUB b
+JPOS 79 #  Jump: L3
+JUMP 90 #  Jump: L4
+RST a # load gcd.y from e to B
+ADD e
+SWP b
+RST a # load gcd.x from d
+ADD d
+SUB b
+SWP d # store to t0
+RST a # load t0 from d
+ADD d
+SWP d # store to gcd.x
+JUMP 120 #  Jump: L5
+RST a # load gcd.y from e to B
+ADD e
+SWP b
+RST a # load gcd.x from d
+ADD d
+ADD b
+SWP d # store to t1
+RST a # load t1 from d
+ADD d
+SWP d # store to gcd.x
+RST a # load gcd.y from e to B
+ADD e
+SWP b
+RST a # load gcd.x from d
+ADD d
+SUB b
+SWP e # store to t2
+RST a # load t2 from e
+ADD e
+SWP e # store to gcd.y
+RST a # load gcd.y from e to B
+ADD e
+SWP b
+RST a # load gcd.x from d
+ADD d
+SUB b
+SWP d # store to t3
+RST a # load t3 from d
+ADD d
+SWP d # store to gcd.x
+JUMP 64 #  Jump: L0
+RST a # load gcd.x from d
+ADD d
+SWP b
+LOAD 5
+SWP b
+RSTORE b
+LOAD 10
+RTRN

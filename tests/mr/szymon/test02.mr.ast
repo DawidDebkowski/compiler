@@ -1,0 +1,66 @@
+Program
+  Main:
+    Assignment
+      Identifier(v)
+      Number(0)
+    For(i TO)
+      From:
+        Number(1)
+      To:
+        Number(4)
+    Do
+      For(j TO)
+        From:
+          Number(1)
+        To:
+          Number(4)
+      Do
+        For(k TO)
+          From:
+            Number(1)
+          To:
+            Number(4)
+        Do
+          For(l TO)
+            From:
+              Number(1)
+            To:
+              Number(4)
+          Do
+            For(m TO)
+              From:
+                Number(1)
+              To:
+                Number(4)
+            Do
+              For(n TO)
+                From:
+                  Number(1)
+                To:
+                  Number(4)
+              Do
+                For(o TO)
+                  From:
+                    Number(1)
+                  To:
+                    Number(4)
+                Do
+                  For(p TO)
+                    From:
+                      Number(1)
+                    To:
+                      Number(4)
+                  Do
+                    For(q TO)
+                      From:
+                        Number(1)
+                      To:
+                        Number(4)
+                    Do
+                      Assignment
+                        Identifier(v)
+                        BinaryOp(+)
+                          Identifier(v)
+                          Number(1)
+    Write
+      Identifier(v)

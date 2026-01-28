@@ -1,0 +1,22 @@
+Program
+  Procedures:
+    Procedure p
+      Assignment
+        Identifier(b)
+        BinaryOp(+)
+          Identifier(a)
+          Number(3)
+  Main:
+    Read
+      Identifier(n)
+    For(i TO)
+      From:
+        Number(1)
+      To:
+        Identifier(n)
+    Do
+      ProcCall(p)
+        Identifier(n)
+        Identifier(i)
+    Write
+      Identifier(n)

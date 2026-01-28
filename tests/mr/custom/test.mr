@@ -1,0 +1,40 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+STORE 5
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+STORE 6
+LOAD 5
+WRITE
+LOAD 6
+WRITE
+LOAD 5
+SWP b
+LOAD 6
+SUB b
+JZERO 37 # <
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+WRITE
+JUMP 39
+RST a
+WRITE
+HALT

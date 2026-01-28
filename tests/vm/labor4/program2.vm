@@ -1,0 +1,239 @@
+RST a # Building 100
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+STORE 101 # n
+RST a # Building 101
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+STORE 102 # licz.n
+RST a # Building 0
+STORE 103 # licz.s
+CALL 42 # proc_licz Jump: proc_licz
+RST a # Building 101
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+STORE 104 # wypisz.n
+RST a # Building 0
+STORE 105 # wypisz.s
+CALL 178 # proc_wypisz Jump: proc_wypisz
+HALT
+STORE 106
+RST a # Building 2
+INC a
+SHL a
+SWP e # store to i
+LOAD 102
+RLOAD a
+SWP b
+RST a # load i from e
+ADD e
+SUB b
+JPOS 82 #  Jump: L1
+RST a # load i from e to B
+ADD e
+SWP b
+RST c # Building 103
+INC c
+SHL c
+INC c
+SHL c
+SHL c
+SHL c
+INC c
+SHL c
+INC c
+SHL c
+INC c
+RLOAD c
+ADD b
+SWP c
+RST a # Building 1
+INC a
+RSTORE c
+RST b # Building 1
+INC b
+RST a # load i from e
+ADD e
+ADD b
+SWP e # store to i
+JUMP 47 #  Jump: L0
+RST a # Building 2
+INC a
+SHL a
+SWP e # store to i
+LOAD 102
+RLOAD a
+SWP b
+RST a # load i from e
+ADD e
+SUB b
+JPOS 176 #  Jump: L3
+RST a # load i from e to B
+ADD e
+SWP b
+RST c # Building 103
+INC c
+SHL c
+INC c
+SHL c
+SHL c
+SHL c
+INC c
+SHL c
+INC c
+SHL c
+INC c
+RLOAD c
+ADD b
+SWP c
+RLOAD c
+SWP d # store to t0
+RST b # Building 0
+RST a # load t0 from d
+ADD d
+SUB b
+JPOS 119 #  Jump: L4
+JUMP 169 #  Jump: L5
+RST a # load i from e to B
+ADD e
+SWP b
+RST a # load i from e
+ADD e
+ADD b
+SWP d # store to t1
+RST a # load t1 from d
+ADD d
+SWP d # store to licz.j
+RST a # load licz.j from d to B
+ADD d
+SWP b
+LOAD 102
+RLOAD a
+INC a
+SUB b
+JPOS 138 #  Jump: L7
+JUMP 169 #  Jump: L8
+RST a # load licz.j from d to B
+ADD d
+SWP b
+RST c # Building 103
+INC c
+SHL c
+INC c
+SHL c
+SHL c
+SHL c
+INC c
+SHL c
+INC c
+SHL c
+INC c
+RLOAD c
+ADD b
+SWP c
+RST a # Building 0
+RSTORE c
+RST a # load i from e to B
+ADD e
+SWP b
+RST a # load licz.j from d
+ADD d
+ADD b
+SWP d # store to t2
+RST a # load t2 from d
+ADD d
+SWP d # store to licz.j
+JUMP 129 #  Jump: L6
+RST b # Building 1
+INC b
+RST a # load i from e
+ADD e
+ADD b
+SWP e # store to i
+JUMP 86 #  Jump: L2
+LOAD 106
+RTRN
+STORE 107
+LOAD 104
+RLOAD a
+SWP d # store to i
+RST a # load i from d to B
+ADD d
+SWP b
+RST a # Building 2
+INC a
+SHL a
+SUB b
+JPOS 237 #  Jump: L10
+RST a # load i from d to B
+ADD d
+SWP b
+RST c # Building 105
+INC c
+SHL c
+INC c
+SHL c
+SHL c
+INC c
+SHL c
+SHL c
+SHL c
+INC c
+RLOAD c
+ADD b
+SWP c
+RLOAD c
+SWP e # store to t3
+RST b # Building 0
+RST a # load t3 from e
+ADD e
+SUB b
+JPOS 215 #  Jump: L11
+JUMP 218 #  Jump: L12
+RST a # load i from d
+ADD d
+WRITE
+RST b # Building 1
+INC b
+RST a # load i from d
+ADD d
+SUB b
+SWP d # store to i
+RST a # load i from d to B
+ADD d
+SWP b
+RST a # Building 0
+SUB b
+JPOS 236 #  Jump: not_eq_0
+RST b # Building 0
+RST a # load i from d
+ADD d
+SUB b
+JPOS 236 #  Jump: not_eq_0
+JUMP 237 #  Jump: L10 Label: not_eq_0
+JUMP 182 #  Jump: L9
+LOAD 107
+RTRN

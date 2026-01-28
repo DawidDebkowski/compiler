@@ -1,0 +1,187 @@
+READ
+STORE 0 # a
+READ
+STORE 1 # b
+RST a # Building 1
+INC a
+STORE 2 # pd.b
+RST a # Building 0
+STORE 3 # pd.a
+CALL 136 # proc_pd Jump: proc_pd
+LOAD 0
+WRITE
+LOAD 1
+WRITE
+HALT
+STORE 4
+LOAD 5
+RLOAD a
+SWP b
+LOAD 6
+RLOAD a
+ADD b
+SWP d # store to t0
+RST a # load t0 from d
+ADD d
+SWP b
+LOAD 6
+SWP b
+RSTORE b
+LOAD 5
+RLOAD a
+SWP b
+LOAD 6
+RLOAD a
+SUB b
+SWP d # store to t1
+RST a # load t1 from d
+ADD d
+SWP b
+LOAD 5
+SWP b
+RSTORE b
+LOAD 4
+RTRN
+STORE 7
+RST a # Building 8
+INC a
+SHL a
+SHL a
+SHL a
+RLOAD a
+STORE 5 # pa.b
+RST a # Building 9
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+RLOAD a
+STORE 6 # pa.a
+CALL 15 # proc_pa Jump: proc_pa
+RST a # Building 8
+INC a
+SHL a
+SHL a
+SHL a
+RLOAD a
+STORE 5 # pa.b
+RST a # Building 9
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+RLOAD a
+STORE 6 # pa.a
+CALL 15 # proc_pa Jump: proc_pa
+LOAD 7
+RTRN
+STORE 10
+RST a # Building 11
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+RLOAD a
+STORE 8 # pb.b
+RST a # Building 12
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+RLOAD a
+STORE 9 # pb.a
+CALL 44 # proc_pb Jump: proc_pb
+RST a # Building 11
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+RLOAD a
+STORE 8 # pb.b
+RST a # Building 12
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+RLOAD a
+STORE 9 # pb.a
+CALL 44 # proc_pb Jump: proc_pb
+RST a # Building 11
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+RLOAD a
+STORE 8 # pb.b
+RST a # Building 12
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+RLOAD a
+STORE 9 # pb.a
+CALL 44 # proc_pb Jump: proc_pb
+LOAD 10
+RTRN
+STORE 13
+RST a # Building 2
+INC a
+SHL a
+RLOAD a
+STORE 11 # pc.b
+RST a # Building 3
+INC a
+SHL a
+INC a
+RLOAD a
+STORE 12 # pc.a
+CALL 79 # proc_pc Jump: proc_pc
+RST a # Building 2
+INC a
+SHL a
+RLOAD a
+STORE 11 # pc.b
+RST a # Building 3
+INC a
+SHL a
+INC a
+RLOAD a
+STORE 12 # pc.a
+CALL 79 # proc_pc Jump: proc_pc
+RST a # Building 2
+INC a
+SHL a
+RLOAD a
+STORE 11 # pc.b
+RST a # Building 3
+INC a
+SHL a
+INC a
+RLOAD a
+STORE 12 # pc.a
+CALL 79 # proc_pc Jump: proc_pc
+RST a # Building 2
+INC a
+SHL a
+RLOAD a
+STORE 11 # pc.b
+RST a # Building 3
+INC a
+SHL a
+INC a
+RLOAD a
+STORE 12 # pc.a
+CALL 79 # proc_pc Jump: proc_pc
+LOAD 13
+RTRN

@@ -1,0 +1,40 @@
+RST a
+INC a
+SHL a
+STORE 5
+RST a
+INC a
+SHL a
+INC a
+STORE 6
+LOAD 5
+SWP b
+LOAD 6
+SWP c
+CALL 18
+SWP b
+STORE 7
+WRITE
+HALT
+SWP e
+RST d
+RST a
+ADD c
+JZERO 34
+SHR c
+SHL c
+SUB c
+JZERO 31
+RST a
+ADD d
+ADD b
+SWP d
+SHR c
+SHL b
+JUMP 20
+RST a
+ADD d
+SWP b
+RST a
+ADD e
+RTRN

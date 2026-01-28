@@ -1,0 +1,24 @@
+RST a # Building 1
+INC a
+SWP d # store to i
+RST b # Building 10
+INC b
+SHL b
+SHL b
+INC b
+SHL b
+RST a # load i from d
+ADD d
+SUB b
+JPOS 23 #  Jump: L1
+RST a # load i from d
+ADD d
+WRITE
+RST b # Building 1
+INC b
+RST a # load i from d
+ADD d
+ADD b
+SWP d # store to i
+JUMP 3 #  Jump: L0
+HALT

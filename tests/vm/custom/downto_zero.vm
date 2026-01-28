@@ -1,0 +1,36 @@
+RST a # Building 10
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SWP d # store to i
+RST a # load i from d to B
+ADD d
+SWP b
+RST a # Building 0
+SUB b
+JPOS 35 #  Jump: L1
+RST a # load i from d
+ADD d
+WRITE
+RST b # Building 1
+INC b
+RST a # load i from d
+ADD d
+SUB b
+SWP d # store to i
+RST a # load i from d to B
+ADD d
+SWP b
+RST a # Building 0
+SUB b
+JPOS 34 #  Jump: not_eq_0
+RST b # Building 0
+RST a # load i from d
+ADD d
+SUB b
+JPOS 34 #  Jump: not_eq_0
+JUMP 35 #  Jump: L1 Label: not_eq_0
+JUMP 7 #  Jump: L0
+HALT

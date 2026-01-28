@@ -1,0 +1,22 @@
+READ
+STORE 5
+LOAD 5
+SHR a # optimizing left div 2
+STORE 6
+SHL a # mul by 2^k
+STORE 6
+SWP b
+LOAD 5
+SUB b # >
+JZERO 15
+RST a
+INC a
+WRITE
+JUMP 17
+RST a
+WRITE
+LOAD 5
+SHR a # optimizing left div 2
+STORE 5
+JPOS 2
+HALT

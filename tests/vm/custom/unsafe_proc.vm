@@ -1,0 +1,108 @@
+RST a # Building 0
+STORE 3011 # p.arr
+CALL 4 # proc_p Jump: proc_p
+HALT
+STORE 3012
+RST b # Building 3000
+INC b
+SHL b
+SHL b
+INC b
+SHL b
+INC b
+SHL b
+INC b
+SHL b
+SHL b
+INC b
+SHL b
+INC b
+SHL b
+INC b
+SHL b
+SHL b
+SHL b
+RST c # Building 3011
+INC c
+SHL c
+SHL c
+INC c
+SHL c
+INC c
+SHL c
+INC c
+SHL c
+INC c
+SHL c
+SHL c
+SHL c
+SHL c
+SHL c
+INC c
+SHL c
+INC c
+RLOAD c
+ADD b
+SWP c
+RST a # Building 123
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+RSTORE c
+RST b # Building 3000
+INC b
+SHL b
+SHL b
+INC b
+SHL b
+INC b
+SHL b
+INC b
+SHL b
+SHL b
+INC b
+SHL b
+INC b
+SHL b
+INC b
+SHL b
+SHL b
+SHL b
+RST c # Building 3011
+INC c
+SHL c
+SHL c
+INC c
+SHL c
+INC c
+SHL c
+INC c
+SHL c
+INC c
+SHL c
+SHL c
+SHL c
+SHL c
+SHL c
+INC c
+SHL c
+INC c
+RLOAD c
+ADD b
+SWP c
+RLOAD c
+SWP d # store to t0
+RST a # load t0 from d
+ADD d
+WRITE
+LOAD 3012
+RTRN

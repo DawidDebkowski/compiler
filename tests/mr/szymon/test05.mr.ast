@@ -1,0 +1,11 @@
+Program
+  Procedures:
+    Procedure dummy
+      Assignment
+        Identifier(tt)
+        Number(0)
+  Main:
+    ProcCall(dummy)
+      Identifier(v)
+    Write
+      Identifier(v)

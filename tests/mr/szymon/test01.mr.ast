@@ -1,0 +1,25 @@
+Program
+  Main:
+    Assignment
+      Identifier(v)
+      Number(0)
+    Read
+      Identifier(n)
+    For(i TO)
+      From:
+        Number(1)
+      To:
+        Identifier(n)
+    Do
+      Assignment
+        Identifier(v)
+        BinaryOp(+)
+          Identifier(v)
+          Number(1)
+      Assignment
+        Identifier(n)
+        BinaryOp(-)
+          Identifier(n)
+          Number(1)
+    Write
+      Identifier(v)

@@ -1,0 +1,331 @@
+READ
+STORE 0 # n
+RST a # Building 2
+INC a
+SHL a
+STORE 1 # dzielnik
+LOAD 1
+SWP b
+LOAD 1
+SWP c
+RST d
+RST a
+ADD c
+SUB b
+JZERO 18 #  Jump: _end_mul_if1_0
+SWP b
+SWP c
+SWP b #  Label: _end_mul_if1_0
+RST a # begin mul loop d << 1
+ADD c
+SHR c
+SHL c
+SUB c
+JZERO 27 #  Jump: _end_mul_if2_1
+SWP d
+ADD b
+SWP d #  Label: _end_mul_if2_1
+SHR c
+SHL b
+RST a
+ADD c
+JPOS 18 #  Jump: _end_mul_if1_0
+SWP d
+SWP f # store to t0
+RST a # load t0 from f
+ADD f
+SWP d # store to m
+RST a # load m from d to B
+ADD d
+SWP b
+LOAD 0
+INC a
+SUB b
+JPOS 45 #  Jump: L1
+JUMP 114 #  Jump: L2
+RST a # Building 2
+INC a
+SHL a
+STORE 3 # check.p
+RST a # Building 1
+INC a
+STORE 4 # check.d
+RST a # Building 0
+STORE 5 # check.n
+RST a # save d before call
+ADD d
+STORE 6
+RST a # save f before call
+ADD f
+STORE 7
+CALL 132 # proc_check Jump: proc_check
+LOAD 7 # restore f after call
+SWP f
+LOAD 6 # restore d after call
+SWP d
+RST b # Building 0
+LOAD 2
+SUB b
+JPOS 70 #  Jump: L3
+JUMP 74 #  Jump: L4
+LOAD 1
+WRITE
+LOAD 2
+WRITE
+RST b # Building 1
+INC b
+LOAD 1
+ADD b
+SWP d # store to t1
+RST a # load t1 from d
+ADD d
+STORE 1 # dzielnik
+LOAD 1
+SWP b
+LOAD 1
+SWP c
+RST d
+RST a
+ADD c
+SUB b
+JZERO 94 #  Jump: _end_mul_if1_2
+SWP b
+SWP c
+SWP b #  Label: _end_mul_if1_2
+RST a # begin mul loop d << 1
+ADD c
+SHR c
+SHL c
+SUB c
+JZERO 103 #  Jump: _end_mul_if2_3
+SWP d
+ADD b
+SWP d #  Label: _end_mul_if2_3
+SHR c
+SHL b
+RST a
+ADD c
+JPOS 94 #  Jump: _end_mul_if1_2
+SWP d
+SWP f # store to t2
+RST a # load t2 from f
+ADD f
+SWP d # store to m
+JUMP 37 #  Jump: L0
+LOAD 0
+SWP b
+RST a # Building 1
+INC a
+SUB b
+JPOS 126 #  Jump: L5
+RST b # Building 1
+INC b
+LOAD 0
+SUB b
+JPOS 126 #  Jump: L5
+JUMP 131 #  Jump: L6
+LOAD 0
+WRITE
+RST a # Building 1
+INC a
+WRITE
+HALT
+STORE 8
+RST a # Building 0
+SWP b
+LOAD 3
+SWP b
+RSTORE b
+LOAD 5
+RLOAD a
+SWP b
+LOAD 4
+RLOAD a
+SWP c
+RST a
+ADD c
+JPOS 150 #  Jump: _not_zero_5
+RST d
+RST e
+JUMP 187 #  Jump: _end_div_4 Label: _not_zero_5
+RST a
+ADD c
+SUB b
+JZERO 159 #  Jump: _not_greater_6
+RST a
+RST e
+SWP b
+SWP d
+JUMP 187 #  Jump: _end_div_4 Label: _not_greater_6
+RST d
+INC d
+RST e #  Label: _begin_div_loop_1_7
+RST a
+ADD c
+SUB b
+JPOS 169 #  Jump: _end_div_if1_8
+SHL c
+SHL d
+JUMP 162 #  Jump: _begin_div_loop_1_7 Label: _end_div_if1_8
+SHR c
+SHR d #  Label: _begin_div_loop_2_9
+SHL e
+RST a
+ADD c
+SUB b
+JPOS 180 #  Jump: _end_div_if2_10
+SWP b
+SUB c
+SWP b
+INC e #  Label: _end_div_if2_10
+SHR c
+SHR d
+RST a
+ADD d
+JPOS 171 #  Jump: _begin_div_loop_2_9
+SWP b
+SWP d #  Label: _end_div_4
+SWP d
+SWP f # store to t3
+RST a # load t3 from f
+ADD f
+SWP d # store to check.r
+RST a # load check.r from d to B
+ADD d
+SWP b
+RST a # Building 0
+SUB b
+JPOS 204 #  Jump: not_eq_11
+RST b # Building 0
+RST a # load check.r from d
+ADD d
+SUB b
+JPOS 204 #  Jump: not_eq_11
+JUMP 205 #  Jump: L8 Label: not_eq_11
+JUMP 329 #  Jump: L9
+LOAD 5
+RLOAD a
+SWP b
+LOAD 4
+RLOAD a
+SWP c
+RST a
+ADD c
+JPOS 217 #  Jump: _not_zero_13
+RST d
+RST e
+JUMP 254 #  Jump: _end_div_12 Label: _not_zero_13
+RST a
+ADD c
+SUB b
+JZERO 226 #  Jump: _not_greater_14
+RST a
+RST e
+SWP b
+SWP d
+JUMP 254 #  Jump: _end_div_12 Label: _not_greater_14
+RST d
+INC d
+RST e #  Label: _begin_div_loop_1_15
+RST a
+ADD c
+SUB b
+JPOS 236 #  Jump: _end_div_if1_16
+SHL c
+SHL d
+JUMP 229 #  Jump: _begin_div_loop_1_15 Label: _end_div_if1_16
+SHR c
+SHR d #  Label: _begin_div_loop_2_17
+SHL e
+RST a
+ADD c
+SUB b
+JPOS 247 #  Jump: _end_div_if2_18
+SWP b
+SUB c
+SWP b
+INC e #  Label: _end_div_if2_18
+SHR c
+SHR d
+RST a
+ADD d
+JPOS 238 #  Jump: _begin_div_loop_2_17
+SWP b
+SWP d #  Label: _end_div_12
+SWP e
+SWP f # store to t4
+RST a # load t4 from f
+ADD f
+SWP b
+LOAD 5
+SWP b
+RSTORE b
+RST b # Building 1
+INC b
+LOAD 3
+RLOAD a
+ADD b
+SWP d # store to t5
+RST a # load t5 from d
+ADD d
+SWP b
+LOAD 3
+SWP b
+RSTORE b
+LOAD 5
+RLOAD a
+SWP b
+LOAD 4
+RLOAD a
+SWP c
+RST a
+ADD c
+JPOS 286 #  Jump: _not_zero_20
+RST d
+RST e
+JUMP 323 #  Jump: _end_div_19 Label: _not_zero_20
+RST a
+ADD c
+SUB b
+JZERO 295 #  Jump: _not_greater_21
+RST a
+RST e
+SWP b
+SWP d
+JUMP 323 #  Jump: _end_div_19 Label: _not_greater_21
+RST d
+INC d
+RST e #  Label: _begin_div_loop_1_22
+RST a
+ADD c
+SUB b
+JPOS 305 #  Jump: _end_div_if1_23
+SHL c
+SHL d
+JUMP 298 #  Jump: _begin_div_loop_1_22 Label: _end_div_if1_23
+SHR c
+SHR d #  Label: _begin_div_loop_2_24
+SHL e
+RST a
+ADD c
+SUB b
+JPOS 316 #  Jump: _end_div_if2_25
+SWP b
+SUB c
+SWP b
+INC e #  Label: _end_div_if2_25
+SHR c
+SHR d
+RST a
+ADD d
+JPOS 307 #  Jump: _begin_div_loop_2_24
+SWP b
+SWP d #  Label: _end_div_19
+SWP d
+SWP f # store to t6
+RST a # load t6 from f
+ADD f
+SWP d # store to check.r
+JUMP 192 #  Jump: L7
+LOAD 8
+RTRN

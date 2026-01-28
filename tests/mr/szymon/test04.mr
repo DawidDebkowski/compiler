@@ -1,0 +1,4 @@
+RST a # Folded constant expression
+STORE 5
+WRITE
+HALT

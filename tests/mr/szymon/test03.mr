@@ -1,0 +1,16 @@
+RST a
+STORE 7 # next line inlining ff
+RST a
+INC a
+SHL a
+INC a
+STORE 7
+SWP b
+RST a
+INC a
+SHL a
+SHL a
+ADD b
+STORE 7
+WRITE
+HALT
