@@ -54,6 +54,7 @@ SHL a
 SHL a
 SHL a
 INC a
+STORE 18
 RLOAD a
 WRITE
 RST a
@@ -63,6 +64,7 @@ INC a
 SHL a
 INC a
 SHL a
+STORE 19
 RLOAD a
 WRITE
 HALT

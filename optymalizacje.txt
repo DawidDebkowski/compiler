@@ -26,3 +26,4 @@ DONE:
 4. Inlinowanie procedur przy 1-2 callach
 5. dead code elimination
 6. uzycie CLN do zrobienia najwiecej operacji jak sie da tutaj
+7. param_cache - jak sa 2 procedury po sobie takie same to nie tworzy od nowa referencji tylko juz ja ma

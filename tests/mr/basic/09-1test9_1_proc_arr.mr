@@ -337,7 +337,7 @@ INC a
 SHL a
 INC a
 STORE 7
-CALL 1
+CALL 1 # not loading cached parameter tab in reg 5
 RST a
 INC a
 SHL a

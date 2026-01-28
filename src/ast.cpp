@@ -828,6 +828,7 @@ void ProcCallNode::codegen() {
 
             // Check Cache
             if (param_cache.count(param_addr) && param_cache[param_addr] == s) {
+                add_comment("not loading cached parameter " + arg->name + " in reg " + std::to_string(param_addr));
                 continue; // Optimized
             }
             param_cache[param_addr] = s;

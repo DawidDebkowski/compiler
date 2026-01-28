@@ -36,6 +36,7 @@ INC a
 SHL a
 INC a
 SHL a
+STORE 10
 RLOAD a
 WRITE
 RST a
@@ -79,6 +80,7 @@ SHL a
 INC a
 SHL a
 INC a
+STORE 11
 RLOAD a
 WRITE
 RST a
@@ -86,19 +88,10 @@ INC a
 SHL a
 INC a
 STORE 9
-RST a
-INC a
-SHL a
-INC a
-SHL a
+LOAD 10
 RLOAD a
 SWP b
-RST a
-INC a
-SHL a
-INC a
-SHL a
-INC a
+LOAD 11
 RLOAD a
 ADD b
 SWP d
@@ -131,6 +124,7 @@ INC a
 SHL a
 SHL a
 SHL a
+STORE 12
 RLOAD a
 WRITE
 HALT

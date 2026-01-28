@@ -27,7 +27,7 @@ LOAD 7
 STORE 5
 LOAD 8
 STORE 6
-CALL 1
+CALL 1 # not loading cached parameter a in reg 5not loading cached parameter b in reg 6
 CALL 1
 LOAD 16
 RTRN
@@ -36,8 +36,8 @@ LOAD 9
 STORE 7
 LOAD 10
 STORE 8
-CALL 24
-CALL 24
+CALL 24 # not loading cached parameter a in reg 7not loading cached parameter b in reg 8
+CALL 24 # not loading cached parameter a in reg 7not loading cached parameter b in reg 8
 CALL 24
 LOAD 17
 RTRN
@@ -61,9 +61,9 @@ SHL a
 INC a
 SHL a
 STORE 10
-CALL 33
-CALL 33
-CALL 33
+CALL 33 # not loading cached parameter a in reg 9not loading cached parameter b in reg 10
+CALL 33 # not loading cached parameter a in reg 9not loading cached parameter b in reg 10
+CALL 33 # not loading cached parameter a in reg 9not loading cached parameter b in reg 10
 CALL 33
 LOAD 13
 WRITE
