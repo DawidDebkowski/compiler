@@ -188,7 +188,7 @@ run: $(TARGET)
 
 test-all: $(TARGET)
 	@mkdir -p $(LOGS_DIR)
-	@timestamp=$$(date +"%d%S%M%H"); \
+	@timestamp=$$(date +"%d%H%M%S"); \
 	log_file=$(LOGS_DIR)/$${timestamp}_test.log; \
 	echo "Running tests for all categories..."; \
 	echo "Log file: $$log_file"; \

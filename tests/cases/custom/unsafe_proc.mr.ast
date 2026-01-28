@@ -1,0 +1,11 @@
+Program
+  Procedures:
+    Procedure p
+      Assignment
+        Identifier(arr[3000])
+        Number(123)
+      Write
+        Identifier(arr[3000])
+  Main:
+    ProcCall(p)
+      Identifier(arr)

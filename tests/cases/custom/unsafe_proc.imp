@@ -1,0 +1,11 @@
+PROCEDURE p(T arr) IS
+IN
+  arr[3000] := 123;
+  WRITE arr[3000];
+END
+
+PROGRAM IS
+  arr[3000:3010]
+IN
+  p(arr);
+END
