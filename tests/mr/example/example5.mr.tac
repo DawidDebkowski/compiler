@@ -1,5 +1,5 @@
-  JUMP main  # Entry Jump
-proc_power:  # Procedure power
+  JUMP main  # Entry Jump#Entry Jump
+proc_power:  # Procedure power#Procedure power
   PROLOGUE 5
   COPY _t0, 1
   STORE d, _t0
@@ -9,7 +9,7 @@ proc_power:  # Procedure power
   LOAD _t4, c
   MOD _t2, _t3, _t4
   COPY pot, _t2
-L0:  # While Start
+L0:  # While Start#While Start
   COPY _t5, wyk
   COPY _t6, 0
   JUMP_LEQ L1, _t5, _t6
@@ -19,7 +19,7 @@ L0:  # While Start
   COPY o, _t7
   COPY _t10, o
   COPY _t11, 1
-  JUMP_NEQ L3, _t10, _t11
+  JUMP_NEQ L2, _t10, _t11
   LOAD _t13, d
   COPY _t14, pot
   MUL _t12, _t13, _t14
@@ -28,7 +28,7 @@ L0:  # While Start
   LOAD _t17, c
   MOD _t15, _t16, _t17
   STORE d, _t15
-L3:
+L2:
   COPY _t19, wyk
   COPY _t20, 2
   DIV _t18, _t19, _t20
@@ -42,9 +42,9 @@ L3:
   MOD _t24, _t25, _t26
   COPY pot, _t24
   JUMP L0
-L1:  # While End
+L1:  # While End#While End
   RETURN 5
-main:  # Main Program
+main:  # Main Program#Main Program
   READ _t27
   COPY a, _t27
   READ _t28
@@ -58,4 +58,4 @@ main:  # Main Program
   CALL , proc_power
   COPY _t30, d
   WRITE , _t30
-  HALT   # HALT
+  HALT   # HALT#HALT

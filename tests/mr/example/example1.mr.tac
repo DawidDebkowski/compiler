@@ -1,5 +1,5 @@
-  JUMP main  # Entry Jump
-proc_de:  # Procedure de
+  JUMP main  # Entry Jump#Entry Jump
+proc_de:  # Procedure de#Procedure de
   PROLOGUE 5
   LOAD _t0, m
   COPY a, _t0
@@ -15,7 +15,7 @@ proc_de:  # Procedure de
   COPY _t7, 1
   SUB _t5, _t6, _t7
   COPY s, _t5
-L0:  # While Start
+L0:  # While Start#While Start
   COPY _t8, b
   COPY _t9, 0
   JUMP_LEQ L1, _t8, _t9
@@ -39,13 +39,13 @@ L0:  # While Start
   COPY tmp, _t19
   LOAD _t22, x
   COPY _t23, tmp
-  JUMP_GEQ L4, _t22, _t23
+  JUMP_GEQ L2, _t22, _t23
   LOAD _t25, n
   COPY _t26, iloraz
   MUL _t24, _t25, _t26
   COPY r, _t24
   JUMP L3
-L4:
+L2:
   COPY _t27, 0
   COPY r, _t27
 L3:
@@ -65,16 +65,16 @@ L3:
   COPY tmp, _t35
   LOAD _t38, y
   COPY _t39, tmp
-  JUMP_GEQ L7, _t38, _t39
+  JUMP_GEQ L4, _t38, _t39
   LOAD _t41, m
   COPY _t42, iloraz
   MUL _t40, _t41, _t42
   COPY s, _t40
-  JUMP L6
-L7:
+  JUMP L5
+L4:
   COPY _t43, 0
   COPY s, _t43
-L6:
+L5:
   COPY _t45, s
   LOAD _t46, y
   ADD _t44, _t45, _t46
@@ -88,11 +88,11 @@ L6:
   COPY _t51, ss
   STORE y, _t51
   JUMP L0
-L1:  # While End
+L1:  # While End#While End
   COPY _t52, a
   STORE z, _t52
   RETURN 5
-main:  # Main Program
+main:  # Main Program#Main Program
   READ _t53
   COPY m, _t53
   READ _t54
@@ -109,4 +109,4 @@ main:  # Main Program
   WRITE , _t56
   COPY _t57, nwd
   WRITE , _t57
-  HALT   # HALT
+  HALT   # HALT#HALT

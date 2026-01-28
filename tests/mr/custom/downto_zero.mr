@@ -1,0 +1,40 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+STORE 7
+RST a
+STORE 8 # For Init
+LOAD 7
+STORE 6
+LOAD 8
+SWP b
+LOAD 7
+SUB b
+STORE 9
+SWP b
+RST a
+INC a
+ADD b
+STORE 9
+RST b
+LOAD 9
+SUB b
+JZERO 39
+LOAD 6
+STORE 10
+WRITE # Dec count
+RST b
+INC b
+LOAD 9
+SUB b
+STORE 9 # Dec iter
+RST b
+INC b
+LOAD 6
+SUB b
+STORE 6
+JUMP 21 # For EndHALT
+HALT

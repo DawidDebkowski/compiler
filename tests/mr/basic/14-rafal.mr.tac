@@ -1,5 +1,5 @@
-  JUMP main  # Entry Jump
-main:  # Main Program
+  JUMP main  # Entry Jump#Entry Jump
+main:  # Main Program#Main Program
   COPY _t0, 1
   COPY i, _t0
   COPY _t1, 5
@@ -48,4 +48,4 @@ main:  # Main Program
   ADD _t35, _t34, 3
   LOAD _t33, _t35
   WRITE , _t33
-  HALT   # HALT
+  HALT   # HALT#HALT

@@ -1,5 +1,5 @@
-  JUMP main  # Entry Jump
-proc_set:  # Procedure set
+  JUMP main  # Entry Jump#Entry Jump
+proc_set:  # Procedure set#Procedure set
   PROLOGUE 5
   LOAD _t0, val
   LOAD _t1, idx
@@ -7,7 +7,7 @@ proc_set:  # Procedure set
   ADD _t3, _t2, _t1
   STORE _t3, _t0
   RETURN 5
-main:  # Main Program
+main:  # Main Program#Main Program
   COPY _t4, 10
   COPY a, _t4
   COPY _t5, 15
@@ -34,4 +34,4 @@ main:  # Main Program
   ADD _t15, _t14, b
   LOAD _t13, _t15
   WRITE , _t13
-  HALT   # HALT
+  HALT   # HALT#HALT

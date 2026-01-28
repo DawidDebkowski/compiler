@@ -97,6 +97,7 @@ proc_head : pidentifier LPAREN {
         info.address = -1; 
         // Allocate RA Slot
         info.ra_address = memory_offset++;
+        printf("%lld\n", info.ra_address);
         procedures_map[current_procedure] = info;
     } args_decl RPAREN {
     }

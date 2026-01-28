@@ -1,0 +1,10 @@
+Program
+  Main:
+    For(i TO)
+      From:
+        Number(1)
+      To:
+        Number(10)
+    Do
+      Write
+        Identifier(i)

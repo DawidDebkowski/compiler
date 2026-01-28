@@ -32,20 +32,20 @@ Program
             Number(3)
         Else
           Write
-            Number(0)
+            Number(33)
       Else
         Write
-          Number(0)
+          Number(22)
     Else
       Write
-        Number(0)
+        Number(11)
     If
       Condition(!=)
         Identifier(x)
         Number(1)
     Then
       Write
-        Number(0)
+        Number(44)
     Else
       Write
         Number(4)
@@ -55,7 +55,7 @@ Program
           Number(2)
       Then
         Write
-          Number(0)
+          Number(55)
       Else
         Write
           Number(5)
@@ -65,7 +65,7 @@ Program
             Number(3)
         Then
           Write
-            Number(0)
+            Number(66)
         Else
           Write
             Number(6)

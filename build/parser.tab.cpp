@@ -578,12 +578,12 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    68,    68,    75,    81,    87,    90,    90,   105,   106,
-     109,   110,   113,   116,   121,   126,   130,   134,   138,   142,
-     145,   148,   153,   159,   163,   169,   172,   175,   178,   183,
-     188,   195,   196,   197,   198,   201,   202,   203,   204,   205,
-     206,   209,   210,   211,   212,   213,   214,   217,   218,   221,
-     222,   226
+       0,    68,    68,    75,    81,    87,    90,    90,   106,   107,
+     110,   111,   114,   117,   122,   127,   131,   135,   139,   143,
+     146,   149,   154,   160,   164,   170,   173,   176,   179,   184,
+     189,   196,   197,   198,   199,   202,   203,   204,   205,   206,
+     207,   210,   211,   212,   213,   214,   215,   218,   219,   222,
+     223,   227
 };
 #endif
 
@@ -1299,343 +1299,344 @@ yyreduce:
         info.address = -1; 
         // Allocate RA Slot
         info.ra_address = memory_offset++;
+        printf("%lld\n", info.ra_address);
         procedures_map[current_procedure] = info;
     }
-#line 1305 "build/parser.tab.cpp"
+#line 1306 "build/parser.tab.cpp"
     break;
 
   case 7: /* proc_head: pidentifier LPAREN $@1 args_decl RPAREN  */
-#line 101 "src/parser.y"
+#line 102 "src/parser.y"
                        {
     }
-#line 1312 "build/parser.tab.cpp"
+#line 1313 "build/parser.tab.cpp"
     break;
 
   case 8: /* main: PROGRAM IS declarations IN commands END  */
-#line 105 "src/parser.y"
+#line 106 "src/parser.y"
                                                { (yyval.stmt_list) = (yyvsp[-1].stmt_list); }
-#line 1318 "build/parser.tab.cpp"
+#line 1319 "build/parser.tab.cpp"
     break;
 
   case 9: /* main: PROGRAM IS IN commands END  */
-#line 106 "src/parser.y"
+#line 107 "src/parser.y"
                                  { (yyval.stmt_list) = (yyvsp[-1].stmt_list); }
-#line 1324 "build/parser.tab.cpp"
+#line 1325 "build/parser.tab.cpp"
     break;
 
   case 10: /* commands: commands command  */
-#line 109 "src/parser.y"
+#line 110 "src/parser.y"
                             { (yyvsp[-1].stmt_list)->push_back((yyvsp[0].stmt)); (yyval.stmt_list) = (yyvsp[-1].stmt_list); }
-#line 1330 "build/parser.tab.cpp"
+#line 1331 "build/parser.tab.cpp"
     break;
 
   case 11: /* commands: command  */
-#line 110 "src/parser.y"
+#line 111 "src/parser.y"
               { (yyval.stmt_list) = new std::vector<StatementNode*>(); (yyval.stmt_list)->push_back((yyvsp[0].stmt)); }
-#line 1336 "build/parser.tab.cpp"
+#line 1337 "build/parser.tab.cpp"
     break;
 
   case 12: /* command: identifier ASSIGN expression SEMICOLON  */
-#line 113 "src/parser.y"
+#line 114 "src/parser.y"
                                                  {
         (yyval.stmt) = new AssignmentNode((yyvsp[-3].ident), (yyvsp[-1].expr), yylineno);
     }
-#line 1344 "build/parser.tab.cpp"
+#line 1345 "build/parser.tab.cpp"
     break;
 
   case 13: /* command: IF condition THEN commands ELSE commands ENDIF  */
-#line 116 "src/parser.y"
+#line 117 "src/parser.y"
                                                      {
         (yyval.stmt) = new IfNode((yyvsp[-5].cond), *(yyvsp[-3].stmt_list), *(yyvsp[-1].stmt_list), yylineno);
         delete (yyvsp[-3].stmt_list);
         delete (yyvsp[-1].stmt_list);
     }
-#line 1354 "build/parser.tab.cpp"
+#line 1355 "build/parser.tab.cpp"
     break;
 
   case 14: /* command: IF condition THEN commands ENDIF  */
-#line 121 "src/parser.y"
+#line 122 "src/parser.y"
                                        {
         std::vector<StatementNode*> empty;
         (yyval.stmt) = new IfNode((yyvsp[-3].cond), *(yyvsp[-1].stmt_list), empty, yylineno);
         delete (yyvsp[-1].stmt_list);
     }
-#line 1364 "build/parser.tab.cpp"
+#line 1365 "build/parser.tab.cpp"
     break;
 
   case 15: /* command: WHILE condition DO commands ENDWHILE  */
-#line 126 "src/parser.y"
+#line 127 "src/parser.y"
                                            {
         (yyval.stmt) = new WhileNode((yyvsp[-3].cond), *(yyvsp[-1].stmt_list), yylineno);
         delete (yyvsp[-1].stmt_list);
     }
-#line 1373 "build/parser.tab.cpp"
+#line 1374 "build/parser.tab.cpp"
     break;
 
   case 16: /* command: REPEAT commands UNTIL condition SEMICOLON  */
-#line 130 "src/parser.y"
+#line 131 "src/parser.y"
                                                 {
         (yyval.stmt) = new RepeatNode((yyvsp[-1].cond), *(yyvsp[-3].stmt_list), yylineno);
         delete (yyvsp[-3].stmt_list);
     }
-#line 1382 "build/parser.tab.cpp"
+#line 1383 "build/parser.tab.cpp"
     break;
 
   case 17: /* command: FOR pidentifier FROM value TO value DO commands ENDFOR  */
-#line 134 "src/parser.y"
+#line 135 "src/parser.y"
                                                              {
         (yyval.stmt) = new ForNode(string((yyvsp[-7].str)), (yyvsp[-5].expr), (yyvsp[-3].expr), false, *(yyvsp[-1].stmt_list), yylineno);
         delete (yyvsp[-1].stmt_list);
     }
-#line 1391 "build/parser.tab.cpp"
+#line 1392 "build/parser.tab.cpp"
     break;
 
   case 18: /* command: FOR pidentifier FROM value DOWNTO value DO commands ENDFOR  */
-#line 138 "src/parser.y"
+#line 139 "src/parser.y"
                                                                  {
         (yyval.stmt) = new ForNode(string((yyvsp[-7].str)), (yyvsp[-5].expr), (yyvsp[-3].expr), true, *(yyvsp[-1].stmt_list), yylineno);
         delete (yyvsp[-1].stmt_list);
     }
-#line 1400 "build/parser.tab.cpp"
+#line 1401 "build/parser.tab.cpp"
     break;
 
   case 19: /* command: proc_call SEMICOLON  */
-#line 142 "src/parser.y"
+#line 143 "src/parser.y"
                           {
         (yyval.stmt) = (yyvsp[-1].stmt);
     }
-#line 1408 "build/parser.tab.cpp"
+#line 1409 "build/parser.tab.cpp"
     break;
 
   case 20: /* command: READ identifier SEMICOLON  */
-#line 145 "src/parser.y"
+#line 146 "src/parser.y"
                                 {
         (yyval.stmt) = new ReadNode((yyvsp[-1].ident), yylineno);
     }
-#line 1416 "build/parser.tab.cpp"
+#line 1417 "build/parser.tab.cpp"
     break;
 
   case 21: /* command: WRITE value SEMICOLON  */
-#line 148 "src/parser.y"
+#line 149 "src/parser.y"
                             {
         (yyval.stmt) = new WriteNode((yyvsp[-1].expr), yylineno);
     }
-#line 1424 "build/parser.tab.cpp"
+#line 1425 "build/parser.tab.cpp"
     break;
 
   case 22: /* proc_call: pidentifier LPAREN args RPAREN  */
-#line 153 "src/parser.y"
+#line 154 "src/parser.y"
                                            {
         (yyval.stmt) = new ProcCallNode(string((yyvsp[-3].str)), *(yyvsp[-1].val_list), yylineno);
         delete (yyvsp[-1].val_list);
     }
-#line 1433 "build/parser.tab.cpp"
+#line 1434 "build/parser.tab.cpp"
     break;
 
   case 23: /* args: args COMMA pidentifier  */
-#line 159 "src/parser.y"
+#line 160 "src/parser.y"
                               {
         (yyvsp[-2].val_list)->push_back(new IdentifierNode(string((yyvsp[0].str)), yylineno));
         (yyval.val_list) = (yyvsp[-2].val_list);
     }
-#line 1442 "build/parser.tab.cpp"
+#line 1443 "build/parser.tab.cpp"
     break;
 
   case 24: /* args: pidentifier  */
-#line 163 "src/parser.y"
+#line 164 "src/parser.y"
                   {
         (yyval.val_list) = new std::vector<ValueNode*>();
         (yyval.val_list)->push_back(new IdentifierNode(string((yyvsp[0].str)), yylineno));
     }
-#line 1451 "build/parser.tab.cpp"
+#line 1452 "build/parser.tab.cpp"
     break;
 
   case 25: /* declarations: declarations COMMA pidentifier  */
-#line 169 "src/parser.y"
+#line 170 "src/parser.y"
                                               {
         add_symbol(string((yyvsp[0].str)), false, false, "", 0, 0);
     }
-#line 1459 "build/parser.tab.cpp"
+#line 1460 "build/parser.tab.cpp"
     break;
 
   case 26: /* declarations: declarations COMMA pidentifier LBRACKET num COLON num RBRACKET  */
-#line 172 "src/parser.y"
+#line 173 "src/parser.y"
                                                                      {
         add_symbol(string((yyvsp[-5].str)), true, false, "", (yyvsp[-3].num), (yyvsp[-1].num));
     }
-#line 1467 "build/parser.tab.cpp"
+#line 1468 "build/parser.tab.cpp"
     break;
 
   case 27: /* declarations: pidentifier  */
-#line 175 "src/parser.y"
+#line 176 "src/parser.y"
                   {
         add_symbol(string((yyvsp[0].str)), false, false, "", 0, 0);
     }
-#line 1475 "build/parser.tab.cpp"
+#line 1476 "build/parser.tab.cpp"
     break;
 
   case 28: /* declarations: pidentifier LBRACKET num COLON num RBRACKET  */
-#line 178 "src/parser.y"
+#line 179 "src/parser.y"
                                                   {
         add_symbol(string((yyvsp[-5].str)), true, false, "", (yyvsp[-3].num), (yyvsp[-1].num));
     }
-#line 1483 "build/parser.tab.cpp"
+#line 1484 "build/parser.tab.cpp"
     break;
 
   case 29: /* args_decl: args_decl COMMA type pidentifier  */
-#line 183 "src/parser.y"
+#line 184 "src/parser.y"
                                              {
        string m = string((yyvsp[-1].str));
        bool is_arr = (m == "T");
        add_symbol(string((yyvsp[0].str)), is_arr, true, m, 0, 0); free((yyvsp[-1].str));
     }
-#line 1493 "build/parser.tab.cpp"
+#line 1494 "build/parser.tab.cpp"
     break;
 
   case 30: /* args_decl: type pidentifier  */
-#line 188 "src/parser.y"
+#line 189 "src/parser.y"
                        {
        string m = string((yyvsp[-1].str));
        bool is_arr = (m == "T");
        add_symbol(string((yyvsp[0].str)), is_arr, true, m, 0, 0); free((yyvsp[-1].str));
     }
-#line 1503 "build/parser.tab.cpp"
+#line 1504 "build/parser.tab.cpp"
     break;
 
   case 31: /* type: T  */
-#line 195 "src/parser.y"
+#line 196 "src/parser.y"
          { (yyval.str) = strdup("T"); }
-#line 1509 "build/parser.tab.cpp"
+#line 1510 "build/parser.tab.cpp"
     break;
 
   case 32: /* type: I  */
-#line 196 "src/parser.y"
+#line 197 "src/parser.y"
          { (yyval.str) = strdup("I"); }
-#line 1515 "build/parser.tab.cpp"
+#line 1516 "build/parser.tab.cpp"
     break;
 
   case 33: /* type: O  */
-#line 197 "src/parser.y"
+#line 198 "src/parser.y"
          { (yyval.str) = strdup("O"); }
-#line 1521 "build/parser.tab.cpp"
+#line 1522 "build/parser.tab.cpp"
     break;
 
   case 34: /* type: %empty  */
-#line 198 "src/parser.y"
+#line 199 "src/parser.y"
                    { (yyval.str) = strdup(""); }
-#line 1527 "build/parser.tab.cpp"
+#line 1528 "build/parser.tab.cpp"
     break;
 
   case 35: /* expression: value  */
-#line 201 "src/parser.y"
+#line 202 "src/parser.y"
                    { (yyval.expr) = (yyvsp[0].expr); }
-#line 1533 "build/parser.tab.cpp"
+#line 1534 "build/parser.tab.cpp"
     break;
 
   case 36: /* expression: value PLUS value  */
-#line 202 "src/parser.y"
+#line 203 "src/parser.y"
                        { (yyval.expr) = new BinaryOpNode((yyvsp[-2].expr), BinaryOp::PLUS, (yyvsp[0].expr), yylineno); }
-#line 1539 "build/parser.tab.cpp"
+#line 1540 "build/parser.tab.cpp"
     break;
 
   case 37: /* expression: value MINUS value  */
-#line 203 "src/parser.y"
+#line 204 "src/parser.y"
                         { (yyval.expr) = new BinaryOpNode((yyvsp[-2].expr), BinaryOp::MINUS, (yyvsp[0].expr), yylineno); }
-#line 1545 "build/parser.tab.cpp"
+#line 1546 "build/parser.tab.cpp"
     break;
 
   case 38: /* expression: value MULT value  */
-#line 204 "src/parser.y"
+#line 205 "src/parser.y"
                        { (yyval.expr) = new BinaryOpNode((yyvsp[-2].expr), BinaryOp::MULT, (yyvsp[0].expr), yylineno); }
-#line 1551 "build/parser.tab.cpp"
+#line 1552 "build/parser.tab.cpp"
     break;
 
   case 39: /* expression: value DIV value  */
-#line 205 "src/parser.y"
+#line 206 "src/parser.y"
                       { (yyval.expr) = new BinaryOpNode((yyvsp[-2].expr), BinaryOp::DIV, (yyvsp[0].expr), yylineno); }
-#line 1557 "build/parser.tab.cpp"
+#line 1558 "build/parser.tab.cpp"
     break;
 
   case 40: /* expression: value MOD value  */
-#line 206 "src/parser.y"
+#line 207 "src/parser.y"
                       { (yyval.expr) = new BinaryOpNode((yyvsp[-2].expr), BinaryOp::MOD, (yyvsp[0].expr), yylineno); }
-#line 1563 "build/parser.tab.cpp"
+#line 1564 "build/parser.tab.cpp"
     break;
 
   case 41: /* condition: value EQ value  */
-#line 209 "src/parser.y"
+#line 210 "src/parser.y"
                            { (yyval.cond) = new ConditionNode((yyvsp[-2].expr), ConditionOp::EQ, (yyvsp[0].expr), yylineno); }
-#line 1569 "build/parser.tab.cpp"
+#line 1570 "build/parser.tab.cpp"
     break;
 
   case 42: /* condition: value NEQ value  */
-#line 210 "src/parser.y"
+#line 211 "src/parser.y"
                       { (yyval.cond) = new ConditionNode((yyvsp[-2].expr), ConditionOp::NEQ, (yyvsp[0].expr), yylineno); }
-#line 1575 "build/parser.tab.cpp"
+#line 1576 "build/parser.tab.cpp"
     break;
 
   case 43: /* condition: value GT value  */
-#line 211 "src/parser.y"
+#line 212 "src/parser.y"
                      { (yyval.cond) = new ConditionNode((yyvsp[-2].expr), ConditionOp::GT, (yyvsp[0].expr), yylineno); }
-#line 1581 "build/parser.tab.cpp"
+#line 1582 "build/parser.tab.cpp"
     break;
 
   case 44: /* condition: value LT value  */
-#line 212 "src/parser.y"
+#line 213 "src/parser.y"
                      { (yyval.cond) = new ConditionNode((yyvsp[-2].expr), ConditionOp::LT, (yyvsp[0].expr), yylineno); }
-#line 1587 "build/parser.tab.cpp"
+#line 1588 "build/parser.tab.cpp"
     break;
 
   case 45: /* condition: value GEQ value  */
-#line 213 "src/parser.y"
+#line 214 "src/parser.y"
                       { (yyval.cond) = new ConditionNode((yyvsp[-2].expr), ConditionOp::GEQ, (yyvsp[0].expr), yylineno); }
-#line 1593 "build/parser.tab.cpp"
+#line 1594 "build/parser.tab.cpp"
     break;
 
   case 46: /* condition: value LEQ value  */
-#line 214 "src/parser.y"
+#line 215 "src/parser.y"
                       { (yyval.cond) = new ConditionNode((yyvsp[-2].expr), ConditionOp::LEQ, (yyvsp[0].expr), yylineno); }
-#line 1599 "build/parser.tab.cpp"
+#line 1600 "build/parser.tab.cpp"
     break;
 
   case 47: /* value: num  */
-#line 217 "src/parser.y"
+#line 218 "src/parser.y"
             { (yyval.expr) = new NumberNode((yyvsp[0].num), yylineno); }
-#line 1605 "build/parser.tab.cpp"
+#line 1606 "build/parser.tab.cpp"
     break;
 
   case 48: /* value: identifier  */
-#line 218 "src/parser.y"
+#line 219 "src/parser.y"
                  { (yyval.expr) = (yyvsp[0].ident); }
-#line 1611 "build/parser.tab.cpp"
+#line 1612 "build/parser.tab.cpp"
     break;
 
   case 49: /* identifier: pidentifier  */
-#line 221 "src/parser.y"
+#line 222 "src/parser.y"
                          { (yyval.ident) = new IdentifierNode(string((yyvsp[0].str)), yylineno); }
-#line 1617 "build/parser.tab.cpp"
+#line 1618 "build/parser.tab.cpp"
     break;
 
   case 50: /* identifier: pidentifier LBRACKET num RBRACKET  */
-#line 222 "src/parser.y"
+#line 223 "src/parser.y"
                                         {
          (yyval.ident) = new IdentifierNode(string((yyvsp[-3].str)), yylineno);
          (yyval.ident)->set_array_access((yyvsp[-1].num), yylineno);
     }
-#line 1626 "build/parser.tab.cpp"
+#line 1627 "build/parser.tab.cpp"
     break;
 
   case 51: /* identifier: pidentifier LBRACKET pidentifier RBRACKET  */
-#line 226 "src/parser.y"
+#line 227 "src/parser.y"
                                                 {
          (yyval.ident) = new IdentifierNode(string((yyvsp[-3].str)), yylineno);
          (yyval.ident)->set_array_access(string((yyvsp[-1].str)), yylineno);
     }
-#line 1635 "build/parser.tab.cpp"
+#line 1636 "build/parser.tab.cpp"
     break;
 
 
-#line 1639 "build/parser.tab.cpp"
+#line 1640 "build/parser.tab.cpp"
 
       default: break;
     }
@@ -1828,7 +1829,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 232 "src/parser.y"
+#line 233 "src/parser.y"
 
 
 void yyerror(const char *s) {

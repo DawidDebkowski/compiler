@@ -316,8 +316,9 @@ void TACBackend::emitJumpCond(TACInstruction& instr) {
     std::string label = instr.dest.name;
     long long dummy = 0;
     
-    emitLoad(0, instr.src1);
+    // Load safely: r1 then r0
     emitLoad(1, instr.src2);
+    emitLoad(0, instr.src1);
     
     if (op == TACOp::JUMP_GT) {
         emit("SUB", 1);
@@ -340,8 +341,13 @@ void TACBackend::emitJumpCond(TACInstruction& instr) {
          emit("SUB", 1);
          emit("JZERO", dummy);
          label_refs[label].push_back(code.size() - 1);
+         
+         // Also jump if NEG (since SUB is a-b, NEG means a < b)
+         // Wait, SUB is max(0, a-b). So if result is 0, a<=b. Correct.
+         // JZERO is sufficient.
     }
     else if (op == TACOp::JUMP_EQ) {
+        // Jump if ra == rb
         emit("SUB", 1);
         emit("JPOS", dummy); 
         long long fail1 = code.size() - 1;
@@ -359,6 +365,10 @@ void TACBackend::emitJumpCond(TACInstruction& instr) {
         code[fail2].arg = code.size();
     }
     else if (op == TACOp::JUMP_NEQ) {
+        // Jump if ra != rb
+        // if ra - rb > 0 then jump
+        // if rb - ra > 0 then jump
+        
         emit("SUB", 1);
         emit("JPOS", dummy);
         label_refs[label].push_back(code.size() - 1);
@@ -398,7 +408,7 @@ void TACBackend::emitParam(TACInstruction& instr) {
 }
 
 void TACBackend::emitReturn(TACInstruction& instr) {
-    long long ra_slot = cln::cl_I_to_long(instr.src1.val);
+    long long ra_slot = cln::cl_I_to_long(instr.dest.val);
     
     // Restore RA from valid slot
     emit("LOAD", ra_slot); // ra <- mem[ra_slot]
@@ -406,7 +416,7 @@ void TACBackend::emitReturn(TACInstruction& instr) {
 }
 
 void TACBackend::emitPrologue(TACInstruction& instr) {
-    long long ra_slot = cln::cl_I_to_long(instr.src1.val);
+    long long ra_slot = cln::cl_I_to_long(instr.dest.val);
     
     // Store RA (currently in ra/r0) to slot
     // RA is pushed to r0 at CALL time by 'r[0] = lr+1' in VM

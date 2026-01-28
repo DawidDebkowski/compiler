@@ -1,0 +1,15 @@
+==========================================
+Test Run Report - 27215318
+==========================================
+
+
+### Category: basic ###
+==========================================
+  01-test_io...                  PASS (Cost: 350, Instructions: 6)
+  02-test2_vars...               PASS (Cost: 613, Instructions: 24)
+  03-test3_mul...                PASS (Cost: 913, Instructions: 53)
+  04-test4_div...                PASS (Cost: 1 025, Instructions: 69)
+  05-test5_mod...                PASS (Cost: 933, Instructions: 67)
+  06-test6_arr...                PASS (Cost: 1 193, Instructions: 74)
+  07-test7_arr_range...          PASS (Cost: 1 204, Instructions: 85)
+  08-test8_proc...               

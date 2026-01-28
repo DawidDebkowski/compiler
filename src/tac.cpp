@@ -86,6 +86,10 @@ std::string TACInstruction::toString() const {
 
 void printTAC(std::ostream& out) {
     for (const auto& instr : tac_program) {
-        out << instr.toString() << "\n";
+        out << instr.toString();
+        if(!instr.comment.empty()) {
+            out << "#" << instr.comment;
+        }
+        out << "\n";
     }
 }

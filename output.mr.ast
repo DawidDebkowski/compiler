@@ -1,12 +1,49 @@
 Program
+  Procedures:
+    Procedure set
+      Assignment
+        Identifier(arr[idx])
+        Identifier(val)
   Main:
     Assignment
-      Identifier(tab[10])
-      Number(100)
+      Identifier(maxint)
+      Number(4611686018427387904)
     Assignment
-      Identifier(tab[15])
-      Number(150)
+      Identifier(e)
+      BinaryOp(+)
+        Number(4611686018427387904)
+        Number(1)
+    Assignment
+      Identifier(c)
+      Number(111)
+    Assignment
+      Identifier(d)
+      Number(222)
+    Read
+      Identifier(b)
+    ProcCall(set)
+      Identifier(tab)
+      Identifier(maxint)
+      Identifier(c)
+    ProcCall(set)
+      Identifier(tab)
+      Identifier(e)
+      Identifier(d)
     Write
-      Identifier(tab[10])
+      Identifier(tab[maxint])
     Write
-      Identifier(tab[15])
+      Identifier(tab[e])
+    Assignment
+      Identifier(far)
+      Number(4611686018427387911)
+    Assignment
+      Identifier(a[far])
+      Number(333)
+    Write
+      Identifier(a[far])
+    ProcCall(set)
+      Identifier(a)
+      Identifier(far)
+      Identifier(b)
+    Write
+      Identifier(a[far])

@@ -1,5 +1,5 @@
 JUMP 19 # Procedure set
-STORE 0
+STORE 5
 LOAD 8
 RLOAD a
 STORE 19
@@ -15,7 +15,7 @@ STORE 22
 SWP b
 LOAD 19
 RSTORE b
-LOAD 0
+LOAD 5
 RTRN # Main Program
 RST a
 INC a

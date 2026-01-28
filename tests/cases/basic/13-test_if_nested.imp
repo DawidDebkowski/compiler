@@ -11,24 +11,24 @@ IN
             IF z = 3 THEN
                 WRITE 3;
             ELSE
-                WRITE 0;
+                WRITE 33;
             ENDIF
         ELSE
-            WRITE 0;
+            WRITE 22;
         ENDIF
     ELSE
-        WRITE 0;
+        WRITE 11;
     ENDIF
     IF x != 1 THEN
-        WRITE 0;
+        WRITE 44;
     ELSE
         WRITE 4;
         IF y != 2 THEN
-            WRITE 0;
+            WRITE 55;
         ELSE
             WRITE 5;
             IF z != 3 THEN
-                WRITE 0;
+                WRITE 66;
             ELSE
                 WRITE 6;
             ENDIF

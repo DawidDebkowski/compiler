@@ -1,5 +1,5 @@
 JUMP 19 # Procedure sum
-STORE 0
+STORE 5
 LOAD 6
 RLOAD a
 STORE 13
@@ -15,7 +15,7 @@ LOAD 8
 SWP b
 LOAD 12
 RSTORE b
-LOAD 0
+LOAD 5
 RTRN # Main Program
 RST a
 INC a

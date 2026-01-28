@@ -687,7 +687,7 @@ void ForNode::codegen() {
     
     // Init: iter := start
     start_val->codegen_to_reg(0);
-    emit("STORE", iter->address);
+    emit("STORE", iter->address, "FOR LOOP");
     
     // Calculate Count / Limit Logic
     // TO: count = end - start + 1
@@ -695,6 +695,28 @@ void ForNode::codegen() {
     
     end_val->codegen_to_reg(1); // r1 = end
     emit("LOAD", iter->address); // r0 = start
+    
+    // Guard: Check if loop range ensures 0 iterations
+    long long jump_skip_guard = -1;
+    emit("SWP", 2); // r2 = start
+    
+    if (!downto) {
+        // TO: Exit if start > end
+        emit("RST", 2); // r0 = start
+        emit("SUB", 1); // start - end
+        emit("JPOS", 0); 
+        jump_skip_guard = code.size() - 1;
+    } else {
+        // DOWNTO: Exit if end > start
+        emit("RST", 1); // r0 = end
+        emit("SUB", 2); // end - start
+        emit("JPOS", 0);
+        jump_skip_guard = code.size() - 1;
+    }
+    
+    // Calculate Count
+    emit("RST", 1); emit("SWP", 1); // r1 = end
+    emit("RST", 2); // r0 = start
     
     if (!downto) {
         // TO: r1 - r0 + 1
@@ -731,7 +753,9 @@ void ForNode::codegen() {
     emit("STORE", iter->address);
     
     emit("JUMP", loop_start);
-    code[jump_out].arg = code.size();
+    long long end_label = code.size();
+    code[jump_out].arg = end_label;
+    if (jump_skip_guard != -1) code[jump_skip_guard].arg = end_label;
     
     current_for_stack.pop_back();
     reset_param_cache();
@@ -1231,6 +1255,20 @@ void RootNode::genTAC(Operand dest) {
 
     emitTAC(TACOp::LABEL, Operand::makeLabel("main"), Operand(), Operand(), "Main Program");
     
+    if (unsafety_detected) {
+         for(auto const& [name, sym] : symbol_table) {
+             if (sym.is_array && sym.is_passed_to_proc && !sym.is_param) {
+                  Operand startVal = makeTemp();
+                  emitTAC(TACOp::COPY, startVal, Operand::makeConst(sym.start), Operand());
+                  
+                  Operand addrReg = makeTemp();
+                  emitTAC(TACOp::COPY, addrReg, Operand::makeConst(sym.address), Operand());
+                  
+                  emitTAC(TACOp::STORE, addrReg, startVal, Operand(), "init unsafe header " + name);
+             }
+         }
+    }
+    
     for (auto* stmt : main_block) {
         stmt->genTAC();
     }
@@ -1287,18 +1325,32 @@ void AssignmentNode::genTAC(Operand dest) {
         }
         
          Operand base = makeTemp();
+         Operand addr = makeTemp();
+         
          if (s->is_param) {
-              // Array Parameter: 'lhsVar' holds the Virtual Base Address
-              // We want the value of the pointer, so we COPY it.
-              emitTAC(TACOp::COPY, base, lhsVar, Operand());
+              if (unsafety_detected) {
+                   // Unsafe: params have RealBase
+                   // Addr = RealBase + 1 + Index - M[RealBase]
+                   Operand rBase = makeTemp();
+                   emitTAC(TACOp::COPY, rBase, lhsVar, Operand());
+                   Operand hStart = makeTemp();
+                   emitTAC(TACOp::LOAD, hStart, rBase, Operand());
+                   
+                   emitTAC(TACOp::COPY, base, rBase, Operand());
+                   emitTAC(TACOp::ADD, base, base, Operand::makeConst(1));
+                   emitTAC(TACOp::ADD, base, base, idx);
+                   emitTAC(TACOp::SUB, addr, base, hStart, "unsafe assign");
+              } else {
+                   // Safe: params have VirtualBase
+                   emitTAC(TACOp::COPY, base, lhsVar, Operand());
+                   emitTAC(TACOp::ADD, addr, base, idx);
+              }
          } else {
               // Global Array: Constant Virtual Base
               long long vb = s->address - s->start;
               emitTAC(TACOp::COPY, base, Operand::makeConst(vb), Operand());
+              emitTAC(TACOp::ADD, addr, base, idx);
          }
-
-         Operand addr = makeTemp();
-         emitTAC(TACOp::ADD, addr, base, idx);
          // Note: Global logic included +1 for header if handled via sym address.
          // Here we construct manually.
          // If s->is_param, we trust caller provided correct VB.
@@ -1311,23 +1363,31 @@ void AssignmentNode::genTAC(Operand dest) {
 }
 
 void IfNode::genTAC(Operand dest) {
-    std::string labelTrue = makeLabel();
-    std::string labelEnd = makeLabel();
-    std::string labelElse = makeLabel();
-    
     if (else_block.empty()) {
-        condition->genTAC_cond(labelEnd, false); 
-        for(auto* s : then_block) s->genTAC();
-        emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand());
+         std::string labelEnd = makeLabel();
+         
+         // If False -> Jump to End
+         condition->genTAC_cond(labelEnd, false); 
+         
+         for(auto* s : then_block) s->genTAC();
+         
+         emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand());
     } else {
-        condition->genTAC_cond(labelElse, false);
-        for(auto* s : then_block) s->genTAC();
-        emitTAC(TACOp::JUMP, Operand::makeLabel(labelEnd), Operand(), Operand());
-        
-        emitTAC(TACOp::LABEL, Operand::makeLabel(labelElse), Operand(), Operand());
-        for(auto* s : else_block) s->genTAC();
-        
-        emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand());
+         std::string labelElse = makeLabel();
+         std::string labelEnd = makeLabel();
+         
+         // If False -> Jump to Else
+         condition->genTAC_cond(labelElse, false);
+         
+         for(auto* s : then_block) s->genTAC();
+         
+         // Jump over Else
+         emitTAC(TACOp::JUMP, Operand::makeLabel(labelEnd), Operand(), Operand());
+         
+         emitTAC(TACOp::LABEL, Operand::makeLabel(labelElse), Operand(), Operand());
+         for(auto* s : else_block) s->genTAC();
+         
+         emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand());
     }
 }
 
@@ -1356,6 +1416,7 @@ void RepeatNode::genTAC(Operand dest) {
 }
 
 void ForNode::genTAC(Operand dest) {
+    current_for_stack.push_back(for_id); // PUSH stack
     Symbol* s = get_variable(iterator);
     Operand iter = Operand::makeVar(iterator, s);
     
@@ -1365,29 +1426,42 @@ void ForNode::genTAC(Operand dest) {
     Operand endOp = makeTemp();
     end_val->genTAC(endOp);
     
+    // Init: iter = start
     emitTAC(TACOp::COPY, iter, startOp, Operand(), "For Init");
     
-    std::string labelStart = makeLabel();
+    // Calculate Count: (TO ? end - start : start - end) + 1
+    Operand count = makeTemp();
+    if (!downto) {
+         emitTAC(TACOp::SUB, count, endOp, startOp);
+    } else {
+         emitTAC(TACOp::SUB, count, startOp, endOp);
+    }
+    emitTAC(TACOp::ADD, count, count, Operand::makeConst(1));
+    
+    std::string labelLoop = makeLabel();
     std::string labelEnd = makeLabel();
     
-    emitTAC(TACOp::LABEL, Operand::makeLabel(labelStart), Operand(), Operand());
+    emitTAC(TACOp::LABEL, Operand::makeLabel(labelLoop), Operand(), Operand());
     
-    if (downto) {
-        emitTAC(TACOp::JUMP_LT, Operand::makeLabel(labelEnd), iter, endOp);
-    } else {
-        emitTAC(TACOp::JUMP_GT, Operand::makeLabel(labelEnd), iter, endOp);
-    }
+    // Check Count > 0
+    emitTAC(TACOp::JUMP_LEQ, Operand::makeLabel(labelEnd), count, Operand::makeConst(0));
     
     for(auto* s : body) s->genTAC();
     
+    // count--
+    emitTAC(TACOp::SUB, count, count, Operand::makeConst(1), "Dec count");
+    
+    // iter step
     if (downto) {
         emitTAC(TACOp::SUB, iter, iter, Operand::makeConst(1), "Dec iter");
     } else {
         emitTAC(TACOp::ADD, iter, iter, Operand::makeConst(1), "Inc iter");
     }
     
-    emitTAC(TACOp::JUMP, Operand::makeLabel(labelStart), Operand(), Operand());
+    emitTAC(TACOp::JUMP, Operand::makeLabel(labelLoop), Operand(), Operand());
     emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand(), "For End");
+    
+    current_for_stack.pop_back(); // POP stack
 }
 
 void ReadNode::genTAC(Operand dest) {
@@ -1420,15 +1494,29 @@ void ReadNode::genTAC(Operand dest) {
          }
          
          Operand base = makeTemp();
+         Operand addr = makeTemp();
+         
          if (s->is_param) {
-              emitTAC(TACOp::COPY, base, var, Operand());
+              if (unsafety_detected) {
+                   Operand rBase = makeTemp();
+                   emitTAC(TACOp::COPY, rBase, var, Operand());
+                   Operand hStart = makeTemp();
+                   emitTAC(TACOp::LOAD, hStart, rBase, Operand());
+                   
+                   emitTAC(TACOp::COPY, base, rBase, Operand());
+                   emitTAC(TACOp::ADD, base, base, Operand::makeConst(1));
+                   emitTAC(TACOp::ADD, base, base, idx);
+                   emitTAC(TACOp::SUB, addr, base, hStart, "unsafe read");
+              } else {
+                   emitTAC(TACOp::COPY, base, var, Operand());
+                   emitTAC(TACOp::ADD, addr, base, idx);
+              }
          } else {
               long long vb = s->address - s->start;
               emitTAC(TACOp::COPY, base, Operand::makeConst(vb), Operand());
+              emitTAC(TACOp::ADD, addr, base, idx);
          }
-
-         Operand addr = makeTemp();
-         emitTAC(TACOp::ADD, addr, base, idx);
+         
          emitTAC(TACOp::STORE, addr, val, Operand());
     }
 }
@@ -1466,24 +1554,29 @@ void ProcCallNode::genTAC(Operand dest) {
              }
              
              Operand base = makeTemp();
-             if (s->is_param) {
-                  emitTAC(TACOp::LOAD, base, argOp, Operand());
-             } else {
-                  emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
-             }
-
              Operand addr = makeTemp();
-             emitTAC(TACOp::COPY, addr, base, Operand());
-             emitTAC(TACOp::ADD, addr, addr, idx);
-             
+
              if (s->is_param) {
                  if (unsafety_detected) {
-                     emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
-                     emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+                      Operand rBase = makeTemp();
+                      emitTAC(TACOp::COPY, rBase, argOp, Operand());
+                      Operand hStart = makeTemp();
+                      emitTAC(TACOp::LOAD, hStart, rBase, Operand());
+                      
+                      emitTAC(TACOp::COPY, base, rBase, Operand());
+                      emitTAC(TACOp::ADD, base, base, Operand::makeConst(1));
+                      emitTAC(TACOp::ADD, base, base, idx);
+                      emitTAC(TACOp::SUB, addr, base, hStart, "unsafe param");
+                 } else {
+                      emitTAC(TACOp::COPY, base, argOp, Operand());
+                      emitTAC(TACOp::ADD, addr, base, idx);
                  }
              } else {
-                  emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start));
-                  emitTAC(TACOp::ADD, addr, addr, Operand::makeConst(1));
+                  // Global Array
+                  emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
+                  emitTAC(TACOp::COPY, addr, base, Operand());
+                  emitTAC(TACOp::ADD, addr, addr, idx);
+                  emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start), "safe global param");
              }
              
              emitTAC(TACOp::PARAM, Operand(), addr, Operand());
@@ -1494,7 +1587,7 @@ void ProcCallNode::genTAC(Operand dest) {
                  // Passing whole array
                  Operand val = makeTemp();
                  if (s->is_param) {
-                      emitTAC(TACOp::LOAD, val, argOp, Operand());
+                      emitTAC(TACOp::COPY, val, argOp, Operand());
                  } else {
                       // Global Array
                       long long vbase = s->address - s->start; // Virtual
@@ -1511,7 +1604,7 @@ void ProcCallNode::genTAC(Operand dest) {
                  if (s->is_param) {
                      // Pass the pointer (Pass-through)
                      Operand p = makeTemp();
-                     emitTAC(TACOp::LOAD, p, argOp, Operand());
+                     emitTAC(TACOp::COPY, p, argOp, Operand());
                      emitTAC(TACOp::PARAM, Operand(), p, Operand());
                  } else {
                      // Pass address of global
@@ -1555,15 +1648,28 @@ void IdentifierNode::genTAC(Operand dest) {
          }
          
          Operand base = makeTemp();
+         Operand addr = makeTemp();
+
          if (s->is_param) {
-              emitTAC(TACOp::COPY, base, var, Operand());
+              if (unsafety_detected) {
+                   Operand rBase = makeTemp();
+                   emitTAC(TACOp::COPY, rBase, var, Operand());
+                   Operand hStart = makeTemp();
+                   emitTAC(TACOp::LOAD, hStart, rBase, Operand());
+                   
+                   emitTAC(TACOp::COPY, base, rBase, Operand());
+                   emitTAC(TACOp::ADD, base, base, Operand::makeConst(1));
+                   emitTAC(TACOp::ADD, base, base, idx);
+                   emitTAC(TACOp::SUB, addr, base, hStart, "unsafe access");
+              } else {
+                   emitTAC(TACOp::COPY, base, var, Operand());
+                   emitTAC(TACOp::ADD, addr, base, idx);
+              }
          } else {
               long long vb = s->address - s->start;
               emitTAC(TACOp::COPY, base, Operand::makeConst(vb), Operand());
+              emitTAC(TACOp::ADD, addr, base, idx);
          }
-
-         Operand addr = makeTemp();
-         emitTAC(TACOp::ADD, addr, base, idx);
          
          emitTAC(TACOp::LOAD, dest, addr, Operand());
     }
@@ -1599,21 +1705,22 @@ void ConditionNode::genTAC_cond(std::string labelTarget, bool jumpIfTrue) {
     
     if (jumpIfTrue) {
         switch(op) {
-            case ConditionOp::EQ: jumpOp = TACOp::JUMP_EQ; break;
-            case ConditionOp::NEQ: jumpOp = TACOp::JUMP_NEQ; break;
-            case ConditionOp::LT: jumpOp = TACOp::JUMP_LT; break;
-            case ConditionOp::GT: jumpOp = TACOp::JUMP_GT; break;
-            case ConditionOp::LEQ: jumpOp = TACOp::JUMP_LEQ; break;
-            case ConditionOp::GEQ: jumpOp = TACOp::JUMP_GEQ; break;
+            case ConditionOp::EQ: jumpOp = TACOp::JUMP_EQ; break; // JUMP IF EQ
+            case ConditionOp::NEQ: jumpOp = TACOp::JUMP_NEQ; break; // JUMP IF NEQ
+            case ConditionOp::LT: jumpOp = TACOp::JUMP_LT; break; // JUMP IF LT
+            case ConditionOp::GT: jumpOp = TACOp::JUMP_GT; break; // JUMP IF GT
+            case ConditionOp::LEQ: jumpOp = TACOp::JUMP_LEQ; break; // JUMP IF LEQ
+            case ConditionOp::GEQ: jumpOp = TACOp::JUMP_GEQ; break; // JUMP IF GEQ
         }
     } else {
+        // Jump if FALSE
         switch(op) {
-            case ConditionOp::EQ: jumpOp = TACOp::JUMP_NEQ; break;
-            case ConditionOp::NEQ: jumpOp = TACOp::JUMP_EQ; break;
-            case ConditionOp::LT: jumpOp = TACOp::JUMP_GEQ; break;
-            case ConditionOp::GT: jumpOp = TACOp::JUMP_LEQ; break;
-            case ConditionOp::LEQ: jumpOp = TACOp::JUMP_GT; break;
-            case ConditionOp::GEQ: jumpOp = TACOp::JUMP_LT; break;
+            case ConditionOp::EQ: jumpOp = TACOp::JUMP_NEQ; break; // FALSE: NEQ
+            case ConditionOp::NEQ: jumpOp = TACOp::JUMP_EQ; break; // FALSE: EQ
+            case ConditionOp::LT: jumpOp = TACOp::JUMP_GEQ; break; // FALSE: GEQ
+            case ConditionOp::GT: jumpOp = TACOp::JUMP_LEQ; break; // FALSE: LEQ
+            case ConditionOp::LEQ: jumpOp = TACOp::JUMP_GT; break; // FALSE: GT
+            case ConditionOp::GEQ: jumpOp = TACOp::JUMP_LT; break; // FALSE: LT
         }
     }
     

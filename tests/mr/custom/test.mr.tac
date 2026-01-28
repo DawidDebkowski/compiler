@@ -1,5 +1,5 @@
-  JUMP main  # Entry Jump
-main:  # Main Program
+  JUMP main  # Entry Jump#Entry Jump
+main:  # Main Program#Main Program
   COPY _t0, 5
   COPY a, _t0
   COPY _t1, 10
@@ -10,12 +10,12 @@ main:  # Main Program
   WRITE , _t3
   COPY _t4, a
   COPY _t5, b
-  JUMP_GEQ L2, _t4, _t5
+  JUMP_GEQ L0, _t4, _t5
   COPY _t6, 111
   WRITE , _t6
   JUMP L1
-L2:
+L0:
   COPY _t7, 0
   WRITE , _t7
 L1:
-  HALT   # HALT
+  HALT   # HALT#HALT
