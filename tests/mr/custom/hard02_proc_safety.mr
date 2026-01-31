@@ -37,20 +37,27 @@ WRITE
 HALT
 SWP e
 RST d
+RST a # IF C > B <=> B - C == 0
+ADD c
+SUB b
+JZERO 46 # SWAP THEM
+SWP c
+SWP b
+SWP c
 RST a
 ADD c
-JZERO 53
+JZERO 60
 SHR c
 SHL c
 SUB c
-JZERO 50
+JZERO 57
 RST a
 ADD d
 ADD b
 SWP d
 SHR c
 SHL b
-JUMP 39
+JUMP 46
 RST a
 ADD d
 SWP b

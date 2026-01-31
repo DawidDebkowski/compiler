@@ -31,6 +31,15 @@ void generate_mul() {
     // 2. Initialize Result (r3) to 0
     emit("RST", 3); 
 
+    emit("RST", 0, "IF C > B <=> B - C == 0");
+    emit("ADD", 2);
+    emit("SUB", 1);
+    emit("JZERO", code.size()+4, "SWAP THEM");
+    emit("SWP", 2);
+    emit("SWP", 1);
+    emit("SWP", 2);
+
+
     long long loop_start = code.size();
 
     // 3. Load Multiplier (r2) to Check Zero/Parity
