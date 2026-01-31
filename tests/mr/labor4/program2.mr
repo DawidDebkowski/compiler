@@ -1,151 +1,258 @@
-RST a
-INC a
-SHL a
-INC a
-SHL a
-SHL a
-SHL a
-INC a
-SHL a
-SHL a
-STORE 10 # next line inlining licz
-RST a
-INC a
-SHL a
-STORE 111
-LOAD 10
+# Błażej Pawluk, 279738
+# Kod wygenerowany przez kompilator
+
+JUMP 9 # skip to main
+
+# ===== BEGIN COMPARISONS =====
+
+
+# BEGIN >: ra - return address, rb - left, rc - right
 SWP b
-LOAD 111
-SWP b
-SUB b
-INC a
-STORE 114
-LOAD 114
-JZERO 48
-RST a
-INC a
-SWP d
-LOAD 111
-RST c
-INC c
-SHL c
 SUB c
 RST c
+JPOS 6 # skip 1
 INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
-SWP d
-RSTORE d
-LOAD 114
-DEC a
-STORE 114
-LOAD 111
-INC a
-STORE 111
-JUMP 22
+SWP c
+SWP b
+RTRN # go back to call
+# END >: ra - return line, rb - result: 0 - true, >0 - false
+
+
+# ====== END COMPARISONS ======
+
+
+
+# === MAIN PROGRAM ===
+# start ASSIGN
+# begin load 100
 RST a
 INC a
 SHL a
-STORE 112
-LOAD 10
-SWP b
-LOAD 112
-SWP b
-SUB b
 INC a
-STORE 115
-LOAD 115
-JZERO 114
-RST b
-LOAD 112
-RST c
-INC c
-SHL c
-SUB c
-RST c
-INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
-RLOAD a
-SUB b # >
-JZERO 107
-LOAD 112
 SHL a
-STORE 7
-LOAD 10
-SWP b
-LOAD 7
-SUB b
-JPOS 107 # <=
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+# end load 100
+STORE 100
+# end ASSIGN
+# begin licz
+# begin FOR
+# begin load 2
 RST a
-SWP d
-LOAD 7
-RST c
-INC c
-SHL c
-SUB c
-RST c
-INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
-SWP d
-RSTORE d
-LOAD 7
+INC a
+SHL a
+# end load 2
+STORE 102 # iterator
+# begin DO (FOR)
+# start ASSIGN
+# begin load variable i
+LOAD 102 # iterator
 SWP b
-LOAD 112
+# begin load 0
+RST a
+# end load 0
 ADD b
-STORE 7
-JUMP 80
-LOAD 115
-DEC a
-STORE 115
-LOAD 112
+SWP b
+# begin load 2
+RST a
 INC a
-STORE 112
-JUMP 59 # next line inlining wypisz
-LOAD 10
-STORE 113
-RST b
-INC b
-SHL b
-LOAD 113
+SHL a
+# end load 2
+SWP b
 SUB b
+SWP g
+# begin load 1
+RST a
 INC a
-STORE 116
-LOAD 116
-JZERO 150
-RST b
-LOAD 113
-RST c
-INC c
-SHL c
-SUB c
-RST c
-INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
+# end load 1
+RSTORE g
+# end ASSIGN
+# end DO (FOR)
+# begin load variable n
+LOAD 100
+# end load variable n
+SWP b
+LOAD 102
+INC a
+STORE 102 # updated iterator
+SUB b
+JZERO 24 # go back to start of do (for)
+# end FOR
+# begin FOR
+# begin load 2
+RST a
+INC a
+SHL a
+# end load 2
+STORE 103 # iterator
+# begin DO (FOR)
+# begin IF
+# begin >
+# begin load 0
+RST a
+# end load 0
+SWP c
+# begin load variable s
+# begin load variable i
+LOAD 103 # iterator
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 2
+RST a
+INC a
+SHL a
+# end load 2
+SWP b
+SUB b
 RLOAD a
-SUB b # >
-JZERO 143
-LOAD 113
+# end load variable s
+SWP b
+CALL 1
+SWP b
+# end >
+JPOS 95 # skip to end of if
+# begin THEN
+# start ASSIGN
+# begin +
+# begin load variable i
+LOAD 103 # iterator
+SWP c
+# begin load variable i
+LOAD 103 # iterator
+ADD c
+# end +
+STORE 101
+# end ASSIGN
+# begin WHILE
+# begin <=
+# begin load variable n
+LOAD 100
+# end load variable n
+SWP c
+# begin load variable j
+LOAD 101
+# end load variable j
+SUB c
+# end <=
+JPOS 95 # go to end of while
+# begin DO (WHILE)
+# start ASSIGN
+# begin load variable j
+LOAD 101
+# end load variable j
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 2
+RST a
+INC a
+SHL a
+# end load 2
+SWP b
+SUB b
+SWP g
+# begin load 0
+RST a
+# end load 0
+RSTORE g
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable i
+LOAD 103 # iterator
+SWP c
+# begin load variable j
+LOAD 101
+# end load variable j
+ADD c
+# end +
+STORE 101
+# end ASSIGN
+JUMP 71 # go back to start of while
+# end WHILE
+# end IF
+# end DO (FOR)
+# begin load variable n
+LOAD 100
+# end load variable n
+SWP b
+LOAD 103
+INC a
+STORE 103 # updated iterator
+SUB b
+JZERO 49 # go back to start of do (for)
+# end FOR
+# end licz
+# begin wypisz
+# begin FOR
+# begin load variable n
+LOAD 100
+# end load variable n
+STORE 104 # iterator
+# begin DO (FOR)
+# begin IF
+# begin >
+# begin load 0
+RST a
+# end load 0
+SWP c
+# begin load variable s
+# begin load variable i
+LOAD 104 # iterator
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 2
+RST a
+INC a
+SHL a
+# end load 2
+SWP b
+SUB b
+RLOAD a
+# end load variable s
+SWP b
+CALL 1
+SWP b
+# end >
+JPOS 123 # skip to end of if
+# begin THEN
+# start WRITE
+# begin load variable i
+LOAD 104 # iterator
 WRITE
-LOAD 116
+# end WRITE
+# end IF
+# end DO (FOR)
+# begin load 2
+RST a
+INC a
+SHL a
+# end load 2
+SWP b
+LOAD 104
+SWP c
+RST a
+ADD c
 DEC a
-STORE 116
-LOAD 113
-DEC a
-STORE 113
-JUMP 123
+STORE 104 # updated iterator
+INC b
+SWP b
+SUB c
+JZERO 104 # go back to start of do (for)
+# end FOR
+# end wypisz
 HALT

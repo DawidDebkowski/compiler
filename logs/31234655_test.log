@@ -1,0 +1,75 @@
+==========================================
+Test Run Report - 31234655
+==========================================
+
+
+### Category: basic ###
+==========================================
+  01-test_io...                  PASS (Cost: 250, Instructions: 4)
+  02-test2_vars...               PASS (Cost: 413, Instructions: 20)
+  03-test3_mul...                PASS (Cost: 525, Instructions: 52)
+  04-test4_div...                PASS (Cost: 629, Instructions: 64)
+  05-test5_mod...                PASS (Cost: 537, Instructions: 58)
+  06-test6_arr...                PASS (Cost: 455, Instructions: 46)
+  07-test7_arr_range...          PASS (Cost: 468, Instructions: 59)
+  08-test8_proc...               PASS (Cost: 373, Instructions: 22)
+  09-0test9_0_proc_arr...        PASS (Cost: 926, Instructions: 68)
+  09-1test9_1_proc_arr...        PASS (Cost: 4 260, Instructions: 852)
+  10-test10_proc_arr_range...    PASS (Cost: 955, Instructions: 122)
+  11-test11_CLN_folding...       SKIP (no answer file)
+  12-test_if_conditions...       PASS (Cost: 5 318, Instructions: 447)
+  13-test_if_nested...           PASS (Cost: 1 361, Instructions: 196)
+  14-rafal...                    PASS (Cost: 1 789, Instructions: 136)
+  15-div_0...                    PASS (Cost: 688, Instructions: 84)
+  16-test_nested_for...          FAIL (output mismatch)
+    Expected: tests/ans/basic/16-test_nested_for.ans
+    Got:      tests/out/basic/16-test_nested_for.out
+    Diff:
+      1c1
+      < > 1024
+      ---
+      > > 0
+  17-test_read_array...          PASS (Cost: 933, Instructions: 72)
+  18-test_simple_for...          FAIL (output mismatch)
+    Expected: tests/ans/basic/18-test_simple_for.ans
+    Got:      tests/out/basic/18-test_simple_for.out
+    Diff:
+      2a3,9
+      > > 4
+      > > 5
+      > > 6
+      > > 7
+      > > 8
+      > > 9
+      > > 10
+  19-test_mul_simple...          PASS (Cost: 483, Instructions: 47)
+  20-test_mul_opt...             PASS (Cost: 5 095, Instructions: 402)
+  21-zero_loops...               FAIL (output mismatch)
+    Expected: tests/ans/basic/21-zero_loops.ans
+    Got:      tests/out/basic/21-zero_loops.out
+    Diff:
+      7,11d6
+      < > 4
+      < > 3
+      < > 2
+      < > 1
+      < > 0
+  22-bad_for...                  FAIL (output mismatch)
+    Expected: tests/ans/basic/22-bad_for.ans
+    Got:      tests/out/basic/22-bad_for.out
+    Diff:
+      1c1
+      < > 111
+      ---
+      > > 6
+  Category results: 18 passed, 4 failed
+
+### Category: custom ###
+==========================================
+  downto_zero...                 SKIP (no answer file)
+  example4_small...              SKIP (no answer file)
+  hard01_loop_clobber...         PASS (Cost: 4 548, Instructions: 42)
+  hard02_proc_safety...          PASS (Cost: 687, Instructions: 66)
+  hard03_complex_flow...         PASS (Cost: 680, Instructions: 29)
+  test...                        SKIP (no answer file)
+  to_ten...                      

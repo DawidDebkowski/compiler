@@ -1,3 +1,4 @@
+// Dawid Dębkowski 279714
 #ifndef AST_HPP
 #define AST_HPP
 
@@ -7,7 +8,6 @@
 #include <set>
 #include "types.hpp"
 
-// Forward declaration
 struct Symbol;
 
 enum class BinaryOp { PLUS, MINUS, MULT, DIV, MOD };
@@ -44,13 +44,12 @@ public:
     // Helper to load result into a specific register
     virtual void codegen_to_reg(int reg) = 0; 
     
-    // Default codegen puts result in r[0]
+    // Default codegen puts result in ra
     void codegen() override { codegen_to_reg(0); }
 
     virtual bool try_evaluate(BigInt& out_val) { return false; }
 };
 
-// --- Values ---
 
 class ValueNode : public ExpressionNode {
 public:
@@ -72,15 +71,13 @@ class IdentifierNode : public ValueNode {
 public:
     std::string name;
     std::string index_name; // For arr[var]
-    ASTNode* index_expr; // For simpler handling in AST if index is complex? 
-                         // Spec says arr[num] or arr[pidentifier]. 
     
     bool is_array;
     bool is_index_const; // true if arr[num]
     long long index_val; // For arr[10]
 
     IdentifierNode(std::string n, int ln) 
-        : ValueNode(ln), name(n), index_expr(nullptr), is_array(false), is_index_const(false), index_val(0) {}
+        : ValueNode(ln), name(n), is_array(false), is_index_const(false), index_val(0) {}
         
     void set_array_access(std::string idx, int ln) {
         is_array = true;
@@ -96,12 +93,11 @@ public:
 
     void codegen_to_reg(int reg) override;
     
-    // Helper to get address into register (for WRITE / READ / ASSIGN)
+    // Helper to get address into register (for WRITE / READ)
     void codegen_address(int reg); 
     void print(std::ostream& out, int indent = 0) const override;
 };
 
-// --- Expressions ---
 
 class BinaryOpNode : public ExpressionNode {
     ExpressionNode* left;
@@ -118,7 +114,6 @@ public:
     ~BinaryOpNode() { delete left; delete right; }
 };
 
-// --- Conditions ---
 
 class ConditionNode : public ASTNode {
     ExpressionNode* left;
@@ -128,7 +123,7 @@ public:
     ConditionNode(ExpressionNode* l, ConditionOp o, ExpressionNode* r, int ln)
         : ASTNode(ln), left(l), right(r), op(o) {}
         
-    // Generates code that Jumps to `target_label` if condition is FALSE
+    // Generates code that jumps to index if condition is FALSE
     void codegen_jump_false(long long target_instruction_index);
     void codegen() override {}
     void validate() override;
@@ -137,7 +132,6 @@ public:
     ~ConditionNode() { delete left; delete right; }
 };
 
-// --- Statements ---
 
 class AssignmentNode : public StatementNode {
     IdentifierNode* target;
@@ -237,7 +231,7 @@ public:
 };
 
 class WriteNode : public StatementNode {
-    ExpressionNode* expr; // Can write value
+    ExpressionNode* expr;
 public:
     WriteNode(ExpressionNode* e, int ln) : StatementNode(ln), expr(e) {}
     void codegen() override;
@@ -246,13 +240,10 @@ public:
     ~WriteNode() { delete expr; }
 };
 
-// --- Root ---
 
 class ProcedureNode : public ASTNode {
 public:
     std::string name;
-    // Args declaration info is stored in Symbol Table, not here
-    // but AST should own the body.
     std::vector<StatementNode*> body; 
 public:
     ProcedureNode(std::string n, std::vector<StatementNode*> b, int ln)

@@ -1,3 +1,11 @@
+# Błażej Pawluk, 279738
+# Kod wygenerowany przez kompilator
+
+
+# === MAIN PROGRAM ===
+# begin p
+# start ASSIGN
+# begin load 3000
 RST a
 INC a
 SHL a
@@ -17,7 +25,38 @@ INC a
 SHL a
 SHL a
 SHL a
-STORE 6 # because unsafe arraysnext line inlining p
+# end load 3000
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 3000
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+# end load 3000
+SWP b
+SUB b
+SWP g
+# begin load 123
 RST a
 INC a
 SHL a
@@ -31,21 +70,64 @@ SHL a
 INC a
 SHL a
 INC a
-SWP d
+# end load 123
+RSTORE g
+# end ASSIGN
+# start WRITE
+# begin load variable arr
+# begin load 3000
 RST a
 INC a
 SHL a
+SHL a
 INC a
 SHL a
 INC a
-SWP d
-RSTORE d
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+# end load 3000
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 3000
 RST a
 INC a
 SHL a
+SHL a
 INC a
 SHL a
 INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+# end load 3000
+SWP b
+SUB b
 RLOAD a
+# end load variable arr
 WRITE
+# end WRITE
+# end p
 HALT

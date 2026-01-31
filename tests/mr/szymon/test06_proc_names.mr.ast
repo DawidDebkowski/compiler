@@ -1,0 +1,17 @@
+Program
+  Procedures:
+    Procedure _dummy
+      Assignment
+        Identifier(a)
+        Number(5)
+  Main:
+    Assignment
+      Identifier(dummy_a)
+      Number(10)
+    ProcCall(_dummy)
+      Identifier(v)
+    Assignment
+      Identifier(dummy_a)
+      Number(10)
+    Write
+      Identifier(v)

@@ -1,9 +1,8 @@
+// Dawid Dębkowski 279714
 #include "codegen.hpp"
 #include <iostream>
 
 vector<Instruction> code;
-vector<long long> loop_stack;
-vector<long long> if_stack;
 
 long long addr_mul = -1;
 long long addr_div = -1;
@@ -24,7 +23,7 @@ void reset_acc_tracker() {
 
 void opcodeCheck(string opcode, long long arg) {
     // reset_acc_tracker();
-    // 1. Instructions that definitely preserve r0
+    // 1. Instructions that preserve r0
     if (opcode == "WRITE" || opcode == "STORE" || 
         opcode == "JUMP" || opcode == "JPOS" || opcode == "JZERO" || opcode == "RSTORE") {
         return;
@@ -37,32 +36,30 @@ void opcodeCheck(string opcode, long long arg) {
         }
     }
 
-    // Default: Instruction modifies r0 or is unknown -> Invalidate
     reset_acc_tracker();
 }
 
-// I
 void emit(string opcode) {
-    opcodeCheck(opcode, 10); // Default to 0 (Accumulator) if implicit
+    opcodeCheck(opcode, 10);
     code.push_back({opcode, 0, false, ""});
 }
-// hate
+
 void emit(string opcode, long long arg) {
     opcodeCheck(opcode, arg);
     code.push_back({opcode, arg, true, ""});
 }
-// C
+
 void emit(string opcode, string comment) {
     opcodeCheck(opcode, 10); // Default to 0
     code.push_back({opcode, 0, false, comment});
 }
-// ++
+
 void emit(string opcode, long long arg, string comment) {
     opcodeCheck(opcode, arg);
     code.push_back({opcode, arg, true, comment});
 }
 
-// I
+// adds comment line before
 void add_comment(string comment) {
     if(code[code.size()-1].comment == "") {
         code[code.size()-1].comment = comment;
@@ -75,7 +72,7 @@ void add_comment(string comment) {
 void gen_const(int reg, BigInt value) {
     if (value < 0) value = 0; 
     
-    // Check if r0 already has this constant (Optimization)
+    // Check if r0 already has this constant (optimization)
     if (reg == 0 && acc_tracker.valid && acc_tracker.is_const && acc_tracker.value_const == cln::cl_I_to_long(value)) {
         return;
     }

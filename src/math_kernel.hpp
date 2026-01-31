@@ -1,3 +1,4 @@
+// Dawid Dębkowski 279714
 #ifndef MATH_KERNEL_HPP
 #define MATH_KERNEL_HPP
 

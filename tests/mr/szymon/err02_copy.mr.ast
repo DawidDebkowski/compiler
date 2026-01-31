@@ -1,0 +1,11 @@
+Program
+  Procedures:
+    Procedure p
+      Write
+        Identifier(n)
+  Main:
+    Assignment
+      Identifier(n)
+      Number(5)
+    ProcCall(p)
+      Identifier(n)

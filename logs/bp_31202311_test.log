@@ -1,0 +1,80 @@
+==========================================
+Test Run Report - 31202311
+==========================================
+
+
+### Category: basic ###
+==========================================
+  01-test_io...                  FAIL (compilation error)
+  02-test2_vars...               FAIL (compilation error)
+  03-test3_mul...                FAIL (compilation error)
+  04-test4_div...                FAIL (compilation error)
+  05-test5_mod...                FAIL (compilation error)
+  06-test6_arr...                FAIL (compilation error)
+  07-test7_arr_range...          FAIL (compilation error)
+  08-test8_proc...               FAIL (compilation error)
+  09-0test9_0_proc_arr...        FAIL (compilation error)
+  09-1test9_1_proc_arr...        FAIL (compilation error)
+  10-test10_proc_arr_range...    FAIL (compilation error)
+  11-test11_CLN_folding...       FAIL (compilation error)
+  12-test_if_conditions...       FAIL (compilation error)
+  13-test_if_nested...           FAIL (compilation error)
+  14-rafal...                    FAIL (compilation error)
+  15-div_0...                    FAIL (compilation error)
+  16-test_nested_for...          FAIL (compilation error)
+  17-test_read_array...          FAIL (compilation error)
+  18-test_simple_for...          FAIL (compilation error)
+  19-test_mul_simple...          FAIL (compilation error)
+  20-test_mul_opt...             FAIL (compilation error)
+  21-zero_loops...               FAIL (compilation error)
+  Category results: 0 passed, 22 failed
+
+### Category: custom ###
+==========================================
+  downto_zero...                 FAIL (compilation error)
+  example4_small...              FAIL (compilation error)
+  hard01_loop_clobber...         FAIL (compilation error)
+  hard02_proc_safety...          FAIL (compilation error)
+  hard03_complex_flow...         FAIL (compilation error)
+  test...                        FAIL (compilation error)
+  to_ten...                      FAIL (compilation error)
+  unsafe_proc...                 FAIL (compilation error)
+  Category results: 0 passed, 8 failed
+
+### Category: example ###
+==========================================
+  example1...                    FAIL (compilation error)
+  example2...                    FAIL (compilation error)
+  example3...                    FAIL (compilation error)
+  example4...                    FAIL (compilation error)
+  example5...                    FAIL (compilation error)
+  example6...                    FAIL (compilation error)
+  example7...                    FAIL (compilation error)
+  example8...                    FAIL (compilation error)
+  example9-big...                FAIL (compilation error)
+  example9...                    FAIL (compilation error)
+  exampleA...                    FAIL (compilation error)
+  Category results: 0 passed, 11 failed
+
+### Category: labor4 ###
+==========================================
+  program0...                    FAIL (compilation error)
+  program1...                    FAIL (compilation error)
+  program2...                    FAIL (compilation error)
+  program3...                    FAIL (compilation error)
+  Category results: 0 passed, 4 failed
+
+### Category: szymon ###
+==========================================
+  err02_copy...                  FAIL (compilation error)
+  test01...                      FAIL (compilation error)
+  test02...                      FAIL (compilation error)
+  test03...                      FAIL (compilation error)
+  test04...                      FAIL (compilation error)
+  test05...                      FAIL (compilation error)
+  test06_proc_names...           FAIL (compilation error)
+  Category results: 0 passed, 7 failed
+
+==========================================
+TOTAL RESULTS: 0 passed, 52 failed
+==========================================

@@ -1,0 +1,8 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+STORE 6 # next line inlining pOptimized: Skip LOAD n
+WRITE
+HALT

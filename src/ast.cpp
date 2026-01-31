@@ -775,94 +775,109 @@ void RepeatNode::validate() {
      for(auto s : body) s->validate();
 }
 
-// --- ForNode ---
-// FOR i FROM start TO end DO ...
-// FOR i FROM start DOWNTO end DO ...
 void ForNode::codegen() {
+    current_for_stack.push_back(for_id);
     reset_param_cache();
     reset_acc_tracker(); // Barrier
-    // Check if nested (already inside another FOR)
-    bool is_nested = !current_for_stack.empty();
-    current_for_stack.push_back(for_id);
     
-    Symbol* iter = get_variable(iterator);
-    
-    // // Optimization: Loop Unrolling for small constant ranges (only if not nested)
-    // BigInt start_const, end_const;
-    // bool start_is_const = start_val->try_evaluate(start_const);
-    // bool end_is_const = end_val->try_evaluate(end_const);
-    
-    // if (start_is_const && end_is_const && !downto && !is_nested) {
-    //     // TO loop
-    //     long long range = cln::cl_I_to_long(end_const - start_const + 1);
-    //     if (range > 0 && range <= 10) { // Unroll small loops
-    //         add_comment("Unrolling FOR loop (" + std::to_string(range) + " iterations)");
-    //         for (long long i = cln::cl_I_to_long(start_const); i <= cln::cl_I_to_long(end_const); i++) {
-    //             // Set iterator to current value
-    //             gen_const(0, i);
-    //             emit("STORE", iter->address);
-                
-    //             // Execute body
-    //             for(auto s : body) s->codegen();
-    //             reset_param_cache();
-    //         }
-    //         current_for_stack.pop_back();
-    //         reset_param_cache();
-    //         reset_acc_tracker(); // Barrier
-    //         return;
-    //     }
-    // }
-    
-    // Standard Loop Implementation
-    // Init: iter := start
-    start_val->codegen_to_reg(0);
-    emit("STORE", iter->address);
-    
-    // Calculate Count / Limit Logic
-    // TO: count = end - start + 1
-    // DOWNTO: count = start - end + 1
-    
+    // 1. Calculate and store LIMIT (end value)
     end_val->codegen_to_reg(1); // r1 = end
-    emit("LOAD", iter->address); // r0 = start
-    
-    if (!downto) {
-        // TO: r1 - r0 + 1
-        emit("SWP", 1); // r1=start, r0=end
-        emit("SUB", 1); // end - start
-    } else {
-        // DOWNTO: r0 - r1 + 1
-        emit("SUB", 1); // start - end
-    }
-    emit("INC", 0);
-    
-    long long count_addr = memory_offset++;
-    emit("STORE", count_addr);
-    
+    long long limit_addr = memory_offset++;
+    emit("STORE", limit_addr); 
+
+    // 2. Initialize ITERATOR
+    Symbol* iter = get_variable(iterator);
+    start_val->codegen_to_reg(0); // r0 = start
+    emit("STORE", iter->address); 
+
     long long loop_start = code.size();
-    reset_acc_tracker(); // Barrier (Loop Header)
-    
-    // Check Count
-    emit("LOAD", count_addr);
-    emit("JZERO", 0);
-    reset_acc_tracker(); // Barrier (Branch side 1)
-    long long jump_out = code.size()-1;
-    
-    // Body
-    for(auto s : body) s->codegen();
-    reset_param_cache();
-    
-    // Decrement Count
-    emit("LOAD", count_addr);
-    emit("DEC", 0);
-    emit("STORE", count_addr);
-    
-    // Step Iterator
-    emit("LOAD", iter->address);
-    if (!downto) emit("INC", 0); else emit("DEC", 0);
-    emit("STORE", iter->address);
-    
-    emit("JUMP", loop_start);
-    code[jump_out].arg = code.size();
+
+    if (!downto) {
+        // --- TO LOOP (Standard Logic) ---
+        // Condition: iter > limit -> Stop
+        
+        emit("LOAD", limit_addr);     // r0 = limit
+        emit("SWP", 1);               // r1 = limit
+        emit("LOAD", iter->address);  // r0 = iter
+        emit("SUB", 1);               // r0 = max(iter - limit, 0)
+        
+        // If iter > limit, jump out
+        emit("JPOS", -1); 
+        long long jump_out_idx = code.size() - 1;
+
+        // Body
+        for(auto s : body) s->codegen();
+
+        // Increment
+        emit("LOAD", iter->address);
+        emit("INC", 0);
+        emit("STORE", iter->address);
+        
+        // Loop
+        emit("JUMP", loop_start);
+
+        // Patch exit
+        code[jump_out_idx].arg = code.size();
+    } else {
+        // --- DOWNTO LOOP (Count Logic) ---
+        // count = (start >= end) ? start - end + 1 : 0
+        
+        long long count_addr = memory_offset++;
+        
+        // Check condition: start < end <=> end - start > 0
+        emit("LOAD", iter->address); // r0 = start
+        emit("SWP", 1);              // r1 = end
+        emit("LOAD", limit_addr);    // r0 = end
+        emit("SUB", 1);              // r0 = end - start
+        
+        emit("JPOS", -1); // Jump to ZeroIters if end > start
+        long long jump_zero_iters = code.size() - 1;
+        
+        // Only if start >= end: count = start - end + 1
+        emit("LOAD", limit_addr);    // r0 = end
+        emit("SWP", 1);              // r1 = start
+        emit("LOAD", iter->address); // r0 = start
+        emit("SUB", 1);              // r0 = start - end
+        emit("INC", 0);              // r0 = start - end + 1
+        emit("STORE", count_addr);
+        
+        emit("JUMP", -1); // Jump to Loop Check
+        long long jump_to_check = code.size() - 1;
+        
+        // ZeroIters label:
+        code[jump_zero_iters].arg = code.size();
+        emit("RST", 0); // r0 = 0
+        emit("STORE", count_addr);
+        
+        // Loop Check label:
+        code[jump_to_check].arg = code.size();
+        long long check_start = code.size();
+        reset_acc_tracker(); // Loop Header Barrier
+
+        // Check Count > 0
+        emit("LOAD", count_addr);
+        emit("JZERO", -1); // Exit if count == 0
+        long long jump_out_idx = code.size() - 1;
+        
+        // Body
+        for(auto s : body) s->codegen();
+        reset_param_cache();
+
+        // Decrement Iterator
+        emit("LOAD", iter->address);
+        emit("DEC", 0);
+        emit("STORE", iter->address);
+        
+        // Decrement Count
+        emit("LOAD", count_addr);
+        emit("DEC", 0);
+        emit("STORE", count_addr);
+        
+        emit("JUMP", check_start);
+        
+        // Patch Exit
+        code[jump_out_idx].arg = code.size();
+    }
     
     current_for_stack.pop_back();
     reset_param_cache();
@@ -1166,9 +1181,7 @@ void IdentifierNode::print(std::ostream& out, int indent) const {
     out << indent_str(indent) << "Identifier(" << name;
     if(is_array) {
         if(is_index_const) out << "[" << index_val << "]";
-        else if (index_expr) {
-            out << "[Expr]"; 
-        } else {
+        else {
              out << "[" << index_name << "]";
         }
     }

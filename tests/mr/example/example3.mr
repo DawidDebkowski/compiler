@@ -1,101 +1,334 @@
+# Błażej Pawluk, 279738
+# Kod wygenerowany przez kompilator
+
+
+# === MAIN PROGRAM ===
+# start READ
 READ
-STORE 5
-STORE 6
-SWP b
-LOAD 5
-ADD b
-STORE 7
-SWP b
-LOAD 6
-ADD b
-STORE 8
-SWP b
-LOAD 7
-ADD b
-STORE 9
-SWP b
-LOAD 8
-ADD b
 STORE 10
-SWP b
-LOAD 9
-ADD b
-STORE 11
-SWP b
+# end READ
+# start ASSIGN
+# begin load variable a
 LOAD 10
-ADD b
-STORE 12
-SWP b
+# end load variable a
+STORE 11
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable a
+LOAD 10
+# end load variable a
+SWP c
+# begin load variable b
 LOAD 11
-ADD b
-STORE 13
-SWP b
-LOAD 12
-ADD b
-STORE 14
-SWP b
-LOAD 13
-ADD b
-STORE 15
-SWP b
-LOAD 14
-ADD b
-STORE 16
-SWP b
-LOAD 15
-ADD b
-STORE 17
-SWP b
-LOAD 16
-ADD b
+# end load variable b
+ADD c
+# end +
 STORE 18
-SWP b
-LOAD 17
-ADD b
-STORE 19
-SWP b
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable b
+LOAD 11
+# end load variable b
+SWP c
+# begin load variable c
 LOAD 18
-ADD b
-STORE 20
-SWP b
-LOAD 19
-ADD b
-STORE 21
-SWP b
-LOAD 20
-ADD b
+# end load variable c
+ADD c
+# end +
+STORE 16
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable c
+LOAD 18
+# end load variable c
+SWP c
+# begin load variable d
+LOAD 16
+# end load variable d
+ADD c
+# end +
 STORE 22
-SWP b
-LOAD 21
-ADD b
-STORE 23
-SWP b
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable d
+LOAD 16
+# end load variable d
+SWP c
+# begin load variable e
 LOAD 22
-ADD b
-STORE 24
-SWP b
+# end load variable e
+ADD c
+# end +
+STORE 20
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable e
+LOAD 22
+# end load variable e
+SWP c
+# begin load variable f
+LOAD 20
+# end load variable f
+ADD c
+# end +
+STORE 21
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable f
+LOAD 20
+# end load variable f
+SWP c
+# begin load variable g
+LOAD 21
+# end load variable g
+ADD c
+# end +
+STORE 14
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable g
+LOAD 21
+# end load variable g
+SWP c
+# begin load variable h
+LOAD 14
+# end load variable h
+ADD c
+# end +
+STORE 19
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable h
+LOAD 14
+# end load variable h
+SWP c
+# begin load variable i
+LOAD 19
+# end load variable i
+ADD c
+# end +
+STORE 23
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable i
+LOAD 19
+# end load variable i
+SWP c
+# begin load variable j
 LOAD 23
-ADD b
-STORE 25
-SWP b
+# end load variable j
+ADD c
+# end +
+STORE 17
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable j
+LOAD 23
+# end load variable j
+SWP c
+# begin load variable k
+LOAD 17
+# end load variable k
+ADD c
+# end +
+STORE 24
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable k
+LOAD 17
+# end load variable k
+SWP c
+# begin load variable l
 LOAD 24
-ADD b
-STORE 26
-SWP b
+# end load variable l
+ADD c
+# end +
+STORE 25
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable l
+LOAD 24
+# end load variable l
+SWP c
+# begin load variable m
 LOAD 25
-ADD b
-STORE 27
-SWP b
-LOAD 26
-ADD b
-STORE 28
-SWP b
-LOAD 27
-ADD b
-STORE 29
-SWP b
-LOAD 28
-ADD b
-STORE 30 # Optimized: Skip LOAD z
+# end load variable m
+ADD c
+# end +
+STORE 15
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable m
+LOAD 25
+# end load variable m
+SWP c
+# begin load variable n
+LOAD 15
+# end load variable n
+ADD c
+# end +
+STORE 9
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable n
+LOAD 15
+# end load variable n
+SWP c
+# begin load variable o
+LOAD 9
+# end load variable o
+ADD c
+# end +
+STORE 13
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable o
+LOAD 9
+# end load variable o
+SWP c
+# begin load variable p
+LOAD 13
+# end load variable p
+ADD c
+# end +
+STORE 8
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable p
+LOAD 13
+# end load variable p
+SWP c
+# begin load variable q
+LOAD 8
+# end load variable q
+ADD c
+# end +
+STORE 7
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable q
+LOAD 8
+# end load variable q
+SWP c
+# begin load variable r
+LOAD 7
+# end load variable r
+ADD c
+# end +
+STORE 6
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable r
+LOAD 7
+# end load variable r
+SWP c
+# begin load variable s
+LOAD 6
+# end load variable s
+ADD c
+# end +
+STORE 4
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable s
+LOAD 6
+# end load variable s
+SWP c
+# begin load variable t
+LOAD 4
+# end load variable t
+ADD c
+# end +
+STORE 12
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable t
+LOAD 4
+# end load variable t
+SWP c
+# begin load variable u
+LOAD 12
+# end load variable u
+ADD c
+# end +
+STORE 5
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable u
+LOAD 12
+# end load variable u
+SWP c
+# begin load variable v
+LOAD 5
+# end load variable v
+ADD c
+# end +
+STORE 3
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable v
+LOAD 5
+# end load variable v
+SWP c
+# begin load variable w
+LOAD 3
+# end load variable w
+ADD c
+# end +
+STORE 1
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable w
+LOAD 3
+# end load variable w
+SWP c
+# begin load variable x
+LOAD 1
+# end load variable x
+ADD c
+# end +
+STORE 0
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load variable x
+LOAD 1
+# end load variable x
+SWP c
+# begin load variable y
+LOAD 0
+# end load variable y
+ADD c
+# end +
+STORE 2
+# end ASSIGN
+# start WRITE
+# begin load variable z
+LOAD 2
+# end load variable z
 WRITE
+# end WRITE
 HALT

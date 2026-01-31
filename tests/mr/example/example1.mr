@@ -1,231 +1,454 @@
-READ
-STORE 19
-READ
-STORE 20 # next line inlining de
-LOAD 19
-STORE 10
-LOAD 20
-STORE 11
-RST a
-INC a
-STORE 21
-RST a
-STORE 22
-LOAD 20
-STORE 12
-LOAD 19
-DEC a
-STORE 13
+# Błażej Pawluk, 279738
+# Kod wygenerowany przez kompilator
+
+JUMP 29 # skip to main
+
+# ===== BEGIN COMPARISONS =====
+
+
+# BEGIN <: ra - return address, rb - left, rc - right
+SWP c
+SUB b
 RST b
-LOAD 11
-SUB b # >
-JZERO 113
-LOAD 10
-SWP b
-LOAD 11
+JPOS 6 # skip 1
+INC b
 SWP c
-CALL 194
-SWP b
-STORE 14
-LOAD 10
-SWP b
-LOAD 11
-SWP c
-CALL 151
-SWP b
-STORE 15
-LOAD 11
-STORE 10
-LOAD 14
-STORE 11
-LOAD 12
-STORE 16
-LOAD 15
-SWP b
-LOAD 12
-SWP c
-CALL 122
-SWP b
-STORE 18
-LOAD 21
-SWP b
-LOAD 18
-SUB b
-JZERO 62 # <
-LOAD 20
-SWP b
-LOAD 15
-SWP c
-CALL 122
-SWP b
-STORE 12
-JUMP 64
-RST a
-STORE 12
-LOAD 12
-SWP b
-LOAD 21
-ADD b
-STORE 12
-LOAD 18
-SWP b
-LOAD 12
-SUB b
-STORE 12
-LOAD 13
-STORE 17
-LOAD 15
-SWP b
-LOAD 13
-SWP c
-CALL 122
-SWP b
-STORE 18
-LOAD 22
-SWP b
-LOAD 18
-SUB b
-JZERO 96 # <
-LOAD 19
-SWP b
-LOAD 15
-SWP c
-CALL 122
-SWP b
-STORE 13
-JUMP 98
-RST a
-STORE 13
-LOAD 13
-SWP b
-LOAD 22
-ADD b
-STORE 13
-LOAD 18
-SWP b
-LOAD 13
-SUB b
-STORE 13
-LOAD 16
-STORE 21
-LOAD 17
-STORE 22
-JUMP 18
-LOAD 10
-STORE 23
-LOAD 21
-WRITE
-LOAD 22
-WRITE
-LOAD 23
-WRITE
-HALT
+RTRN # go back to call
+# END <: ra - return line, rb - result: 0 - true, >0 - false
+
+
+# ====== END COMPARISONS ======
+
+# ===== BEGIN EXPRESSIONS =====
+
+
+# BEGIN *: ra - return address, rb - left, rc - right, rd,re - helpers
 SWP e
 RST d
-RST a # IF C > B <=> B - C == 0
-ADD c
-SUB b
-JZERO 131 # SWAP THEM
 SWP c
-SWP b
+JZERO 25 # skip to end - skip 14
 SWP c
 RST a
 ADD c
-JZERO 145
 SHR c
 SHL c
 SUB c
-JZERO 142
-RST a
-ADD d
+JZERO 22 # skip 3
+SWP d
 ADD b
 SWP d
-SHR c
 SHL b
-JUMP 131
-RST a
-ADD d
+SHR c
+JUMP 10 # go back 14
+SWP d
 SWP b
+SWP e
+RTRN # go back to call
+# END *: ra - return line, rb - result
+
+
+# ====== END EXPRESSIONS ======
+
+
+# === MAIN PROGRAM ===
+# start READ
+READ
+STORE 4
+# end READ
+# start READ
+READ
+STORE 3
+# end READ
+# begin de
+# start ASSIGN
+# begin load variable m
+LOAD 4
+# end load variable m
+STORE 8
+# end ASSIGN
+# start ASSIGN
+# begin load variable n
+LOAD 3
+# end load variable n
+STORE 9
+# end ASSIGN
+# start ASSIGN
+# begin load 1
 RST a
-ADD e
-RTRN
-SWP d
+INC a
+# end load 1
+STORE 2
+# end ASSIGN
+# start ASSIGN
+# begin load 0
+RST a
+# end load 0
+STORE 1
+# end ASSIGN
+# start ASSIGN
+# begin load variable n
+LOAD 3
+# end load variable n
+STORE 6
+# end ASSIGN
+# start ASSIGN
+# begin -
+# begin load 1
+RST a
+INC a
+# end load 1
 SWP c
-JPOS 157 # DIV 0 CHECK
+# begin load variable m
+LOAD 4
+# end load variable m
+SUB c
+# end -
+STORE 7
+# end ASSIGN
+# begin WHILE
+# begin >
+# begin load 0
+RST a
+# end load 0
+SWP c
+# begin load variable b
+LOAD 9
+# end load variable b
+SUB c
+RST c
+JPOS 57 # skip 1
+INC c
+SWP c
+# end >
+JPOS 230 # go to end of while
+# begin DO (WHILE)
+# start ASSIGN
+# begin %
+# begin load variable b
+LOAD 9
+# end load variable b
+SWP d
+# begin load variable a
+LOAD 8
+# end load variable a
+SWP c
+SWP d
+JPOS 67 # mod by non-0, skip 2
+RST a
+JUMP 103 # mod by 0, result=0, skip to end, skip 37
+SWP d
 RST b
-SWP d
-RTRN
-SWP c
-RST g
-RST f
-INC f
+RST e
+INC e
 RST a
 ADD c
-SWP e
-RST a
-ADD e
-SUB b
-JPOS 171
+INC a
+SUB d
+JZERO 79 # skip 3
+SHL d
 SHL e
-SHL f
-JUMP 164
+JUMP 71 # go back 7
+SHR d
 SHR e
-SHR f
-RST a
-ADD f
-JZERO 188
-SHL g
-RST a
-ADD e
-SUB b
-JPOS 185
-SWP b
-SUB e
-SWP b
-INC g
-SHR e
-SHR f
-JUMP 173
-RST a
-ADD g
-SWP b
-RST a
-ADD d
-RTRN
-SWP d
-SWP c
-JPOS 200 # DIV 0 CHECK
-RST b
-SWP d
-RTRN
-SWP c
-RST f
-INC f
+SWP e
+JZERO 102 # skip to end - skip 20
+SWP e
 RST a
 ADD c
+INC a
+SUB d
+JZERO 97
+RST a
+ADD c
+SUB d
+SWP c
+SWP b
+ADD e
+SWP b
+JUMP 99 # skip 2
+RST a
+ADD c
+SHR d
+SHR e
+JUMP 81 # go back 20
+SWP c
+# end %
+STORE 10
+# end ASSIGN
+# start ASSIGN
+# begin /
+# begin load variable b
+LOAD 9
+# end load variable b
+SWP d
+# begin load variable a
+LOAD 8
+# end load variable a
+SWP c
+SWP d
+JPOS 112 # div by non-0, skip 2
+RST a
+JUMP 148 # div by 0, result=0, skip to end, skip 37
+SWP d
+RST b
+RST e
+INC e
+RST a
+ADD c
+INC a
+SUB d
+JZERO 124 # skip 3
+SHL d
+SHL e
+JUMP 116 # go back 7
+SHR d
+SHR e
+SWP e
+JZERO 147 # skip to end - skip 20
 SWP e
 RST a
-ADD e
-SUB b
-JPOS 213
-SHL e
-SHL f
-JUMP 206
-SHR e
-SHR f
+ADD c
+INC a
+SUB d
+JZERO 142
 RST a
-ADD f
-JZERO 228
-RST a
-ADD e
-SUB b
-JPOS 225
+ADD c
+SUB d
+SWP c
 SWP b
-SUB e
+ADD e
 SWP b
-SHR e
-SHR f
-JUMP 215
+JUMP 144 # skip 2
 RST a
-ADD d
-RTRN
+ADD c
+SHR d
+SHR e
+JUMP 126 # go back 20
+SWP b
+# end /
+STORE 11
+# end ASSIGN
+# start ASSIGN
+# begin load variable b
+LOAD 9
+# end load variable b
+STORE 8
+# end ASSIGN
+# start ASSIGN
+# begin load variable reszta
+LOAD 10
+# end load variable reszta
+STORE 9
+# end ASSIGN
+# start ASSIGN
+# begin load variable r
+LOAD 6
+# end load variable r
+STORE 12
+# end ASSIGN
+# start ASSIGN
+# begin *
+# begin load variable r
+LOAD 6
+# end load variable r
+SWP c
+# begin load variable iloraz
+LOAD 11
+# end load variable iloraz
+SWP b
+CALL 8
+SWP b
+# end *
+STORE 5
+# end ASSIGN
+# begin IF
+# begin <
+# begin load variable tmp
+LOAD 5
+# end load variable tmp
+SWP c
+# begin load variable x
+LOAD 2
+# end load variable x
+SWP b
+CALL 1
+SWP b
+# end <
+JPOS 177 # skip to else
+# begin THEN
+# start ASSIGN
+# begin *
+# begin load variable iloraz
+LOAD 11
+# end load variable iloraz
+SWP c
+# begin load variable n
+LOAD 3
+# end load variable n
+SWP b
+CALL 8
+SWP b
+# end *
+STORE 6
+# end ASSIGN
+JUMP 179 # skip to end of if
+# begin ELSE
+# start ASSIGN
+# begin load 0
+RST a
+# end load 0
+STORE 6
+# end ASSIGN
+# end IF
+# start ASSIGN
+# begin +
+# begin load variable x
+LOAD 2
+# end load variable x
+SWP c
+# begin load variable r
+LOAD 6
+# end load variable r
+ADD c
+# end +
+STORE 6
+# end ASSIGN
+# start ASSIGN
+# begin -
+# begin load variable tmp
+LOAD 5
+# end load variable tmp
+SWP c
+# begin load variable r
+LOAD 6
+# end load variable r
+SUB c
+# end -
+STORE 6
+# end ASSIGN
+# start ASSIGN
+# begin load variable s
+LOAD 7
+# end load variable s
+STORE 13
+# end ASSIGN
+# start ASSIGN
+# begin *
+# begin load variable s
+LOAD 7
+# end load variable s
+SWP c
+# begin load variable iloraz
+LOAD 11
+# end load variable iloraz
+SWP b
+CALL 8
+SWP b
+# end *
+STORE 5
+# end ASSIGN
+# begin IF
+# begin <
+# begin load variable tmp
+LOAD 5
+# end load variable tmp
+SWP c
+# begin load variable y
+LOAD 1
+# end load variable y
+SWP b
+CALL 1
+SWP b
+# end <
+JPOS 213 # skip to else
+# begin THEN
+# start ASSIGN
+# begin *
+# begin load variable iloraz
+LOAD 11
+# end load variable iloraz
+SWP c
+# begin load variable m
+LOAD 4
+# end load variable m
+SWP b
+CALL 8
+SWP b
+# end *
+STORE 7
+# end ASSIGN
+JUMP 215 # skip to end of if
+# begin ELSE
+# start ASSIGN
+# begin load 0
+RST a
+# end load 0
+STORE 7
+# end ASSIGN
+# end IF
+# start ASSIGN
+# begin +
+# begin load variable y
+LOAD 1
+# end load variable y
+SWP c
+# begin load variable s
+LOAD 7
+# end load variable s
+ADD c
+# end +
+STORE 7
+# end ASSIGN
+# start ASSIGN
+# begin -
+# begin load variable tmp
+LOAD 5
+# end load variable tmp
+SWP c
+# begin load variable s
+LOAD 7
+# end load variable s
+SUB c
+# end -
+STORE 7
+# end ASSIGN
+# start ASSIGN
+# begin load variable rr
+LOAD 12
+# end load variable rr
+STORE 2
+# end ASSIGN
+# start ASSIGN
+# begin load variable ss
+LOAD 13
+# end load variable ss
+STORE 1
+# end ASSIGN
+JUMP 50 # go back to start of while
+# end WHILE
+# start ASSIGN
+# begin load variable a
+LOAD 8
+# end load variable a
+STORE 0
+# end ASSIGN
+# end de
+# start WRITE
+# begin load variable x
+LOAD 2
+# end load variable x
+WRITE
+# end WRITE
+# start WRITE
+# begin load variable y
+LOAD 1
+# end load variable y
+WRITE
+# end WRITE
+# start WRITE
+# begin load variable nwd
+LOAD 0
+# end load variable nwd
+WRITE
+# end WRITE
+HALT

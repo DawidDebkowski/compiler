@@ -1,0 +1,46 @@
+# Błażej Pawluk, 279738
+# Kod wygenerowany przez kompilator
+
+
+# === MAIN PROGRAM ===
+# start ASSIGN
+# begin load 10
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+# end load 10
+STORE 0
+# end ASSIGN
+# begin _dummy
+# start ASSIGN
+# begin load 5
+RST a
+INC a
+SHL a
+SHL a
+INC a
+# end load 5
+STORE 1
+# end ASSIGN
+# end _dummy
+# start ASSIGN
+# begin load 10
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+# end load 10
+STORE 0
+# end ASSIGN
+# start WRITE
+# begin load variable v
+LOAD 1
+# end load variable v
+WRITE
+# end WRITE
+HALT

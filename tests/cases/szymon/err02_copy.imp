@@ -1,0 +1,10 @@
+PROCEDURE p(I a) IS IN
+    WRITE n;
+END
+
+PROGRAM IS
+    n
+IN
+    n := 5;
+    p(n);
+END

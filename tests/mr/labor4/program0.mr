@@ -1,22 +1,183 @@
-READ
-STORE 5
-LOAD 5
-SHR a # optimizing left div 2
-STORE 6 # Optimized: Skip LOAD p
-SHL a # mul by 2^k
-STORE 6
+# Błażej Pawluk, 279738
+# Kod wygenerowany przez kompilator
+
+JUMP 45 # skip to main
+
+
+# ===== BEGIN EXPRESSIONS =====
+
+
+# BEGIN /: ra - return address, rb - left, rc - right, rd,re,rf - helpers
+SWP f
+SWP c
+JPOS 6 # non-zero - calculate, skip 2
+RST b
+JUMP 43 # div by 0, return 0, skip to end, skip 37
+SWP d
 SWP b
-LOAD 5
-SUB b # >
-JZERO 15
+SWP c
+RST b
+RST e
+INC e
+RST a
+ADD c
+INC a
+SUB d
+JZERO 20 # skip 3
+SHL d
+SHL e
+JUMP 12 # go back 7
+SHR d
+SHR e
+SWP e
+JZERO 43 # skip to end - skip 20
+SWP e
+RST a
+ADD c
+INC a
+SUB d
+JZERO 38
+RST a
+ADD c
+SUB d
+SWP c
+SWP b
+ADD e
+SWP b
+JUMP 40 # skip 2
+RST a
+ADD c
+SHR d
+SHR e
+JUMP 22 # go back 20
+SWP f
+RTRN # go back to call
+# END /: ra - return line, rb - result
+
+
+# ====== END EXPRESSIONS ======
+
+# === MAIN PROGRAM ===
+# start READ
+READ
+STORE 1
+# end READ
+# begin REPEAT
+# start ASSIGN
+# begin /
+# begin load 2
 RST a
 INC a
-WRITE
-JUMP 17
+SHL a
+# end load 2
+SWP c
+# begin load variable n
+LOAD 1
+# end load variable n
+SWP b
+CALL 1
+SWP b
+# end /
+STORE 0
+# end ASSIGN
+# start ASSIGN
+# begin *
+# begin load variable p
+LOAD 0
+# end load variable p
+SWP c
+# begin load 2
 RST a
+INC a
+SHL a
+# end load 2
+SWP b
+RST d
+SWP c
+JZERO 78 # skip to end - skip 14
+SWP c
+RST a
+ADD c
+SHR c
+SHL c
+SUB c
+JZERO 75 # skip 3
+SWP d
+ADD b
+SWP d
+SHL b
+SHR c
+JUMP 63 # go back 14
+SWP d
+# end *
+STORE 0
+# end ASSIGN
+# begin IF
+# begin >
+# begin load variable p
+LOAD 0
+# end load variable p
+SWP c
+# begin load variable n
+LOAD 1
+# end load variable n
+SUB c
+RST c
+JPOS 87 # skip 1
+INC c
+SWP c
+# end >
+JPOS 93 # skip to else
+# begin THEN
+# start WRITE
+# begin load 1
+RST a
+INC a
+# end load 1
 WRITE
-LOAD 5
-SHR a # optimizing left div 2
-STORE 5
-JPOS 2
+# end WRITE
+JUMP 95 # skip to end of if
+# begin ELSE
+# start WRITE
+# begin load 0
+RST a
+# end load 0
+WRITE
+# end WRITE
+# end IF
+# start ASSIGN
+# begin /
+# begin load 2
+RST a
+INC a
+SHL a
+# end load 2
+SWP c
+# begin load variable n
+LOAD 1
+# end load variable n
+SWP b
+CALL 1
+SWP b
+# end /
+STORE 1
+# end ASSIGN
+# begin =
+# begin load 0
+RST a
+# end load 0
+SWP c
+# begin load variable n
+LOAD 1
+# end load variable n
+SWP b
+RST a
+ADD b
+SUB c
+SWP c
+SUB b
+ADD c
+# end =
+JZERO 47 # go back to start of repeat
+# end REPEAT
 HALT

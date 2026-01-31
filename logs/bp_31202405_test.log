@@ -1,0 +1,23 @@
+==========================================
+Test Run Report - 31202405
+==========================================
+
+
+### Category: basic ###
+==========================================
+  01-test_io...                  PASS (Cost: 300, Instructions: 5)
+  02-test2_vars...               PASS (Cost: 413, Instructions: 20)
+  03-test3_mul...                PASS (Cost: 576, Instructions: 39)
+  04-test4_div...                PASS (Cost: 697, Instructions: 55)
+  05-test5_mod...                PASS (Cost: 599, Instructions: 55)
+  06-test6_arr...                PASS (Cost: 541, Instructions: 60)
+  07-test7_arr_range...          PASS (Cost: 588, Instructions: 107)
+  08-test8_proc...               PASS (Cost: 423, Instructions: 23)
+  09-0test9_0_proc_arr...        PASS (Cost: 2 519, Instructions: 124)
+  09-1test9_1_proc_arr...        PASS (Cost: 4 321, Instructions: 916)
+  10-test10_proc_arr_range...    PASS (Cost: 2 105, Instructions: 138)
+  11-test11_CLN_folding...       SKIP (no answer file)
+  12-test_if_conditions...       PASS (Cost: 5 875, Instructions: 480)
+  13-test_if_nested...           PASS (Cost: 1 452, Instructions: 183)
+  14-rafal...                    PASS (Cost: 1 978, Instructions: 165)
+  15-div_0...                    

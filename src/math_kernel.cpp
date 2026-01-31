@@ -5,10 +5,6 @@
 
 using namespace std;
 
-const long long SPILL_RE = 2;
-const long long SPILL_RF = 3;
-const long long SPILL_RG = 4;
-
 // Registers used:
 //  r0 (ra): Scratch / Accumulator
 //  r1 (rb): Multiplicand (Left)
@@ -25,10 +21,10 @@ void generate_mul() {
     //      Multiplier >> 1
     addr_mul = code.size();
     
-    // 1. Save Return Address to r4
+    // Save Return Address to r4
     emit("SWP", 4); 
-
-    // 2. Initialize Result (r3) to 0
+    
+    // Initialize Result (r3) to 0
     emit("RST", 3); 
 
     emit("RST", 0, "IF C > B <=> B - C == 0");
@@ -42,15 +38,15 @@ void generate_mul() {
 
     long long loop_start = code.size();
 
-    // 3. Load Multiplier (r2) to Check Zero/Parity
+    // Load Multiplier (r2) to Check Zero/Parity
     emit("RST", 0); 
     emit("ADD", 2); 
     
-    // 4. Check Termination: If Multiplier == 0, End
+    // Check Termination: If Multiplier == 0, End
     emit("JZERO", 0);
     long long jump_end = code.size() - 1;
 
-    // 5. Parity Check (Is r2 Odd?)
+    // Parity Check
     //    r2 = floor(r2 / 2) * 2;
     //    Bit = Old_r2 - New_r2;
     
@@ -63,7 +59,7 @@ void generate_mul() {
     emit("JZERO", 0); // If LSB is 0, Skip Addition
     long long jump_even = code.size() - 1;
 
-    // 6. Odd Case: Result (r3) += Multiplicand (r1)
+    // Odd Case: Result (r3) += Multiplicand (r1)
     emit("RST", 0);
     emit("ADD", 3); // r0 = Result
     emit("ADD", 1); // r0 = Result + Multiplicand
@@ -72,14 +68,14 @@ void generate_mul() {
     // Label: jump_even
     code[jump_even].arg = code.size();
 
-    // 7. Prepare Multiplier (r2) for next iteration
+    // Prepare Multiplier (r2) for next iteration
     //    Actually do the division by 2
     emit("SHR", 2); 
 
-    // 8. Double the Multiplicand (r1)
+    // Double the Multiplicand (r1)
     emit("SHL", 1);
 
-    // 9. Loop
+    // Loop
     emit("JUMP", loop_start);
 
     // --- END ---
@@ -124,12 +120,12 @@ void generate_div() {
     
     emit("SWP", 2);
 
-    // 1. Initialize
+    // Initialize
     emit("RST", 6); // rg = 0 (Quotient)
     emit("RST", 5); emit("INC", 5); // rf = 1 (Mask)
     emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc (Divisor copy)
 
-    // 2. Align (Scale Up)
+    // Align (Scale Up)
     long long loop_up = code.size();
 
     // Check: r4 > r1 ?
@@ -141,40 +137,40 @@ void generate_div() {
     emit("SHL", 5); // rf << 1
     emit("JUMP", loop_up);
 
-    // 3. Correction (Overshoot)
+    // Correction (Overshoot)
     code[jump_peak].arg = code.size();
     emit("SHR", 4);
     emit("SHR", 5);
 
-    // 4. Compute (Scale Down)
+    // Compute (Scale Down)
     long long loop_down = code.size();
 
-    // A. Check Termination (rf == 0)
+    // Check Termination (rf == 0)
     emit("RST", 0); emit("ADD", 5);
     emit("JZERO", 0);
     long long jump_end = code.size() - 1;
 
-    // B. Shift Quotient
+    // Shift Quotient
     emit("SHL", 6);
 
-    // C. Compare (r4 <= r1 ?)
+    // Compare (r4 <= r1 ?)
     // If r4 - r1 > 0, Jump
     emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
     emit("JPOS", 0);
     long long jump_skip = code.size() - 1;
 
-    // D. Subtract and Set Bit
+    // Subtract and Set Bit
     emit("SWP", 1); emit("SUB", 4); emit("SWP", 1); // r1 -= r4
     emit("INC", 6); // Set LSB
 
     code[jump_skip].arg = code.size();
 
-    // E. Shift Down
+    // Shift Down
     emit("SHR", 4);
     emit("SHR", 5);
     emit("JUMP", loop_down);
 
-    // 5. Finalize
+    // Finalize
     code[jump_end].arg = code.size();
     
     // Result: Quotient in r6 -> r1
@@ -212,11 +208,11 @@ void generate_mod() {
     emit("RTRN");
     
     emit("SWP", 2);
-    // 1. Initialize
+    // Initialize
     emit("RST", 5); emit("INC", 5); // rf = 1 (Mask)
     emit("RST", 0); emit("ADD", 2); emit("SWP", 4); // re = rc (Divisor copy)
 
-    // 2. Align (Scale Up)
+    // Align (Scale Up)
     long long loop_up = code.size();
 
     // Check: r4 > r1 ?
@@ -228,39 +224,38 @@ void generate_mod() {
     emit("SHL", 5); // rf << 1
     emit("JUMP", loop_up);
 
-    // 3. Correction (Overshoot)
+    // Correction (Overshoot)
     code[jump_peak].arg = code.size();
     emit("SHR", 4);
     emit("SHR", 5);
 
-    // 4. Compute (Scale Down)
+    // Compute (Scale Down)
     long long loop_down = code.size();
 
-    // A. Check Termination (rf == 0)
+    // Check Termination (rf == 0)
     emit("RST", 0); emit("ADD", 5);
     emit("JZERO", 0);
     long long jump_end = code.size() - 1;
 
-    // B. Compare (r4 <= r1 ?)
+    // Compare (r4 <= r1 ?)
     // If r4 - r1 > 0, Jump
     emit("RST", 0); emit("ADD", 4); emit("SUB", 1);
     emit("JPOS", 0); // If too large, skip
     long long jump_skip = code.size() - 1;
 
-    // C. Correction (rb -= re)
+    // Correction (rb -= re)
     emit("SWP", 1); emit("SUB", 4); emit("SWP", 1);
     
     code[jump_skip].arg = code.size();
 
-    // D. Shift Down
+    // Shift Down
     emit("SHR", 4);
     emit("SHR", 5);
     emit("JUMP", loop_down);
 
-    // 5. Finalize
     code[jump_end].arg = code.size();
 
-    // Restore RA from r3
+    // Restore RA
     emit("RST", 0); emit("ADD", 3); 
     emit("RTRN");
 }

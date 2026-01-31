@@ -1,9 +1,37 @@
+# Błażej Pawluk, 279738
+# Kod wygenerowany przez kompilator
+
+JUMP 5 # skip to main
+
+# ===== BEGIN COMPARISONS =====
+
+
+# BEGIN <=: ra - return address, rb - left, rc - right
+SWP b
+SUB c
+SWP b
+RTRN # go back to call
+# END <=: ra - return line, rb - result: 0 - true, >0 - false
+
+
+# ====== END COMPARISONS ======
+
+
+# === MAIN PROGRAM ===
+# start READ
 READ
 STORE 5
+# end READ
+# start READ
 READ
-STORE 6
+STORE 4
+# end READ
+# start READ
 READ
-STORE 7
+STORE 2
+# end READ
+# start ASSIGN
+# begin load 111091
 RST a
 INC a
 SHL a
@@ -32,34 +60,12 @@ SHL a
 INC a
 SHL a
 INC a
-STORE 8
-RST b
-INC b
-SHL b
-INC b
-SHL b
-SHL b
-INC b
-SHL b
-INC b
-SHL b
-SHL b
-SHL b
-INC b
-SHL b
-SHL b
-SHL b
-SHL b
-SHL b
-SHL b
-SHL b
-INC b
-SHL b
-INC b
-SHL b
-LOAD 8
-SUB b
-JPOS 135 # <=
+# end load 111091
+STORE 1
+# end ASSIGN
+# begin WHILE
+# begin <=
+# begin load 111110
 RST a
 INC a
 SHL a
@@ -68,13 +74,57 @@ SHL a
 SHL a
 INC a
 SHL a
+INC a
 SHL a
 SHL a
 SHL a
 INC a
-STORE 9
-LOAD 9
+SHL a
+SHL a
+SHL a
+SHL a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+# end load 111110
+SWP c
+# begin load variable i
+LOAD 1
+# end load variable i
 SWP b
+CALL 1
+SWP b
+# end <=
+JPOS 155 # go to end of while
+# begin DO (WHILE)
+# start ASSIGN
+# begin load 209
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+INC a
+# end load 209
+STORE 0
+# end ASSIGN
+# begin WHILE
+# begin >=
+# begin load variable j
+LOAD 0
+# end load variable j
+SWP c
+# begin load 200
 RST a
 INC a
 SHL a
@@ -86,8 +136,13 @@ INC a
 SHL a
 SHL a
 SHL a
-SUB b
-JPOS 126 # >=
+# end load 200
+SUB c
+# end >=
+JPOS 143 # go to end of while
+# begin DO (WHILE)
+# start ASSIGN
+# begin load 11
 RST a
 INC a
 SHL a
@@ -95,48 +150,133 @@ SHL a
 INC a
 SHL a
 INC a
-STORE 10
-RST b
-INC b
-SHL b
-SHL b
-INC b
-SHL b
-SHL b
-LOAD 10
-SUB b
-JPOS 117 # <=
+# end load 11
+STORE 3
+# end ASSIGN
+# begin WHILE
+# begin <=
+# begin load 20
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+# end load 20
+SWP c
+# begin load variable k
+LOAD 3
+# end load variable k
+SWP b
+CALL 1
+SWP b
+# end <=
+JPOS 131 # go to end of while
+# begin DO (WHILE)
+# start ASSIGN
+# begin +
+# begin load variable k
+LOAD 3
+# end load variable k
+SWP c
+# begin load variable a
 LOAD 5
-SWP b
-LOAD 10
-ADD b
+# end load variable a
+ADD c
+# end +
 STORE 5
-LOAD 10
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load 1
+RST a
 INC a
-STORE 10
-JUMP 98
-LOAD 6
-SWP b
-LOAD 9
-ADD b
-STORE 6
-LOAD 9
-DEC a
-STORE 9
-JUMP 75
-LOAD 7
-SWP b
-LOAD 8
-ADD b
-STORE 7
-LOAD 8
+# end load 1
+SWP c
+# begin load variable k
+LOAD 3
+# end load variable k
+ADD c
+# end +
+STORE 3
+# end ASSIGN
+JUMP 106 # go back to start of while
+# end WHILE
+# start ASSIGN
+# begin +
+# begin load variable j
+LOAD 0
+# end load variable j
+SWP c
+# begin load variable b
+LOAD 4
+# end load variable b
+ADD c
+# end +
+STORE 4
+# end ASSIGN
+# start ASSIGN
+# begin -
+# begin load 1
+RST a
 INC a
-STORE 8
-JUMP 35
+# end load 1
+SWP c
+# begin load variable j
+LOAD 0
+# end load variable j
+SUB c
+# end -
+STORE 0
+# end ASSIGN
+JUMP 83 # go back to start of while
+# end WHILE
+# start ASSIGN
+# begin +
+# begin load variable i
+LOAD 1
+# end load variable i
+SWP c
+# begin load variable c
+LOAD 2
+# end load variable c
+ADD c
+# end +
+STORE 2
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load 1
+RST a
+INC a
+# end load 1
+SWP c
+# begin load variable i
+LOAD 1
+# end load variable i
+ADD c
+# end +
+STORE 1
+# end ASSIGN
+JUMP 40 # go back to start of while
+# end WHILE
+# start WRITE
+# begin load variable a
 LOAD 5
+# end load variable a
 WRITE
-LOAD 6
+# end WRITE
+# start WRITE
+# begin load variable b
+LOAD 4
+# end load variable b
 WRITE
-LOAD 7
+# end WRITE
+# start WRITE
+# begin load variable c
+LOAD 2
+# end load variable c
 WRITE
+# end WRITE
 HALT

@@ -1,197 +1,221 @@
+# Błażej Pawluk, 279738
+# Kod wygenerowany przez kompilator
+
+
+# === MAIN PROGRAM ===
+# start ASSIGN
+# begin load 0
 RST a
-STORE 5
+# end load 0
+STORE 0
+# end ASSIGN
+# begin FOR
+# begin load 1
 RST a
 INC a
-STORE 6
-RST b
-INC b
-SHL b
-SHL b
-LOAD 6
+# end load 1
+STORE 1 # iterator
+# begin DO (FOR)
+# begin FOR
+# begin load 1
+RST a
+INC a
+# end load 1
+STORE 2 # iterator
+# begin DO (FOR)
+# begin FOR
+# begin load 1
+RST a
+INC a
+# end load 1
+STORE 3 # iterator
+# begin DO (FOR)
+# begin FOR
+# begin load 1
+RST a
+INC a
+# end load 1
+STORE 4 # iterator
+# begin DO (FOR)
+# begin FOR
+# begin load 1
+RST a
+INC a
+# end load 1
+STORE 5 # iterator
+# begin DO (FOR)
+# begin FOR
+# begin load 1
+RST a
+INC a
+# end load 1
+STORE 6 # iterator
+# begin DO (FOR)
+# begin FOR
+# begin load 1
+RST a
+INC a
+# end load 1
+STORE 7 # iterator
+# begin DO (FOR)
+# begin FOR
+# begin load 1
+RST a
+INC a
+# end load 1
+STORE 8 # iterator
+# begin DO (FOR)
+# begin FOR
+# begin load 1
+RST a
+INC a
+# end load 1
+STORE 9 # iterator
+# begin DO (FOR)
+# start ASSIGN
+# begin +
+# begin load 1
+RST a
+INC a
+# end load 1
+SWP c
+# begin load variable v
+LOAD 0
+# end load variable v
+ADD c
+# end +
+STORE 0
+# end ASSIGN
+# end DO (FOR)
+# begin load 4
+RST a
+INC a
+SHL a
+SHL a
+# end load 4
 SWP b
-SUB b
-INC a
-STORE 15
-LOAD 15
-JZERO 194
-RST a
-INC a
-STORE 7
-RST b
-INC b
-SHL b
-SHL b
-LOAD 7
-SWP b
-SUB b
-INC a
-STORE 16
-LOAD 16
-JZERO 187
-RST a
-INC a
-STORE 8
-RST b
-INC b
-SHL b
-SHL b
-LOAD 8
-SWP b
-SUB b
-INC a
-STORE 17
-LOAD 17
-JZERO 180
-RST a
-INC a
-STORE 9
-RST b
-INC b
-SHL b
-SHL b
-LOAD 9
-SWP b
-SUB b
-INC a
-STORE 18
-LOAD 18
-JZERO 173
-RST a
-INC a
-STORE 10
-RST b
-INC b
-SHL b
-SHL b
-LOAD 10
-SWP b
-SUB b
-INC a
-STORE 19
-LOAD 19
-JZERO 166
-RST a
-INC a
-STORE 11
-RST b
-INC b
-SHL b
-SHL b
-LOAD 11
-SWP b
-SUB b
-INC a
-STORE 20
-LOAD 20
-JZERO 159
-RST a
-INC a
-STORE 12
-RST b
-INC b
-SHL b
-SHL b
-LOAD 12
-SWP b
-SUB b
-INC a
-STORE 21
-LOAD 21
-JZERO 152
-RST a
-INC a
-STORE 13
-RST b
-INC b
-SHL b
-SHL b
-LOAD 13
-SWP b
-SUB b
-INC a
-STORE 22
-LOAD 22
-JZERO 145
-RST a
-INC a
-STORE 14
-RST b
-INC b
-SHL b
-SHL b
-LOAD 14
-SWP b
-SUB b
-INC a
-STORE 23
-LOAD 23
-JZERO 138
-LOAD 5
-INC a
-STORE 5
-LOAD 23
-DEC a
-STORE 23
-LOAD 14
-INC a
-STORE 14
-JUMP 126
-LOAD 22
-DEC a
-STORE 22
-LOAD 13
-INC a
-STORE 13
-JUMP 112
-LOAD 21
-DEC a
-STORE 21
-LOAD 12
-INC a
-STORE 12
-JUMP 98
-LOAD 20
-DEC a
-STORE 20
-LOAD 11
-INC a
-STORE 11
-JUMP 84
-LOAD 19
-DEC a
-STORE 19
-LOAD 10
-INC a
-STORE 10
-JUMP 70
-LOAD 18
-DEC a
-STORE 18
 LOAD 9
 INC a
-STORE 9
-JUMP 56
-LOAD 17
-DEC a
-STORE 17
+STORE 9 # updated iterator
+SUB b
+JZERO 29 # go back to start of do (for)
+# end FOR
+# end DO (FOR)
+# begin load 4
+RST a
+INC a
+SHL a
+SHL a
+# end load 4
+SWP b
 LOAD 8
 INC a
-STORE 8
-JUMP 42
-LOAD 16
-DEC a
-STORE 16
+STORE 8 # updated iterator
+SUB b
+JZERO 26 # go back to start of do (for)
+# end FOR
+# end DO (FOR)
+# begin load 4
+RST a
+INC a
+SHL a
+SHL a
+# end load 4
+SWP b
 LOAD 7
 INC a
-STORE 7
-JUMP 28
-LOAD 15
-DEC a
-STORE 15
+STORE 7 # updated iterator
+SUB b
+JZERO 23 # go back to start of do (for)
+# end FOR
+# end DO (FOR)
+# begin load 4
+RST a
+INC a
+SHL a
+SHL a
+# end load 4
+SWP b
 LOAD 6
 INC a
-STORE 6
-JUMP 14
+STORE 6 # updated iterator
+SUB b
+JZERO 20 # go back to start of do (for)
+# end FOR
+# end DO (FOR)
+# begin load 4
+RST a
+INC a
+SHL a
+SHL a
+# end load 4
+SWP b
 LOAD 5
+INC a
+STORE 5 # updated iterator
+SUB b
+JZERO 17 # go back to start of do (for)
+# end FOR
+# end DO (FOR)
+# begin load 4
+RST a
+INC a
+SHL a
+SHL a
+# end load 4
+SWP b
+LOAD 4
+INC a
+STORE 4 # updated iterator
+SUB b
+JZERO 14 # go back to start of do (for)
+# end FOR
+# end DO (FOR)
+# begin load 4
+RST a
+INC a
+SHL a
+SHL a
+# end load 4
+SWP b
+LOAD 3
+INC a
+STORE 3 # updated iterator
+SUB b
+JZERO 11 # go back to start of do (for)
+# end FOR
+# end DO (FOR)
+# begin load 4
+RST a
+INC a
+SHL a
+SHL a
+# end load 4
+SWP b
+LOAD 2
+INC a
+STORE 2 # updated iterator
+SUB b
+JZERO 8 # go back to start of do (for)
+# end FOR
+# end DO (FOR)
+# begin load 4
+RST a
+INC a
+SHL a
+SHL a
+# end load 4
+SWP b
+LOAD 1
+INC a
+STORE 1 # updated iterator
+SUB b
+JZERO 5 # go back to start of do (for)
+# end FOR
+# start WRITE
+# begin load variable v
+LOAD 0
+# end load variable v
 WRITE
+# end WRITE
 HALT

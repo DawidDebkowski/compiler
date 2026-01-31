@@ -1,0 +1,103 @@
+Program
+  Main:
+    Assignment
+      Identifier(a)
+      Number(111)
+    Assignment
+      Identifier(n)
+      Number(5)
+    Assignment
+      Identifier(m)
+      Number(2)
+    For(i DOWNTO)
+      From:
+        Number(10)
+      To:
+        Number(20)
+    Do
+      Assignment
+        Identifier(a)
+        Number(1)
+    For(i TO)
+      From:
+        Number(5)
+      To:
+        Number(2)
+    Do
+      Assignment
+        Identifier(a)
+        Number(2)
+    For(i TO)
+      From:
+        Number(5)
+      To:
+        Number(4)
+    Do
+      Assignment
+        Identifier(a)
+        Number(3)
+    For(i DOWNTO)
+      From:
+        Number(4)
+      To:
+        Number(5)
+    Do
+      Assignment
+        Identifier(a)
+        Number(4)
+    For(i DOWNTO)
+      From:
+        Identifier(m)
+      To:
+        Identifier(n)
+    Do
+      Assignment
+        Identifier(a)
+        Number(5)
+    For(i TO)
+      From:
+        Identifier(n)
+      To:
+        Identifier(m)
+    Do
+      Assignment
+        Identifier(a)
+        Number(5)
+    For(i DOWNTO)
+      From:
+        Number(3)
+      To:
+        Identifier(n)
+    Do
+      Assignment
+        Identifier(a)
+        Number(6)
+    For(i TO)
+      From:
+        Number(6)
+      To:
+        Identifier(m)
+    Do
+      Assignment
+        Identifier(a)
+        Number(7)
+    For(i DOWNTO)
+      From:
+        Identifier(m)
+      To:
+        Number(12)
+    Do
+      Assignment
+        Identifier(a)
+        Number(8)
+    For(i TO)
+      From:
+        Identifier(n)
+      To:
+        Number(0)
+    Do
+      Assignment
+        Identifier(a)
+        Number(9)
+    Write
+      Identifier(a)

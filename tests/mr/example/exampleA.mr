@@ -1,3 +1,10 @@
+# Błażej Pawluk, 279738
+# Kod wygenerowany przez kompilator
+
+
+# === MAIN PROGRAM ===
+# start ASSIGN
+# begin load 24
 RST a
 INC a
 SHL a
@@ -5,281 +12,402 @@ INC a
 SHL a
 SHL a
 SHL a
-STORE 5 # Optimized: Skip LOAD n
-SWP d
+# end load 24
+STORE 79
+# end ASSIGN
+# start ASSIGN
+# begin load 0
 RST a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-SHL a
-SWP d
-RSTORE d
-RST a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-SHL a
-RLOAD a
+# end load 0
 SWP b
-LOAD 5
-SUB b
-SWP d
-LOAD 5
-RST c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
-SWP d
-RSTORE d
+# begin load 0
 RST a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-SHL a
-RLOAD a
-INC a
-STORE 6
+# end load 0
+ADD b
+SWP b
+# begin load 0
 RST a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-SHL a
-RLOAD a
-STORE 85
-LOAD 5
-RST c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
-RLOAD a
-SWP b
-LOAD 85
-SUB b
-INC a
-STORE 88
-LOAD 88
-JZERO 131
-LOAD 85
-INC a
-SWP d
-LOAD 85
-RST c
-INC c
-SHL c
-SHL c
-SHL c
-ADD c
-SWP d
-RSTORE d
-LOAD 85
-SWP b
-LOAD 6
-SUB b
-SWP d
-LOAD 85
-RST c
-INC c
-SHL c
-SHL c
-SHL c
-SHL c
-INC c
-SHL c
-ADD c
-SWP d
-RSTORE d
-LOAD 88
-DEC a
-STORE 88
-LOAD 85
-DEC a
-STORE 85
-JUMP 93
-LOAD 5
-RST c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
-RLOAD a
-STORE 6
-LOAD 5
-RST c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
-RLOAD a
-STORE 86
-RST a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-INC a
-SHL a
-SHL a
-RLOAD a
-SWP b
-LOAD 86
+# end load 0
 SWP b
 SUB b
-INC a
-STORE 89
-LOAD 89
-JZERO 223
-LOAD 86
-RST c
-INC c
-SHL c
-SHL c
-SHL c
-ADD c
-RLOAD a
+SWP g
+# begin load variable n
+LOAD 79
+# end load variable n
+RSTORE g
+# end ASSIGN
+# start ASSIGN
+# begin load variable n
+LOAD 79
+# end load variable n
 SWP b
-LOAD 86
-RST c
-INC c
-SHL c
-SHL c
-SHL c
-SHL c
-INC c
-SHL c
-ADD c
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+SWP g
+# begin -
+# begin load variable tc
+# begin load 0
+RST a
+# end load 0
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
 RLOAD a
+# end load variable tc
 SWP c
-CALL 256
-SWP b
-SWP d
-LOAD 86
-RST c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
-SWP d
-RSTORE d
-LOAD 89
-DEC a
-STORE 89
-LOAD 86
-INC a
-STORE 86
-JUMP 176
+# begin load variable n
+LOAD 79
+# end load variable n
+SUB c
+# end -
+RSTORE g
+# end ASSIGN
+# start ASSIGN
+# begin +
+# begin load 1
 RST a
-STORE 87
-LOAD 5
+INC a
+# end load 1
+SWP c
+# begin load variable tc
+# begin load 0
+RST a
+# end load 0
 SWP b
-LOAD 87
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
 SWP b
 SUB b
-INC a
-STORE 90
-LOAD 90
-JZERO 255
-LOAD 87
-RST c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-INC c
-SHL c
-SHL c
-ADD c
 RLOAD a
-WRITE
-LOAD 90
-DEC a
-STORE 90
-LOAD 87
+# end load variable tc
+ADD c
+# end +
+STORE 78
+# end ASSIGN
+# begin FOR
+# begin load variable tc
+# begin load 0
+RST a
+# end load 0
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+RLOAD a
+# end load variable tc
+STORE 80 # iterator
+# begin DO (FOR)
+# start ASSIGN
+# begin load variable i
+LOAD 80 # iterator
+SWP b
+# begin load 52
+RST a
 INC a
-STORE 87
-JUMP 232
-HALT
-SWP e
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+# end load 52
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+SWP g
+# begin +
+# begin load 1
+RST a
+INC a
+# end load 1
+SWP c
+# begin load variable i
+LOAD 80 # iterator
+ADD c
+# end +
+RSTORE g
+# end ASSIGN
+# start ASSIGN
+# begin load variable i
+LOAD 80 # iterator
+SWP b
+# begin load 26
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+# end load 26
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+SWP g
+# begin -
+# begin load variable i
+LOAD 80 # iterator
+SWP c
+# begin load variable j
+LOAD 78
+# end load variable j
+SUB c
+# end -
+RSTORE g
+# end ASSIGN
+# end DO (FOR)
+# begin load variable tc
+# begin load variable n
+LOAD 79
+# end load variable n
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+RLOAD a
+# end load variable tc
+SWP b
+LOAD 80
+SWP c
+RST a
+ADD c
+DEC a
+STORE 80 # updated iterator
+INC b
+SWP b
+SUB c
+JZERO 65 # go back to start of do (for)
+# end FOR
+# start ASSIGN
+# begin load variable tc
+# begin load variable n
+LOAD 79
+# end load variable n
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+RLOAD a
+# end load variable tc
+STORE 78
+# end ASSIGN
+# begin FOR
+# begin load variable tc
+# begin load variable n
+LOAD 79
+# end load variable n
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+RLOAD a
+# end load variable tc
+STORE 81 # iterator
+# begin DO (FOR)
+# start ASSIGN
+# begin load variable i
+LOAD 81 # iterator
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+SWP g
+# begin *
+# begin load variable tb
+# begin load variable i
+LOAD 81 # iterator
+SWP b
+# begin load 26
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+# end load 26
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+RLOAD a
+# end load variable tb
+SWP c
+# begin load variable ta
+# begin load variable i
+LOAD 81 # iterator
+SWP b
+# begin load 52
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+# end load 52
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+RLOAD a
+# end load variable ta
+SWP b
 RST d
-RST a # IF C > B <=> B - C == 0
-ADD c
-SUB b
-JZERO 265 # SWAP THEM
 SWP c
-SWP b
+JZERO 209 # skip to end - skip 14
 SWP c
 RST a
 ADD c
-JZERO 279
 SHR c
 SHL c
 SUB c
-JZERO 276
-RST a
-ADD d
+JZERO 206 # skip 3
+SWP d
 ADD b
 SWP d
-SHR c
 SHL b
-JUMP 265
+SHR c
+JUMP 194 # go back 14
+SWP d
+# end *
+RSTORE g
+# end ASSIGN
+# end DO (FOR)
+# begin load variable tc
+# begin load 0
 RST a
-ADD d
+# end load 0
 SWP b
+# begin load 0
 RST a
-ADD e
-RTRN
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+RLOAD a
+# end load variable tc
+SWP b
+LOAD 81
+INC a
+STORE 81 # updated iterator
+SUB b
+JZERO 149 # go back to start of do (for)
+# end FOR
+# begin FOR
+# begin load 0
+RST a
+# end load 0
+STORE 82 # iterator
+# begin DO (FOR)
+# start WRITE
+# begin load variable tc
+# begin load variable i
+LOAD 82 # iterator
+SWP b
+# begin load 0
+RST a
+# end load 0
+ADD b
+SWP b
+# begin load 0
+RST a
+# end load 0
+SWP b
+SUB b
+RLOAD a
+# end load variable tc
+WRITE
+# end WRITE
+# end DO (FOR)
+# begin load variable n
+LOAD 79
+# end load variable n
+SWP b
+LOAD 82
+INC a
+STORE 82 # updated iterator
+SUB b
+JZERO 228 # go back to start of do (for)
+# end FOR
+HALT
