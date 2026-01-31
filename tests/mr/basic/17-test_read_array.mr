@@ -5,7 +5,6 @@ SHL a
 INC a
 SHL a
 INC a
-STORE 17
 SWP b
 READ
 RSTORE b
@@ -35,7 +34,13 @@ ADD c
 SWP b
 READ
 RSTORE b
-LOAD 17
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
 RLOAD a
 WRITE
 RST a
@@ -44,7 +49,6 @@ SHL a
 INC a
 SHL a
 SHL a
-STORE 18
 RLOAD a
 WRITE
 LOAD 5

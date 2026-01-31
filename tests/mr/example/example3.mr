@@ -96,6 +96,6 @@ STORE 29
 SWP b
 LOAD 28
 ADD b
-STORE 30
+STORE 30 # Optimized: Skip LOAD z
 WRITE
 HALT

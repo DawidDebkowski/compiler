@@ -1,0 +1,24 @@
+Program
+  Procedures:
+    Procedure trash_regs
+      Assignment
+        Identifier(tmp)
+        Number(999)
+      Assignment
+        Identifier(tmp)
+        BinaryOp(*)
+          Identifier(tmp)
+          Identifier(a)
+      Write
+        Identifier(tmp)
+  Main:
+    Assignment
+      Identifier(x)
+      Number(10)
+    ProcCall(trash_regs)
+      Identifier(x)
+    Assignment
+      Identifier(z)
+      Identifier(x)
+    Write
+      Identifier(z)

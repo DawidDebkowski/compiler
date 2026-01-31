@@ -1,0 +1,29 @@
+READ
+STORE 5
+READ
+STORE 6
+LOAD 5
+SWP b
+LOAD 6
+SUB b
+JZERO 13 # <
+RST a
+INC a
+STORE 7
+JUMP 17
+RST a
+INC a
+SHL a
+STORE 7
+LOAD 7
+SWP b
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+ADD b
+STORE 7 # Optimized: Skip LOAD c
+WRITE
+HALT

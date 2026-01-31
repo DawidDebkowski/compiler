@@ -38,6 +38,7 @@ public:
     
     // Check if expression is a compile-time constant
     virtual bool is_constant() const { return false; }
+    virtual bool is_simple() const { return false; }
     virtual BigInt evaluate() const { return 0; }
     
     // Helper to load result into a specific register

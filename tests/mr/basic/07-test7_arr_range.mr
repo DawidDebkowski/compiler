@@ -16,7 +16,6 @@ SHL a
 INC a
 SHL a
 INC a
-STORE 17
 SWP d
 RSTORE d
 RST a
@@ -38,13 +37,23 @@ SHL a
 SHL a
 SHL a
 SHL a
-STORE 18
 SWP d
 RSTORE d
-LOAD 17
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
 RLOAD a
 WRITE
-LOAD 18
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
 RLOAD a
 WRITE
 HALT

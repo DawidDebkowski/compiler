@@ -2,7 +2,7 @@ READ
 STORE 5
 LOAD 5
 SHR a # optimizing left div 2
-STORE 6
+STORE 6 # Optimized: Skip LOAD p
 SHL a # mul by 2^k
 STORE 6
 SWP b

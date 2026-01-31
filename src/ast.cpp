@@ -16,6 +16,7 @@ static std::map<long long, Symbol*> param_cache;
 
 void reset_param_cache() {
     param_cache.clear();
+    reset_acc_tracker();
 }
 
 bool should_inline(std::string name) {
@@ -69,7 +70,7 @@ void IdentifierNode::codegen_address(int reg) {
         yyerror(msg.c_str());
         exit(1);
     }
-
+    
     if (!is_array) {
         if (s->is_param) {
             // Parameter passed by reference (address is at s->address)
@@ -165,17 +166,33 @@ void IdentifierNode::codegen_to_reg(int reg) {
     
     if (!is_array) {
         if (s->is_param) {
+             // Optimization: If r0 wants it and r0 already has it... 
+             // But params are pointers, so we need to reload to be safe unless we track param slot addresses?
+             // Not implementing unsafe param caching yet.
              emit("LOAD", s->address); // Load Address
              emit("RLOAD", 0); // Load Value
         } else {
-             emit("LOAD", s->address);
+             // Optimization for Global Scalar
+             if (reg == 0 && acc_tracker.valid && !acc_tracker.is_const && acc_tracker.variable == name) {
+                 // Hit!
+                 add_comment("Optimized: Skip LOAD " + name);
+             } else {
+                emit("LOAD", s->address);
+                if (reg == 0) {
+                     acc_tracker.valid = true;
+                     acc_tracker.is_const = false;
+                     acc_tracker.variable = name;
+                }
+             }
         }
     } else {
         codegen_address(0); // Address in r0
         emit("RLOAD", 0);   // Value in r0
     }
     
-    if (reg != 0) emit("SWP", reg);
+    if (reg != 0) {
+        emit("SWP", reg);
+    }
 }
 
 // --- BinaryOpNode ---
@@ -297,6 +314,62 @@ void BinaryOpNode::codegen_to_reg(int reg) {
         }
     }
     
+    if (op == BinaryOp::PLUS) {
+        // Optimization: x + x = x << 1
+        auto* id1 = dynamic_cast<IdentifierNode*>(left);
+        auto* id2 = dynamic_cast<IdentifierNode*>(right);
+        
+        if (id1 && id2) {
+             bool match = false;
+             if (!id1->is_array && !id2->is_array) {
+                 if (id1->name == id2->name) match = true;
+             }
+             else if (id1->is_array && id2->is_array) {
+                 if (id1->name == id2->name) {
+                     if (id1->is_index_const && id2->is_index_const) {
+                         if (id1->index_val == id2->index_val) match = true;
+                     } 
+                     else if (!id1->is_index_const && !id2->is_index_const) {
+                         if (id1->index_name == id2->index_name) match = true;
+                     }
+                 }
+             }
+
+             if (match) {
+                 // x + x => x << 1
+                 left->codegen_to_reg(reg);
+                 emit("SHL", reg);
+                 return;
+             }
+        }
+
+        if (right->is_constant()) {
+             BigInt val = right->evaluate();
+             if (val == 0) { left->codegen_to_reg(reg); return; }
+             if (val == 1) { left->codegen_to_reg(reg); emit("INC", reg); return; }
+        }
+        if (left->is_constant()) {
+             BigInt val = left->evaluate();
+             if (val == 0) { right->codegen_to_reg(reg); return; }
+             if (val == 1) { right->codegen_to_reg(reg); emit("INC", reg); return; }
+        }
+    }
+    
+    if (op == BinaryOp::MINUS) {
+        if (right->is_constant()) {
+            BigInt val = right->evaluate();
+            if (val == 0) { left->codegen_to_reg(reg); return; }
+            if (val == 1) { left->codegen_to_reg(reg); emit("DEC", reg); return; }
+        }
+
+        // 0 - x is 0 in natural numbers? Specification say: "result of subtracting larger from smaller is 0".
+        // so 0 - x (if x>=0) is 0.
+        if (left->is_constant() && left->evaluate() == 0) {
+             gen_const(reg, 0);
+             return;
+        }
+    }
+
     switch(op) {
         case BinaryOp::PLUS:
             left->codegen_to_reg(1);
@@ -394,6 +467,12 @@ void AssignmentNode::codegen() {
         expr->codegen_to_reg(0);
         Symbol* s = get_variable(target->name);
         emit("STORE", s->address);
+        
+        // After STORE, r0 still holds the value.
+        // We can mark it as being 'target->name'
+        acc_tracker.valid = true;
+        acc_tracker.is_const = false;
+        acc_tracker.variable = target->name;
     }
 }
 
@@ -563,11 +642,15 @@ void IfNode::codegen() {
         return;
     }
 
-    reset_param_cache();
+    reset_acc_tracker(); // Barrier entry
     // Condition
     long long jump_idx_pos;
     condition->codegen_jump_false(0);
     reset_param_cache();
+    // Barrier: We just jumped. Or fell through.
+    // Actually condition->codegen_jump_false ends with a JUMP instruction so emit() resets it.
+    // But let's be safe.
+    reset_acc_tracker(); 
     jump_idx_pos = code.size() - 1;
     
     // Then Block
@@ -582,12 +665,14 @@ void IfNode::codegen() {
     
     // Backpatch False Jump
     code[jump_idx_pos].arg = code.size();
+    reset_acc_tracker(); // Barrier: Join point (Else start or End)
     
     // Else
     if (!else_block.empty()) {
         for(auto s : else_block) s->codegen();
         reset_param_cache();
         code[jump_over_else].arg = code.size();
+        reset_acc_tracker(); // Barrier: Join point
     }
 }
 
@@ -609,20 +694,24 @@ void WhileNode::codegen() {
          // Infinite Loop
          add_comment("Infinite WHILE loop (condition true)");
          reset_param_cache();
+         reset_acc_tracker(); // Barrier
          long long start = code.size();
          // No condition check
          reset_param_cache();
          for(auto s : body) s->codegen();
          emit("JUMP", start);
          reset_param_cache();
+         reset_acc_tracker(); // Barrier
          return;
     }
 
     reset_param_cache();
+    reset_acc_tracker(); // Barrier
     long long start = code.size();
     
     condition->codegen_jump_false(0);
     reset_param_cache();
+    reset_acc_tracker(); // Barrier (Jump Target/Fallthrough)
     long long jump_out = code.size()-1;
     
     for(auto s : body) s->codegen();
@@ -630,6 +719,7 @@ void WhileNode::codegen() {
     
     emit("JUMP", start);
     code[jump_out].arg = code.size();
+    reset_acc_tracker(); // Barrier (Loop exit)
 }
 
 void WhileNode::validate() {
@@ -643,30 +733,39 @@ void RepeatNode::codegen() {
          if (cond_val) { // REPEAT ... UNTIL TRUE -> Runs once
              add_comment("REPEAT UNTIL TRUE (runs once)");
              reset_param_cache();
+             reset_acc_tracker(); // Barrier
              for(auto s : body) s->codegen();
              reset_param_cache();
+             reset_acc_tracker(); // Barrier
              return;
          }
          // REPEAT ... UNTIL FALSE -> Infinite Loop
          add_comment("REPEAT UNTIL FALSE (infinite loop)");
          reset_param_cache();
+         reset_acc_tracker(); // Barrier
          long long start = code.size();
-         
+         // No condition check
          reset_param_cache();
+         reset_acc_tracker(); // Barrier (Loop Header)
          for(auto s : body) s->codegen();
          
          emit("JUMP", start);
          reset_param_cache();
+         reset_acc_tracker(); // Barrier
          return;
     }
 
      reset_param_cache();
+     reset_acc_tracker(); // Barrier
      long long start = code.size();
+     reset_acc_tracker(); // Barrier (Loop Header)
+
      for(auto s : body) s->codegen();
      reset_param_cache();
      
      condition->codegen_jump_false(0);
      reset_param_cache();
+     reset_acc_tracker(); // Barrier (Jump Target/Fallthrough)
      long long jump_instr = code.size()-1;
      code[jump_instr].arg = start;
 }
@@ -681,10 +780,40 @@ void RepeatNode::validate() {
 // FOR i FROM start DOWNTO end DO ...
 void ForNode::codegen() {
     reset_param_cache();
+    reset_acc_tracker(); // Barrier
+    // Check if nested (already inside another FOR)
+    bool is_nested = !current_for_stack.empty();
     current_for_stack.push_back(for_id);
     
     Symbol* iter = get_variable(iterator);
     
+    // // Optimization: Loop Unrolling for small constant ranges (only if not nested)
+    // BigInt start_const, end_const;
+    // bool start_is_const = start_val->try_evaluate(start_const);
+    // bool end_is_const = end_val->try_evaluate(end_const);
+    
+    // if (start_is_const && end_is_const && !downto && !is_nested) {
+    //     // TO loop
+    //     long long range = cln::cl_I_to_long(end_const - start_const + 1);
+    //     if (range > 0 && range <= 10) { // Unroll small loops
+    //         add_comment("Unrolling FOR loop (" + std::to_string(range) + " iterations)");
+    //         for (long long i = cln::cl_I_to_long(start_const); i <= cln::cl_I_to_long(end_const); i++) {
+    //             // Set iterator to current value
+    //             gen_const(0, i);
+    //             emit("STORE", iter->address);
+                
+    //             // Execute body
+    //             for(auto s : body) s->codegen();
+    //             reset_param_cache();
+    //         }
+    //         current_for_stack.pop_back();
+    //         reset_param_cache();
+    //         reset_acc_tracker(); // Barrier
+    //         return;
+    //     }
+    // }
+    
+    // Standard Loop Implementation
     // Init: iter := start
     start_val->codegen_to_reg(0);
     emit("STORE", iter->address);
@@ -710,10 +839,12 @@ void ForNode::codegen() {
     emit("STORE", count_addr);
     
     long long loop_start = code.size();
+    reset_acc_tracker(); // Barrier (Loop Header)
     
     // Check Count
     emit("LOAD", count_addr);
     emit("JZERO", 0);
+    reset_acc_tracker(); // Barrier (Branch side 1)
     long long jump_out = code.size()-1;
     
     // Body
@@ -735,6 +866,7 @@ void ForNode::codegen() {
     
     current_for_stack.pop_back();
     reset_param_cache();
+    reset_acc_tracker(); // Barrier (Loop Exit)
 }
 
 void ForNode::validate() {
@@ -897,6 +1029,7 @@ void ProcCallNode::validate() {
 
 void ProcedureNode::codegen() {
     reset_param_cache();
+    reset_acc_tracker(); // Critical: Reset accumulator state entering new procedure
     current_procedure = name;
     procedures_map[name].address = code.size();
     long long ra = memory_offset++;
@@ -920,6 +1053,7 @@ void ProcedureNode::validate() {
 void RootNode::codegen() {
     emit("JUMP", 0);
     reset_param_cache();
+    reset_acc_tracker(); // Critical: Reset state before generating bodies
     
     // Analyze Usage
     std::set<std::string> used_procs;

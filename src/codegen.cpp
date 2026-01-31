@@ -14,21 +14,51 @@ vector<long long> calls_div;
 vector<long long> calls_mod;
 
 Symbol* reg_descriptors[8] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+AccState acc_tracker = {false, "", 0, false};
+
+void reset_acc_tracker() {
+    acc_tracker.valid = false;
+    acc_tracker.variable = "";
+    acc_tracker.is_const = false;
+}
+
+void opcodeCheck(string opcode, long long arg) {
+    // reset_acc_tracker();
+    // 1. Instructions that definitely preserve r0
+    if (opcode == "WRITE" || opcode == "STORE" || 
+        opcode == "JUMP" || opcode == "JPOS" || opcode == "JZERO" || opcode == "RSTORE") {
+        return;
+    } 
+    
+    // 2. Instructions that preserve r0 ONLY if they operate on other registers
+    if (opcode == "RST" || opcode == "INC" || opcode == "DEC" || opcode == "SHL" || opcode == "SHR") {
+        if(arg != 0) {
+            return;
+        }
+    }
+
+    // Default: Instruction modifies r0 or is unknown -> Invalidate
+    reset_acc_tracker();
+}
 
 // I
 void emit(string opcode) {
+    opcodeCheck(opcode, 10); // Default to 0 (Accumulator) if implicit
     code.push_back({opcode, 0, false, ""});
 }
 // hate
 void emit(string opcode, long long arg) {
+    opcodeCheck(opcode, arg);
     code.push_back({opcode, arg, true, ""});
 }
 // C
 void emit(string opcode, string comment) {
+    opcodeCheck(opcode, 10); // Default to 0
     code.push_back({opcode, 0, false, comment});
 }
 // ++
 void emit(string opcode, long long arg, string comment) {
+    opcodeCheck(opcode, arg);
     code.push_back({opcode, arg, true, comment});
 }
 
@@ -45,8 +75,21 @@ void add_comment(string comment) {
 void gen_const(int reg, BigInt value) {
     if (value < 0) value = 0; 
     
+    // Check if r0 already has this constant (Optimization)
+    if (reg == 0 && acc_tracker.valid && acc_tracker.is_const && acc_tracker.value_const == cln::cl_I_to_long(value)) {
+        return;
+    }
+
     emit("RST", reg);
-    if (value == 0) return;
+    if (value == 0) {
+        if (reg == 0) {
+            acc_tracker.valid = true;
+            acc_tracker.is_const = true;
+            acc_tracker.value_const = 0;
+            acc_tracker.variable = "";
+        }
+        return;
+    }
     
     unsigned int len = cln::integer_length(value);
     

@@ -1,4 +1,4 @@
 RST a # Folded constant expression
-STORE 5
+STORE 5 # Optimized: Skip LOAD v
 WRITE
 HALT

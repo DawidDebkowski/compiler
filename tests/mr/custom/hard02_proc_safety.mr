@@ -1,0 +1,59 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+STORE 7 # next line inlining trash_regs
+RST a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+STORE 6
+SWP b
+LOAD 7
+SWP c
+CALL 37
+SWP b
+STORE 6 # Optimized: Skip LOAD tmp
+WRITE
+LOAD 7
+STORE 8 # Optimized: Skip LOAD z
+WRITE
+HALT
+SWP e
+RST d
+RST a
+ADD c
+JZERO 53
+SHR c
+SHL c
+SUB c
+JZERO 50
+RST a
+ADD d
+ADD b
+SWP d
+SHR c
+SHL b
+JUMP 39
+RST a
+ADD d
+SWP b
+RST a
+ADD e
+RTRN

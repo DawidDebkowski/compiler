@@ -1,0 +1,38 @@
+==========================================
+Test Run Report - 28200343
+==========================================
+
+
+### Category: basic ###
+==========================================
+  01-test_io...                  PASS (Cost: 250, Instructions: 4)
+  02-test2_vars...               PASS (Cost: 413, Instructions: 20)
+  03-test3_mul...                PASS (Cost: 513, Instructions: 45)
+  04-test4_div...                PASS (Cost: 629, Instructions: 64)
+  05-test5_mod...                PASS (Cost: 537, Instructions: 58)
+  06-test6_arr...                PASS (Cost: 455, Instructions: 46)
+  07-test7_arr_range...          PASS (Cost: 468, Instructions: 59)
+  08-test8_proc...               PASS (Cost: 373, Instructions: 22)
+  09-0test9_0_proc_arr...        PASS (Cost: 926, Instructions: 68)
+  09-1test9_1_proc_arr...        PASS (Cost: 4 260, Instructions: 852)
+  10-test10_proc_arr_range...    PASS (Cost: 955, Instructions: 122)
+  11-test11_CLN_folding...       SKIP (no answer file)
+  12-test_if_conditions...       PASS (Cost: 5 318, Instructions: 447)
+  13-test_if_nested...           PASS (Cost: 1 361, Instructions: 196)
+  14-rafal...                    PASS (Cost: 1 789, Instructions: 136)
+  15-div_0...                    PASS (Cost: 688, Instructions: 84)
+  16-test_nested_for...          PASS (Cost: 856 564, Instructions: 211)
+  17-test_read_array...          PASS (Cost: 933, Instructions: 72)
+  18-test_simple_for...          PASS (Cost: 1 233, Instructions: 34)
+  19-test_mul_simple...          PASS (Cost: 472, Instructions: 40)
+  20-test_mul_opt...             PASS (Cost: 5 161, Instructions: 395)
+  21-zero_loops...               PASS (Cost: 4 863, Instructions: 32)
+  Category results: 21 passed, 0 failed
+
+### Category: custom ###
+==========================================
+  downto_zero...                 SKIP (no answer file)
+  example4_small...              SKIP (no answer file)
+  hard01_loop_clobber...         PASS (Cost: 4 608, Instructions: 44)
+  hard02_proc_safety...          PASS (Cost: 675, Instructions: 59)
+  hard03_complex_flow...         

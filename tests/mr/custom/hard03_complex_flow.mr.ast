@@ -1,0 +1,25 @@
+Program
+  Main:
+    Read
+      Identifier(a)
+    Read
+      Identifier(b)
+    If
+      Condition(<)
+        Identifier(a)
+        Identifier(b)
+    Then
+      Assignment
+        Identifier(c)
+        Number(1)
+    Else
+      Assignment
+        Identifier(c)
+        Number(2)
+    Assignment
+      Identifier(c)
+      BinaryOp(+)
+        Identifier(c)
+        Number(10)
+    Write
+      Identifier(c)

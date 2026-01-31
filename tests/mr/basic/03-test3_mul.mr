@@ -18,7 +18,7 @@ LOAD 6
 SWP c
 CALL 23
 SWP b
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 HALT
 SWP e

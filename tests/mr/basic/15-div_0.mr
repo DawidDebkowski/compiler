@@ -20,7 +20,7 @@ LOAD 6
 SWP c
 CALL 41
 SWP b
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST b
 INC b
@@ -36,7 +36,7 @@ LOAD 7
 SWP c
 CALL 41
 SWP b
-STORE 8
+STORE 8 # Optimized: Skip LOAD d
 WRITE
 HALT
 SWP d

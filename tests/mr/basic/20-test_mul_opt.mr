@@ -2,9 +2,9 @@ RST a
 INC a
 SHL a
 INC a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 SHL a # mul by 2^k
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 LOAD 5
 SHL a # mul by 2^k
@@ -12,7 +12,7 @@ SHL a # mul by 2^k
 SHL a # mul by 2^k
 SHL a # mul by 2^k
 SHL a # mul by 2^k
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -20,8 +20,8 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
-STORE 7
+STORE 5 # Optimized: Skip LOAD a
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -29,13 +29,13 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 RST b
 SWP b
 ADD b
 SHL a
 ADD b
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -43,10 +43,10 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 SHL a # mul by 2^k
 SHL a # mul by 2^k
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -54,14 +54,14 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 RST b
 SWP b
 ADD b
 SHL a
 SHL a
 ADD b
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -69,14 +69,14 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 RST b
 SWP b
 ADD b
 SHL a
 ADD b
 SHL a
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -84,7 +84,7 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 RST b
 SWP b
 ADD b
@@ -92,7 +92,7 @@ SHL a
 SHL a
 SHL a
 SUB b
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -100,11 +100,11 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 SHL a # mul by 2^k
 SHL a # mul by 2^k
 SHL a # mul by 2^k
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -112,7 +112,7 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 RST b
 SWP b
 ADD b
@@ -120,7 +120,7 @@ SHL a
 SHL a
 SHL a
 ADD b
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -128,7 +128,7 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 RST b
 SWP b
 ADD b
@@ -136,7 +136,7 @@ SHL a
 SHL a
 ADD b
 SHL a
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -157,7 +157,7 @@ SHL c
 INC c
 CALL 330
 SWP b
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -179,13 +179,13 @@ SHL c
 INC c
 CALL 330
 SWP b
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
 STORE 5
 RST a # div by 0
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -203,8 +203,8 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
-STORE 7
+STORE 5 # Optimized: Skip LOAD a
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -215,9 +215,9 @@ INC a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 SHR a # optimizing left div 2
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -238,7 +238,7 @@ SHL c
 INC c
 CALL 352
 SWP b
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -248,14 +248,14 @@ SHL a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 RST b
 SWP b
 ADD b
 SHR b # mod optim shift
 SHL b # mod optim shift
 SUB b # mod optim sub
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -266,34 +266,14 @@ SHL a
 INC a
 SHL a
 INC a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 RST b
 SWP b
 ADD b
 SHR b # mod optim shift
 SHL b # mod optim shift
 SUB b # mod optim sub
-STORE 7
-WRITE
-RST a
-INC a
-SHL a
-SHL a
-SHL a
-SHL a
-SHL a
-INC a
-SHL a
-STORE 5
-RST b
-SWP b
-ADD b
-SHR b # mod optim shift
-SHR b # mod optim shift
-SHL b # mod optim shift
-SHL b # mod optim shift
-SUB b # mod optim sub
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
 INC a
@@ -304,11 +284,31 @@ SHL a
 SHL a
 INC a
 SHL a
+STORE 5 # Optimized: Skip LOAD a
+RST b
+SWP b
+ADD b
+SHR b # mod optim shift
+SHR b # mod optim shift
+SHL b # mod optim shift
+SHL b # mod optim shift
+SUB b # mod optim sub
+STORE 7 # Optimized: Skip LOAD c
+WRITE
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
 INC a
 SHL a
 INC a
 SHL a
-STORE 5
+STORE 5 # Optimized: Skip LOAD a
 RST b
 SWP b
 ADD b
@@ -325,7 +325,7 @@ SHL b # mod optim shift
 SHL b # mod optim shift
 SHL b # mod optim shift
 SUB b # mod optim sub
-STORE 7
+STORE 7 # Optimized: Skip LOAD c
 WRITE
 HALT
 SWP e

@@ -33,7 +33,7 @@ SWP d
 RSTORE d
 LOAD 17
 SHL a # mul by 2^k
-STORE 17 # next line inlining set
+STORE 17 # next line inlining setOptimized: Skip LOAD val
 SWP d
 LOAD 16
 RST c
@@ -54,7 +54,6 @@ SHL a
 SHL a
 SHL a
 INC a
-STORE 18
 RLOAD a
 WRITE
 RST a
@@ -64,7 +63,6 @@ INC a
 SHL a
 INC a
 SHL a
-STORE 19
 RLOAD a
 WRITE
 HALT

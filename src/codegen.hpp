@@ -27,6 +27,16 @@ extern vector<long long> calls_mod;
 struct Symbol; // Forward declaration
 extern Symbol* reg_descriptors[8];
 
+// Simple Accumulator(r0) Tracker
+struct AccState {
+    bool valid;
+    string variable; // Name of variable currently held in r0
+    long long value_const; // For constant tracking (optional)
+    bool is_const;
+};
+extern AccState acc_tracker;
+void reset_acc_tracker();
+
 void emit(string opcode, string comment);
 void emit(string opcode, long long arg, string comment);
 void emit(string opcode);

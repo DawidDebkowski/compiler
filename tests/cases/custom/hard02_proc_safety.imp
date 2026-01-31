@@ -1,0 +1,16 @@
+PROCEDURE trash_regs(a) IS
+    tmp
+IN
+    tmp := 999;
+    tmp := tmp * a;
+    WRITE tmp;
+END
+
+PROGRAM IS
+    x, z
+IN
+    x := 10;
+    trash_regs(x);
+    z := x;
+    WRITE z;
+END
