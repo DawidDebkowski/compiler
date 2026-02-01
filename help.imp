@@ -1,0 +1,30 @@
+PROCEDURE sort(T a, I beg, I end) IS
+temp, tempidx
+IN
+FOR i FROM beg TO end DO
+    temp := i -1;
+    FOR j FROM beg TO temp DO
+        tempidx := j+1;
+        IF a[j] > a[tempidx] THEN
+            temp := a[j];
+            a[j] := a[tempidx];
+            a[tempidx] := temp;
+        ENDIF
+    ENDFOR
+ENDFOR
+END # sort
+
+PROGRAM IS
+a[1:100],
+n, beg
+IN
+READ n;
+FOR i FROM 1 TO n DO
+    READ a[i];
+ENDFOR
+beg := 1;
+sort(a, beg, n);
+FOR i FROM 1 TO n DO
+    WRITE a[i];
+ENDFOR
+END # sort
