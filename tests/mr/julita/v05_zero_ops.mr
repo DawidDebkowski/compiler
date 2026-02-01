@@ -1,0 +1,26 @@
+RST a
+STORE 5 # Optimized: Skip LOAD a
+STORE 6 # Optimized: Skip LOAD b
+WRITE
+RST a # Folded constant expression
+STORE 6 # Optimized: Skip LOAD b
+WRITE
+RST a # Folded constant expression
+STORE 6 # Optimized: Skip LOAD b
+WRITE
+RST a # Folded constant expression
+STORE 6 # Optimized: Skip LOAD b
+WRITE
+RST a # Folded constant expression
+STORE 6 # Optimized: Skip LOAD b
+WRITE
+RST a # Folded constant expression
+STORE 6 # Optimized: Skip LOAD b
+WRITE
+RST a # Folded constant expression
+STORE 6 # Optimized: Skip LOAD b
+WRITE
+RST a # Folded constant expression
+STORE 6 # Optimized: Skip LOAD b
+WRITE
+HALT

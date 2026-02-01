@@ -1,0 +1,26 @@
+Program
+  Procedures:
+    Procedure allparams
+      Assignment
+        Identifier(temp)
+        BinaryOp(+)
+          Identifier(input)
+          Number(10)
+      Assignment
+        Identifier(output)
+        Identifier(temp)
+      Write
+        Identifier(ref)
+  Main:
+    Assignment
+      Identifier(a)
+      Number(5)
+    Assignment
+      Identifier(c)
+      Number(100)
+    ProcCall(allparams)
+      Identifier(a)
+      Identifier(b)
+      Identifier(c)
+    Write
+      Identifier(b)

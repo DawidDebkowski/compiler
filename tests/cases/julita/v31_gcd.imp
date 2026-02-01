@@ -1,0 +1,31 @@
+# Advanced Test 31: GCD with Euclidean algorithm using mod
+# Heavy use of division and modulo
+PROCEDURE gcd(I a, I b, O result) IS
+  x, y, temp
+IN
+  x := a;
+  y := b;
+  WHILE y > 0 DO
+    temp := x % y;
+    x := y;
+    y := temp;
+  ENDWHILE
+  result := x;
+END
+
+PROGRAM IS
+  g, numa, numb
+IN
+  numa := 48;
+  numb := 18;
+  gcd(numa, numb, g);
+  WRITE g;
+  numa := 1071;
+  numb := 462;
+  gcd(numa, numb, g);
+  WRITE g;
+  numa := 17;
+  numb := 13;
+  gcd(numa, numb, g);
+  WRITE g;
+END

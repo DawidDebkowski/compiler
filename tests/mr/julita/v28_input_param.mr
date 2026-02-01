@@ -1,0 +1,17 @@
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+STORE 7 # next line inlining try_modify_input
+SHL a # mul by 2^k
+STORE 8
+LOAD 7
+WRITE
+LOAD 8
+WRITE
+HALT

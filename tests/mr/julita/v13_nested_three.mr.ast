@@ -1,0 +1,30 @@
+Program
+  Main:
+    Assignment
+      Identifier(sum)
+      Number(0)
+    For(i TO)
+      From:
+        Number(1)
+      To:
+        Number(3)
+    Do
+      For(j TO)
+        From:
+          Number(1)
+        To:
+          Number(3)
+      Do
+        For(k TO)
+          From:
+            Number(1)
+          To:
+            Number(3)
+        Do
+          Assignment
+            Identifier(sum)
+            BinaryOp(+)
+              Identifier(sum)
+              Number(1)
+    Write
+      Identifier(sum)

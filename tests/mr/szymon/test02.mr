@@ -1,221 +1,161 @@
-# Błażej Pawluk, 279738
-# Kod wygenerowany przez kompilator
-
-
-# === MAIN PROGRAM ===
-# start ASSIGN
-# begin load 0
 RST a
-# end load 0
-STORE 0
-# end ASSIGN
-# begin FOR
-# begin load 1
+STORE 5
 RST a
 INC a
-# end load 1
-STORE 1 # iterator
-# begin DO (FOR)
-# begin FOR
-# begin load 1
-RST a
-INC a
-# end load 1
-STORE 2 # iterator
-# begin DO (FOR)
-# begin FOR
-# begin load 1
-RST a
-INC a
-# end load 1
-STORE 3 # iterator
-# begin DO (FOR)
-# begin FOR
-# begin load 1
-RST a
-INC a
-# end load 1
-STORE 4 # iterator
-# begin DO (FOR)
-# begin FOR
-# begin load 1
-RST a
-INC a
-# end load 1
-STORE 5 # iterator
-# begin DO (FOR)
-# begin FOR
-# begin load 1
-RST a
-INC a
-# end load 1
-STORE 6 # iterator
-# begin DO (FOR)
-# begin FOR
-# begin load 1
-RST a
-INC a
-# end load 1
-STORE 7 # iterator
-# begin DO (FOR)
-# begin FOR
-# begin load 1
-RST a
-INC a
-# end load 1
-STORE 8 # iterator
-# begin DO (FOR)
-# begin FOR
-# begin load 1
-RST a
-INC a
-# end load 1
-STORE 9 # iterator
-# begin DO (FOR)
-# start ASSIGN
-# begin +
-# begin load 1
-RST a
-INC a
-# end load 1
-SWP c
-# begin load variable v
-LOAD 0
-# end load variable v
-ADD c
-# end +
-STORE 0
-# end ASSIGN
-# end DO (FOR)
-# begin load 4
+STORE 6 # BEGIN FOR LOOP - STORE ITERATOR ADDR
 RST a
 INC a
 SHL a
 SHL a
-# end load 4
-SWP b
-LOAD 9
-INC a
-STORE 9 # updated iterator
-SUB b
-JZERO 29 # go back to start of do (for)
-# end FOR
-# end DO (FOR)
-# begin load 4
-RST a
-INC a
-SHL a
-SHL a
-# end load 4
-SWP b
-LOAD 8
-INC a
-STORE 8 # updated iterator
-SUB b
-JZERO 26 # go back to start of do (for)
-# end FOR
-# end DO (FOR)
-# begin load 4
-RST a
-INC a
-SHL a
-SHL a
-# end load 4
-SWP b
-LOAD 7
-INC a
-STORE 7 # updated iterator
-SUB b
-JZERO 23 # go back to start of do (for)
-# end FOR
-# end DO (FOR)
-# begin load 4
-RST a
-INC a
-SHL a
-SHL a
-# end load 4
+STORE 15
+LOAD 15
 SWP b
 LOAD 6
-INC a
-STORE 6 # updated iterator
 SUB b
-JZERO 20 # go back to start of do (for)
-# end FOR
-# end DO (FOR)
-# begin load 4
+JPOS 158
+RST a
+INC a
+STORE 7 # BEGIN FOR LOOP - STORE ITERATOR ADDR
 RST a
 INC a
 SHL a
 SHL a
-# end load 4
+STORE 16
+LOAD 16
 SWP b
+LOAD 7
+SUB b
+JPOS 154
+RST a
+INC a
+STORE 8 # BEGIN FOR LOOP - STORE ITERATOR ADDR
+RST a
+INC a
+SHL a
+SHL a
+STORE 17
+LOAD 17
+SWP b
+LOAD 8
+SUB b
+JPOS 150
+RST a
+INC a
+STORE 9 # BEGIN FOR LOOP - STORE ITERATOR ADDR
+RST a
+INC a
+SHL a
+SHL a
+STORE 18
+LOAD 18
+SWP b
+LOAD 9
+SUB b
+JPOS 146
+RST a
+INC a
+STORE 10 # BEGIN FOR LOOP - STORE ITERATOR ADDR
+RST a
+INC a
+SHL a
+SHL a
+STORE 19
+LOAD 19
+SWP b
+LOAD 10
+SUB b
+JPOS 142
+RST a
+INC a
+STORE 11 # BEGIN FOR LOOP - STORE ITERATOR ADDR
+RST a
+INC a
+SHL a
+SHL a
+STORE 20
+LOAD 20
+SWP b
+LOAD 11
+SUB b
+JPOS 138
+RST a
+INC a
+STORE 12 # BEGIN FOR LOOP - STORE ITERATOR ADDR
+RST a
+INC a
+SHL a
+SHL a
+STORE 21
+LOAD 21
+SWP b
+LOAD 12
+SUB b
+JPOS 134
+RST a
+INC a
+STORE 13 # BEGIN FOR LOOP - STORE ITERATOR ADDR
+RST a
+INC a
+SHL a
+SHL a
+STORE 22
+LOAD 22
+SWP b
+LOAD 13
+SUB b
+JPOS 130
+RST a
+INC a
+STORE 14 # BEGIN FOR LOOP - STORE ITERATOR ADDR
+RST a
+INC a
+SHL a
+SHL a
+STORE 23
+LOAD 23
+SWP b
+LOAD 14
+SUB b
+JPOS 126
 LOAD 5
 INC a
-STORE 5 # updated iterator
-SUB b
-JZERO 17 # go back to start of do (for)
-# end FOR
-# end DO (FOR)
-# begin load 4
-RST a
+STORE 5
+LOAD 14
 INC a
-SHL a
-SHL a
-# end load 4
-SWP b
-LOAD 4
+STORE 14
+JUMP 114 # END FOR LOOP
+LOAD 13
 INC a
-STORE 4 # updated iterator
-SUB b
-JZERO 14 # go back to start of do (for)
-# end FOR
-# end DO (FOR)
-# begin load 4
-RST a
+STORE 13
+JUMP 101 # END FOR LOOP
+LOAD 12
 INC a
-SHL a
-SHL a
-# end load 4
-SWP b
-LOAD 3
+STORE 12
+JUMP 88 # END FOR LOOP
+LOAD 11
 INC a
-STORE 3 # updated iterator
-SUB b
-JZERO 11 # go back to start of do (for)
-# end FOR
-# end DO (FOR)
-# begin load 4
-RST a
+STORE 11
+JUMP 75 # END FOR LOOP
+LOAD 10
 INC a
-SHL a
-SHL a
-# end load 4
-SWP b
-LOAD 2
+STORE 10
+JUMP 62 # END FOR LOOP
+LOAD 9
 INC a
-STORE 2 # updated iterator
-SUB b
-JZERO 8 # go back to start of do (for)
-# end FOR
-# end DO (FOR)
-# begin load 4
-RST a
+STORE 9
+JUMP 49 # END FOR LOOP
+LOAD 8
 INC a
-SHL a
-SHL a
-# end load 4
-SWP b
-LOAD 1
+STORE 8
+JUMP 36 # END FOR LOOP
+LOAD 7
 INC a
-STORE 1 # updated iterator
-SUB b
-JZERO 5 # go back to start of do (for)
-# end FOR
-# start WRITE
-# begin load variable v
-LOAD 0
-# end load variable v
+STORE 7
+JUMP 23 # END FOR LOOP
+LOAD 6
+INC a
+STORE 6
+JUMP 10 # END FOR LOOP
+LOAD 5
 WRITE
-# end WRITE
 HALT

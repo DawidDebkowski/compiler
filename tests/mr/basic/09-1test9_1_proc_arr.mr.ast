@@ -2,8 +2,33 @@ Program
   Procedures:
     Procedure set
       Assignment
+        Identifier(minus)
+        Identifier(idx)
+      For(i TO)
+        From:
+          Identifier(minus)
+        To:
+          Identifier(minus)
+      Do
+        Assignment
+          Identifier(arr[i])
+          Identifier(val)
+    Procedure add
+      Assignment
+        Identifier(tmp)
         Identifier(arr[idx])
-        Identifier(val)
+      Assignment
+        Identifier(tmp)
+        BinaryOp(+)
+          Identifier(tmp)
+          Identifier(val)
+      Assignment
+        Identifier(arr[idx])
+        Identifier(tmp)
+    Procedure copy
+      Assignment
+        Identifier(dst[d_idx])
+        Identifier(src[s_idx])
   Main:
     Assignment
       Identifier(maxint)
@@ -47,3 +72,43 @@ Program
       Identifier(b)
     Write
       Identifier(a[far])
+    Assignment
+      Identifier(f)
+      Number(888)
+    ProcCall(add)
+      Identifier(tab)
+      Identifier(maxint)
+      Identifier(f)
+    Write
+      Identifier(tab[maxint])
+    ProcCall(copy)
+      Identifier(tab)
+      Identifier(maxint)
+      Identifier(a)
+      Identifier(far)
+    Write
+      Identifier(a[far])
+    Assignment
+      Identifier(f)
+      Number(1)
+    ProcCall(add)
+      Identifier(a)
+      Identifier(far)
+      Identifier(f)
+    Write
+      Identifier(a[far])
+    Assignment
+      Identifier(far)
+      BinaryOp(+)
+        Identifier(far)
+        Number(1)
+    Assignment
+      Identifier(a[far])
+      Number(777)
+    ProcCall(copy)
+      Identifier(a)
+      Identifier(far)
+      Identifier(tab)
+      Identifier(e)
+    Write
+      Identifier(tab[e])

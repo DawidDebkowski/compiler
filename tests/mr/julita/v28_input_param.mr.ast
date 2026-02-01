@@ -1,0 +1,19 @@
+Program
+  Procedures:
+    Procedure try_modify_input
+      Assignment
+        Identifier(result)
+        BinaryOp(*)
+          Identifier(x)
+          Number(2)
+  Main:
+    Assignment
+      Identifier(original)
+      Number(50)
+    ProcCall(try_modify_input)
+      Identifier(original)
+      Identifier(output)
+    Write
+      Identifier(original)
+    Write
+      Identifier(output)

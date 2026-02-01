@@ -1,0 +1,12 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+STORE 6 # next line inlining printit
+WRITE
+HALT

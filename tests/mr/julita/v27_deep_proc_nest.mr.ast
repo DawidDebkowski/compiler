@@ -1,0 +1,32 @@
+Program
+  Procedures:
+    Procedure level_c
+      Assignment
+        Identifier(x)
+        BinaryOp(+)
+          Identifier(x)
+          Number(1)
+    Procedure level_b
+      ProcCall(level_c)
+        Identifier(y)
+      Assignment
+        Identifier(y)
+        BinaryOp(*)
+          Identifier(y)
+          Number(2)
+    Procedure level_a
+      ProcCall(level_b)
+        Identifier(z)
+      Assignment
+        Identifier(z)
+        BinaryOp(+)
+          Identifier(z)
+          Number(10)
+  Main:
+    Assignment
+      Identifier(val)
+      Number(5)
+    ProcCall(level_a)
+      Identifier(val)
+    Write
+      Identifier(val)

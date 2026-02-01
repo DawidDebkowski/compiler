@@ -1,45 +1,16 @@
-# Błażej Pawluk, 279738
-# Kod wygenerowany przez kompilator
-
-
-# === MAIN PROGRAM ===
-# start ASSIGN
-# begin load 0
 RST a
-# end load 0
-STORE 0
-# end ASSIGN
-# begin ff
-# start ASSIGN
-# begin load 3
+STORE 7 # next line inlining ff
 RST a
 INC a
 SHL a
 INC a
-# end load 3
-STORE 0
-# end ASSIGN
-# start ASSIGN
-# begin +
-# begin load 4
+STORE 7
+SWP b
 RST a
 INC a
 SHL a
 SHL a
-# end load 4
-SWP c
-# begin load variable a
-LOAD 0
-# end load variable a
-ADD c
-# end +
-STORE 0
-# end ASSIGN
-# end ff
-# start WRITE
-# begin load variable p
-LOAD 0
-# end load variable p
+ADD b
+STORE 7
 WRITE
-# end WRITE
 HALT

@@ -1,173 +1,72 @@
-# Błażej Pawluk, 279738
-# Kod wygenerowany przez kompilator
-
-JUMP 53 # skip to main
-
-
-# ===== BEGIN PROCEDURES ======
-
-# BEGIN PROCEDURE pa
-
-STORE 2 # return address
-
-# procedure body:
-# start ASSIGN
-LOAD 3
-SWP g
-# begin +
-# begin load variable b
-LOAD 4
+JUMP 43
+STORE 15
+LOAD 5
 RLOAD a
-# end load variable b
-SWP c
-# begin load variable a
-LOAD 3
-RLOAD a
-# end load variable a
-ADD c
-# end +
-RSTORE g
-# end ASSIGN
-# start ASSIGN
-LOAD 4
-SWP g
-# begin -
-# begin load variable b
-LOAD 4
-RLOAD a
-# end load variable b
-SWP c
-# begin load variable a
-LOAD 3
-RLOAD a
-# end load variable a
-SUB c
-# end -
-RSTORE g
-# end ASSIGN
-
-LOAD 2 # return address
-RTRN # go back to call
-# END PROCEDURE pa
-
-# BEGIN PROCEDURE pb
-
-STORE 5 # return address
-
-# procedure body:
+SWP b
 LOAD 6
-STORE 3
-LOAD 7
-STORE 4
-# call pa
-CALL 1
+RLOAD a
+ADD b
+SWP d
+LOAD 5
+SWP d
+RSTORE d
 LOAD 6
-STORE 3
+RLOAD a
+SWP b
+LOAD 5
+RLOAD a
+SUB b
+SWP d
+LOAD 6
+SWP d
+RSTORE d
+LOAD 15
+RTRN
+STORE 16
 LOAD 7
-STORE 4
-# call pa
+STORE 5
+LOAD 8
+STORE 6
+CALL 1 # not loading cached parameter a in reg 5not loading cached parameter b in reg 6
 CALL 1
-
-LOAD 5 # return address
-RTRN # go back to call
-# END PROCEDURE pb
-
-# BEGIN PROCEDURE pc
-
-STORE 8 # return address
-
-# procedure body:
+LOAD 16
+RTRN
+STORE 17
 LOAD 9
-STORE 6
-LOAD 10
 STORE 7
-# call pb
-CALL 22
-LOAD 9
-STORE 6
 LOAD 10
-STORE 7
-# call pb
-CALL 22
-LOAD 9
-STORE 6
-LOAD 10
-STORE 7
-# call pb
-CALL 22
-
-LOAD 8 # return address
-RTRN # go back to call
-# END PROCEDURE pc
-
-
-# ====== END PROCEDURES =======
-
-# === MAIN PROGRAM ===
-# start READ
+STORE 8
+CALL 24 # not loading cached parameter a in reg 7not loading cached parameter b in reg 8
+CALL 24 # not loading cached parameter a in reg 7not loading cached parameter b in reg 8
+CALL 24
+LOAD 17
+RTRN
 READ
-STORE 1
-# end READ
-# start READ
+STORE 13
 READ
-STORE 0
-# end READ
-# begin pd
-# begin load 1
+STORE 14 # next line inlining pd
 RST a
 INC a
-# end load 1
+SHL a
+INC a
+SHL a
+SHL a
+INC a
 STORE 9
-# begin load 0
-RST a
-# end load 0
-STORE 10
-# call pc
-CALL 35
-# begin load 1
 RST a
 INC a
-# end load 1
-STORE 9
-# begin load 0
-RST a
-# end load 0
-STORE 10
-# call pc
-CALL 35
-# begin load 1
-RST a
+SHL a
 INC a
-# end load 1
-STORE 9
-# begin load 0
-RST a
-# end load 0
-STORE 10
-# call pc
-CALL 35
-# begin load 1
-RST a
+SHL a
 INC a
-# end load 1
-STORE 9
-# begin load 0
-RST a
-# end load 0
+SHL a
 STORE 10
-# call pc
-CALL 35
-# end pd
-# start WRITE
-# begin load variable a
-LOAD 1
-# end load variable a
+CALL 33 # not loading cached parameter a in reg 9not loading cached parameter b in reg 10
+CALL 33 # not loading cached parameter a in reg 9not loading cached parameter b in reg 10
+CALL 33 # not loading cached parameter a in reg 9not loading cached parameter b in reg 10
+CALL 33
+LOAD 13
 WRITE
-# end WRITE
-# start WRITE
-# begin load variable b
-LOAD 0
-# end load variable b
+LOAD 14
 WRITE
-# end WRITE
 HALT

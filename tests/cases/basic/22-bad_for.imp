@@ -37,5 +37,5 @@ IN
     FOR i FROM n TO 0 DO
         a := 9;
     ENDFOR
-    WRITE a;
+    WRITE a; # > 111
 END

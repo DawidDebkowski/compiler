@@ -1,0 +1,15 @@
+# Test 12: Array with offset indices (not starting at 0)
+PROGRAM IS
+  arr[100:105], sum, temp
+IN
+  arr[100] := 10;
+  arr[101] := 20;
+  arr[102] := 30;
+  arr[103] := 40;
+  arr[104] := 50;
+  arr[105] := 60;
+  # Grammar only allows value op value, so break into steps
+  sum := arr[100] + arr[102];
+  temp := sum + arr[105];
+  WRITE temp;
+END

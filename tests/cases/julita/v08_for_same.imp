@@ -1,0 +1,10 @@
+# Test 08: FOR loop edge - start equals end
+PROGRAM IS
+  x
+IN
+  x := 0;
+  FOR i FROM 5 TO 5 DO
+    x := x + 1;
+  ENDFOR
+  WRITE x;
+END

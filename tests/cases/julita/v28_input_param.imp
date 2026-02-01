@@ -1,0 +1,16 @@
+# Advanced Test 28: I parameter is pass-by-value (should NOT modify caller's variable)
+# Spec: I means input only, treated as constant in procedure
+PROCEDURE try_modify_input(I x, O result) IS
+IN
+  result := x * 2;
+  # Cannot assign to x since it's I parameter
+END
+
+PROGRAM IS
+  original, output
+IN
+  original := 50;
+  try_modify_input(original, output);
+  WRITE original;
+  WRITE output;
+END

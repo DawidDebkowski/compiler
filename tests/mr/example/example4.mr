@@ -1,352 +1,230 @@
-# Błażej Pawluk, 279738
-# Kod wygenerowany przez kompilator
-
-JUMP 171 # skip to main
-
-
-# ===== BEGIN EXPRESSIONS =====
-
-
-# BEGIN /: ra - return address, rb - left, rc - right, rd,re,rf - helpers
-SWP f
-SWP c
-JPOS 6 # non-zero - calculate, skip 2
-RST b
-JUMP 43 # div by 0, return 0, skip to end, skip 37
+JUMP 84
+STORE 19
+RST a
+INC a
 SWP d
+LOAD 6
+SWP d
+RSTORE d
+LOAD 5
+RLOAD a
+STORE 18 # BEGIN FOR LOOP - STORE ITERATOR ADDR
+RST a
+INC a
+SHL a
+STORE 20
 SWP b
-SWP c
+LOAD 18
+SWP b
+SUB b
+JPOS 27
+LOAD 18
+SWP b
+LOAD 20
+SWP b
+SUB b
+INC a
+JUMP 28
+RST a
+STORE 20
+LOAD 20
+JZERO 82
+LOAD 18
 RST b
-RST e
-INC e
+SWP b
+ADD b
+SHR b # mod optim shift
+SHL b # mod optim shift
+SUB b # mod optim sub
+STORE 7
+SWP b
 RST a
-ADD c
 INC a
-SUB d
-JZERO 20 # skip 3
-SHL d
-SHL e
-JUMP 12 # go back 7
-SHR d
-SHR e
-SWP e
-JZERO 43 # skip to end - skip 20
-SWP e
-RST a
-ADD c
-INC a
-SUB d
-JZERO 38
-RST a
-ADD c
-SUB d
 SWP c
-SWP b
-ADD e
-SWP b
-JUMP 40 # skip 2
+RST a
+ADD b
+SUB c
+SWP d
 RST a
 ADD c
-SHR d
-SHR e
-JUMP 22 # go back 20
-SWP f
-RTRN # go back to call
-# END /: ra - return line, rb - result
-
-
-# BEGIN *: ra - return address, rb - left, rc - right, rd,re - helpers
+SUB b
+ADD d
+JPOS 64
+LOAD 6
+RLOAD a
+SWP b
+LOAD 18
+SWP c
+CALL 158
+SWP b
+SWP d
+LOAD 6
+SWP d
+RSTORE d
+JUMP 75
+LOAD 18
+SWP b
+LOAD 6
+RLOAD a
+SWP c
+CALL 158
+SWP b
+SWP d
+LOAD 6
+SWP d
+RSTORE d
+LOAD 20
+DEC a
+STORE 20
+LOAD 18
+DEC a
+STORE 18
+JUMP 29 # END DOWNTO FOR LOOP
+LOAD 19
+RTRN
+READ
+STORE 15
+READ
+STORE 16 # next line inlining bc
+RST a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+STORE 5
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+STORE 6
+CALL 1
+LOAD 16
+SWP b
+LOAD 15
+SUB b
+STORE 11
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+STORE 5
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+STORE 6
+CALL 1
+RST a
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+STORE 5
+RST a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+STORE 6
+CALL 1
+LOAD 12
+SWP b
+LOAD 13
+SWP c
+CALL 187
+SWP b
+STORE 17
+SWP b
+LOAD 14
+SWP c
+CALL 187
+SWP b
+STORE 17
+WRITE
+HALT
 SWP e
 RST d
+RST a # IF C > B <=> B - C == 0
+ADD c
+SUB b
+JZERO 167 # SWAP THEM
 SWP c
-JZERO 62 # skip to end - skip 14
+SWP b
 SWP c
 RST a
 ADD c
+JZERO 181
 SHR c
 SHL c
 SUB c
-JZERO 59 # skip 3
-SWP d
+JZERO 178
+RST a
+ADD d
 ADD b
 SWP d
-SHL b
 SHR c
-JUMP 47 # go back 14
-SWP d
+SHL b
+JUMP 167
+RST a
+ADD d
 SWP b
-SWP e
-RTRN # go back to call
-# END *: ra - return line, rb - result
-
-
-# ====== END EXPRESSIONS ======
-
-# ===== BEGIN PROCEDURES ======
-
-# BEGIN PROCEDURE s
-
-STORE 8 # return address
-
-# procedure body:
-# start ASSIGN
-LOAD 10
-SWP g
-# begin load 1
 RST a
-INC a
-# end load 1
-RSTORE g
-# end ASSIGN
-# begin FOR
-# begin load variable n
-LOAD 9
-RLOAD a
-# end load variable n
-STORE 11 # iterator
-# begin DO (FOR)
-# start ASSIGN
-# begin %
-# begin load 2
-RST a
-INC a
-SHL a
-# end load 2
-SWP d
-# begin load variable i
-LOAD 11 # iterator
-SWP c
-SWP d
-JPOS 85 # mod by non-0, skip 2
-RST a
-JUMP 121 # mod by 0, result=0, skip to end, skip 37
-SWP d
-RST b
-RST e
-INC e
-RST a
-ADD c
-INC a
-SUB d
-JZERO 97 # skip 3
-SHL d
-SHL e
-JUMP 89 # go back 7
-SHR d
-SHR e
-SWP e
-JZERO 120 # skip to end - skip 20
-SWP e
-RST a
-ADD c
-INC a
-SUB d
-JZERO 115
-RST a
-ADD c
-SUB d
-SWP c
-SWP b
 ADD e
-SWP b
-JUMP 117 # skip 2
+RTRN
+SWP d
+SWP c
+JPOS 193 # DIV 0 CHECK
+RST b
+SWP d
+RTRN
+SWP c
+RST g
+RST f
+INC f
 RST a
 ADD c
-SHR d
-SHR e
-JUMP 99 # go back 20
-SWP c
-# end %
-STORE 7
-# end ASSIGN
-# begin IF
-# begin =
-# begin load 1
+SWP e
 RST a
-INC a
-# end load 1
-SWP c
-# begin load variable o
-LOAD 7
-# end load variable o
-SWP b
-RST a
-ADD b
-SUB c
-SWP c
+ADD e
 SUB b
-ADD c
-# end =
-JPOS 145 # skip to else
-# begin THEN
-# start ASSIGN
-LOAD 10
-SWP g
-# begin *
-# begin load variable i
-LOAD 11 # iterator
-SWP c
-# begin load variable m
-LOAD 10
-RLOAD a
-# end load variable m
-SWP b
-CALL 45
-SWP b
-# end *
-RSTORE g
-# end ASSIGN
-JUMP 155 # skip to end of if
-# begin ELSE
-# start ASSIGN
-LOAD 10
-SWP g
-# begin *
-# begin load variable m
-LOAD 10
-RLOAD a
-# end load variable m
-SWP c
-# begin load variable i
-LOAD 11 # iterator
-SWP b
-CALL 45
-SWP b
-# end *
-RSTORE g
-# end ASSIGN
-# end IF
-# end DO (FOR)
-# begin load 2
+JPOS 207
+SHL e
+SHL f
+JUMP 200
+SHR e
+SHR f
 RST a
-INC a
-SHL a
-# end load 2
+ADD f
+JZERO 224
+SHL g
+RST a
+ADD e
+SUB b
+JPOS 221
 SWP b
-LOAD 11
-SWP c
-RST a
-ADD c
-DEC a
-STORE 11 # updated iterator
-INC b
+SUB e
 SWP b
-SUB c
-JZERO 75 # go back to start of do (for)
-# end FOR
-
-LOAD 8 # return address
-RTRN # go back to call
-# END PROCEDURE s
-
-
-# ====== END PROCEDURES =======
-
-# === MAIN PROGRAM ===
-# start READ
-READ
-STORE 2
-# end READ
-# start READ
-READ
-STORE 1
-# end READ
-# begin bc
-# begin load 2
+INC g
+SHR e
+SHR f
+JUMP 209
 RST a
-INC a
-SHL a
-# end load 2
-STORE 9
-# begin load 4
-RST a
-INC a
-SHL a
-SHL a
-# end load 4
-STORE 10
-# call s
-CALL 66
-# start ASSIGN
-# begin -
-# begin load variable k
-LOAD 1
-# end load variable k
-SWP c
-# begin load variable n
-LOAD 2
-# end load variable n
-SUB c
-# end -
-STORE 5
-# end ASSIGN
-# begin load 5
-RST a
-INC a
-SHL a
-SHL a
-INC a
-# end load 5
-STORE 9
-# begin load 6
-RST a
-INC a
-SHL a
-INC a
-SHL a
-# end load 6
-STORE 10
-# call s
-CALL 66
-# begin load 1
-RST a
-INC a
-# end load 1
-STORE 9
-# begin load 3
-RST a
-INC a
-SHL a
-INC a
-# end load 3
-STORE 10
-# call s
-CALL 66
-# start ASSIGN
-# begin /
-# begin load variable b
-LOAD 6
-# end load variable b
-SWP c
-# begin load variable a
-LOAD 4
-# end load variable a
+ADD g
 SWP b
-CALL 1
-SWP b
-# end /
-STORE 0
-# end ASSIGN
-# start ASSIGN
-# begin /
-# begin load variable c
-LOAD 3
-# end load variable c
-SWP c
-# begin load variable m
-LOAD 0
-# end load variable m
-SWP b
-CALL 1
-SWP b
-# end /
-STORE 0
-# end ASSIGN
-# end bc
-# start WRITE
-# begin load variable w
-LOAD 0
-# end load variable w
-WRITE
-# end WRITE
-HALT
+RST a
+ADD d
+RTRN

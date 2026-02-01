@@ -1,0 +1,67 @@
+Program
+  Procedures:
+    Procedure licz
+      For(i TO)
+        From:
+          Number(2)
+        To:
+          Identifier(n)
+      Do
+        Assignment
+          Identifier(s[i])
+          Number(1)
+      For(i TO)
+        From:
+          Number(2)
+        To:
+          Identifier(n)
+      Do
+        If
+          Condition(>)
+            Identifier(s[i])
+            Number(0)
+        Then
+          Assignment
+            Identifier(j)
+            BinaryOp(+)
+              Identifier(i)
+              Identifier(i)
+          While
+            Condition(<=)
+              Identifier(j)
+              Identifier(n)
+          Do
+            Assignment
+              Identifier(s[j])
+              Number(0)
+            Assignment
+              Identifier(j)
+              BinaryOp(+)
+                Identifier(j)
+                Identifier(i)
+        Write
+          Identifier(i)
+    Procedure wypisz
+      For(i DOWNTO)
+        From:
+          Identifier(n)
+        To:
+          Number(2)
+      Do
+        If
+          Condition(>)
+            Identifier(s[i])
+            Number(0)
+        Then
+          Write
+            Identifier(i)
+  Main:
+    Assignment
+      Identifier(n)
+      Number(1073741)
+    ProcCall(licz)
+      Identifier(sito)
+      Identifier(n)
+    ProcCall(wypisz)
+      Identifier(sito)
+      Identifier(n)

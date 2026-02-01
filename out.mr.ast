@@ -1,25 +1,29 @@
 Program
-  Main:
-    Read
-      Identifier(a)
-    Read
-      Identifier(b)
-    If
-      Condition(<)
+  Procedures:
+    Procedure a
+      Write
         Identifier(a)
-        Identifier(b)
-    Then
-      Assignment
-        Identifier(c)
-        Number(1)
-    Else
-      Assignment
-        Identifier(c)
-        Number(2)
+    Procedure b
+      For(b TO)
+        From:
+          Number(2)
+        To:
+          Number(3)
+      Do
+        Write
+          Identifier(b)
+  Main:
     Assignment
-      Identifier(c)
-      BinaryOp(+)
-        Identifier(c)
-        Number(10)
+      Identifier(a)
+      Number(111)
+    Assignment
+      Identifier(b)
+      Number(222)
+    ProcCall(a)
+      Identifier(a)
     Write
-      Identifier(c)
+      Identifier(a)
+    ProcCall(b)
+      Identifier(b)
+    Write
+      Identifier(b)

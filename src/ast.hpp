@@ -96,6 +96,7 @@ public:
     // Helper to get address into register (for WRITE / READ)
     void codegen_address(int reg); 
     void print(std::ostream& out, int indent = 0) const override;
+    void validate() override;
 };
 
 

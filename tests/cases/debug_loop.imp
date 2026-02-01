@@ -1,0 +1,18 @@
+PROCEDURE set(T arr, idx, val) IS
+    minus
+IN
+    minus := idx;
+    # Should run exactly once for idx = minus
+    FOR idx FROM minus TO idx DO
+        arr[idx] := val;
+    ENDFOR
+END
+
+PROGRAM IS
+    tab[10:20], maxint, val
+IN
+    maxint := 10;
+    val := 999;
+    set(tab, maxint, val);
+    WRITE tab[10];
+END

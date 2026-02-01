@@ -1,0 +1,119 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+STORE 5
+SWP b
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JPOS 26
+RST a
+INC a
+WRITE
+JUMP 28
+RST a
+WRITE # Compiling constant IF (dead code elim)
+RST a
+INC a
+WRITE
+LOAD 5
+SWP b
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SWP c
+RST a
+ADD b
+SUB c
+SWP d
+RST a
+ADD c
+SUB b
+ADD d
+JZERO 52
+RST a
+INC a
+WRITE
+JUMP 54
+RST a
+WRITE
+RST b
+LOAD 5
+SUB b
+JZERO 62 # <
+RST a
+INC a
+WRITE
+JUMP 64
+RST a
+WRITE
+LOAD 5
+SWP b
+RST a
+SUB b
+JZERO 73 # <
+RST a
+INC a
+WRITE
+JUMP 75
+RST a
+WRITE
+RST b
+LOAD 5
+SUB b # >
+JZERO 83
+RST a
+INC a
+WRITE
+JUMP 85
+RST a
+WRITE
+LOAD 5
+SWP b
+RST a
+SUB b # >
+JZERO 94
+RST a
+INC a
+WRITE
+JUMP 96
+RST a
+WRITE
+LOAD 5
+SWP b
+LOAD 5
+SUB b
+JPOS 105 # >=
+RST a
+INC a
+WRITE
+JUMP 107
+RST a
+WRITE
+LOAD 5
+SWP b
+LOAD 5
+SUB b
+JPOS 116 # <=
+RST a
+INC a
+WRITE
+JUMP 118
+RST a
+WRITE
+HALT

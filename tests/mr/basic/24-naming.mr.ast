@@ -1,0 +1,29 @@
+Program
+  Procedures:
+    Procedure a
+      Write
+        Identifier(a)
+    Procedure b
+      For(b TO)
+        From:
+          Number(2)
+        To:
+          Number(3)
+      Do
+        Write
+          Identifier(b)
+  Main:
+    Assignment
+      Identifier(a)
+      Number(111)
+    Assignment
+      Identifier(b)
+      Number(222)
+    ProcCall(a)
+      Identifier(a)
+    Write
+      Identifier(a)
+    ProcCall(b)
+      Identifier(b)
+    Write
+      Identifier(b)

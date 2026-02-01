@@ -1,0 +1,6 @@
+RST a
+STORE 5 # REPEAT UNTIL TRUE (runs once)
+INC a
+STORE 5
+WRITE
+HALT

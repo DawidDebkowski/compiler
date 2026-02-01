@@ -1,6 +1,6 @@
 Program
   Procedures:
-    Procedure _dummy
+    Procedure dummy
       Assignment
         Identifier(a)
         Number(5)
@@ -8,7 +8,7 @@ Program
     Assignment
       Identifier(dummy_a)
       Number(10)
-    ProcCall(_dummy)
+    ProcCall(dummy)
       Identifier(v)
     Assignment
       Identifier(dummy_a)

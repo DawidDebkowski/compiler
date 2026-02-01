@@ -1,0 +1,12 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+STORE 7 # next line inlining outernext line inlining inner
+SHL a # mul by 2^k
+STORE 7
+INC a
+STORE 7
+WRITE
+HALT

@@ -1,0 +1,30 @@
+# Advanced Test 30: Complex algorithm - Binary search simulation
+# Tests nested WHILE loops, comparisons, arithmetic
+PROGRAM IS
+  arr[0:15], target, lo, hi, mid, found
+IN
+  # Initialize sorted array
+  FOR i FROM 0 TO 15 DO
+    arr[i] := i * 3;
+  ENDFOR
+  target := 21;  
+  lo := 0;
+  hi := 15;
+  found := 0;
+  WHILE lo <= hi DO
+    mid := lo + hi;
+    mid := mid / 2;
+    IF arr[mid] = target THEN
+      found := mid;
+      lo := hi + 1;
+    ELSE
+      IF arr[mid] < target THEN
+        lo := mid + 1;
+      ELSE
+        hi := mid - 1;
+      ENDIF
+    ENDIF
+  ENDWHILE
+  WRITE found;
+  WRITE arr[found];
+END

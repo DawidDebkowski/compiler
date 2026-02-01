@@ -1,0 +1,26 @@
+Program
+  Main:
+    For(j TO)
+      From:
+        Number(0)
+      To:
+        Number(9)
+    Do
+      Assignment
+        Identifier(arr[j])
+        Identifier(j)
+    Assignment
+      Identifier(idx)
+      Number(0)
+    Write
+      Identifier(arr[idx])
+    Assignment
+      Identifier(idx)
+      Number(9)
+    Write
+      Identifier(arr[idx])
+    Assignment
+      Identifier(idx)
+      Number(5)
+    Write
+      Identifier(arr[idx])

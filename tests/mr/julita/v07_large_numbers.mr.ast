@@ -1,0 +1,27 @@
+Program
+  Main:
+    Assignment
+      Identifier(a)
+      Number(1000000000)
+    Assignment
+      Identifier(b)
+      Number(2000000000)
+    Assignment
+      Identifier(c)
+      BinaryOp(+)
+        Identifier(a)
+        Identifier(b)
+    Write
+      Identifier(c)
+    Assignment
+      Identifier(c)
+      BinaryOp(*)
+        Identifier(a)
+        Number(2)
+    Write
+      Identifier(c)
+    Assignment
+      Identifier(a)
+      Number(9223372036854775807)
+    Write
+      Identifier(a)

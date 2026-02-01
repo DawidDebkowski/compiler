@@ -1,217 +1,130 @@
-# Błażej Pawluk, 279738
-# Kod wygenerowany przez kompilator
-
-JUMP 50 # skip to main
-
-
-
-# ===== BEGIN PROCEDURES ======
-
-# BEGIN PROCEDURE gcd
-
-STORE 9 # return address
-
-# procedure body:
-# start ASSIGN
-# begin load variable a
-LOAD 10
+JUMP 45
+STORE 17
+LOAD 5
 RLOAD a
-# end load variable a
 STORE 8
-# end ASSIGN
-# start ASSIGN
-# begin load variable b
-LOAD 11
+LOAD 6
 RLOAD a
-# end load variable b
-STORE 7
-# end ASSIGN
-# begin WHILE
-# begin >
-# begin load 0
+STORE 9
+RST b
+LOAD 9
+SUB b # >
+JZERO 38
+LOAD 8
+SWP b
+LOAD 9
+SUB b
+JPOS 23 # >=
+LOAD 9
+SWP b
+LOAD 8
+SUB b
+STORE 8
+JUMP 37
+LOAD 8
+SWP b
+LOAD 9
+ADD b
+STORE 8
+LOAD 9
+SWP b
+LOAD 8
+SUB b
+STORE 9
+SWP b
+LOAD 8
+SUB b
+STORE 8
+JUMP 8
+LOAD 8
+SWP d
+LOAD 7
+SWP d
+RSTORE d
+LOAD 17
+RTRN
+READ
+STORE 10
+READ
+STORE 11
+READ
+STORE 12
+READ
+STORE 13
 RST a
-# end load 0
-SWP c
-# begin load variable y
-LOAD 7
-# end load variable y
-SUB c
-RST c
-JPOS 15 # skip 1
-INC c
-SWP c
-# end >
-JPOS 44 # go to end of while
-# begin DO (WHILE)
-# begin IF
-# begin >=
-# begin load variable x
-LOAD 8
-# end load variable x
-SWP c
-# begin load variable y
-LOAD 7
-# end load variable y
-SUB c
-# end >=
-JPOS 28 # skip to else
-# begin THEN
-# start ASSIGN
-# begin -
-# begin load variable y
-LOAD 7
-# end load variable y
-SWP c
-# begin load variable x
-LOAD 8
-# end load variable x
-SUB c
-# end -
-STORE 8
-# end ASSIGN
-JUMP 43 # skip to end of if
-# begin ELSE
-# start ASSIGN
-# begin +
-# begin load variable y
-LOAD 7
-# end load variable y
-SWP c
-# begin load variable x
-LOAD 8
-# end load variable x
-ADD c
-# end +
-STORE 8
-# end ASSIGN
-# start ASSIGN
-# begin -
-# begin load variable y
-LOAD 7
-# end load variable y
-SWP c
-# begin load variable x
-LOAD 8
-# end load variable x
-SUB c
-# end -
-STORE 7
-# end ASSIGN
-# start ASSIGN
-# begin -
-# begin load variable y
-LOAD 7
-# end load variable y
-SWP c
-# begin load variable x
-LOAD 8
-# end load variable x
-SUB c
-# end -
-STORE 8
-# end ASSIGN
-# end IF
-JUMP 8 # go back to start of while
-# end WHILE
-# start ASSIGN
-LOAD 12
-SWP g
-# begin load variable x
-LOAD 8
-# end load variable x
-RSTORE g
-# end ASSIGN
-
-LOAD 9 # return address
-RTRN # go back to call
-# END PROCEDURE gcd
-
-
-# ====== END PROCEDURES =======
-
-# === MAIN PROGRAM ===
-# start READ
-READ
-STORE 6
-# end READ
-# start READ
-READ
-STORE 4
-# end READ
-# start READ
-READ
-STORE 3
-# end READ
-# start READ
-READ
+INC a
+SHL a
+SHL a
+INC a
+SHL a
 STORE 5
-# end READ
-# begin load 6
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+INC a
+STORE 6
 RST a
 INC a
 SHL a
 INC a
 SHL a
-# end load 6
-STORE 10
-# begin load 4
-RST a
 INC a
 SHL a
-SHL a
-# end load 4
-STORE 11
-# begin load 2
-RST a
-INC a
-SHL a
-# end load 2
-STORE 12
-# call gcd
+STORE 7
 CALL 1
-# begin load 3
 RST a
 INC a
 SHL a
 INC a
-# end load 3
-STORE 10
-# begin load 5
+SHL a
+SHL a
+STORE 5
 RST a
+INC a
+SHL a
 INC a
 SHL a
 SHL a
 INC a
-# end load 5
-STORE 11
-# begin load 1
+STORE 6
 RST a
 INC a
-# end load 1
-STORE 12
-# call gcd
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+STORE 7
 CALL 1
-# begin load 2
 RST a
 INC a
 SHL a
-# end load 2
-STORE 10
-# begin load 1
+INC a
+SHL a
+INC a
+SHL a
+STORE 5
 RST a
 INC a
-# end load 1
-STORE 11
-# begin load 0
+SHL a
+INC a
+SHL a
+INC a
+SHL a
+INC a
+STORE 6
 RST a
-# end load 0
-STORE 12
-# call gcd
+INC a
+SHL a
+SHL a
+SHL a
+SHL a
+STORE 7
 CALL 1
-# start WRITE
-# begin load variable z
-LOAD 0
-# end load variable z
+LOAD 16
 WRITE
-# end WRITE
 HALT

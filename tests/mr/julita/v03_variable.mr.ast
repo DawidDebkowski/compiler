@@ -1,0 +1,7 @@
+Program
+  Main:
+    Assignment
+      Identifier(x)
+      Number(100)
+    Write
+      Identifier(x)

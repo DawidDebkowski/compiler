@@ -1,0 +1,4 @@
+Program
+  Main:
+    Write
+      Number(42)

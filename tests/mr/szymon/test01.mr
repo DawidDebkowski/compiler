@@ -1,68 +1,27 @@
-# Błażej Pawluk, 279738
-# Kod wygenerowany przez kompilator
-
-
-# === MAIN PROGRAM ===
-# start ASSIGN
-# begin load 0
 RST a
-# end load 0
-STORE 0
-# end ASSIGN
-# start READ
+STORE 6
 READ
-STORE 1
-# end READ
-# begin FOR
-# begin load 1
+STORE 5
 RST a
 INC a
-# end load 1
-STORE 2 # iterator
-# begin DO (FOR)
-# start ASSIGN
-# begin +
-# begin load 1
-RST a
-INC a
-# end load 1
-SWP c
-# begin load variable v
-LOAD 0
-# end load variable v
-ADD c
-# end +
-STORE 0
-# end ASSIGN
-# start ASSIGN
-# begin -
-# begin load 1
-RST a
-INC a
-# end load 1
-SWP c
-# begin load variable n
-LOAD 1
-# end load variable n
-SUB c
-# end -
-STORE 1
-# end ASSIGN
-# end DO (FOR)
-# begin load variable n
-LOAD 1
-# end load variable n
+STORE 7 # BEGIN FOR LOOP - STORE ITERATOR ADDR
+LOAD 5
+STORE 8
+LOAD 8
 SWP b
-LOAD 2
-INC a
-STORE 2 # updated iterator
+LOAD 7
 SUB b
-JZERO 7 # go back to start of do (for)
-# end FOR
-# start WRITE
-# begin load variable v
-LOAD 0
-# end load variable v
+JPOS 24
+LOAD 6
+INC a
+STORE 6
+LOAD 5
+DEC a
+STORE 5
+LOAD 7
+INC a
+STORE 7
+JUMP 9 # END FOR LOOP
+LOAD 6
 WRITE
-# end WRITE
 HALT

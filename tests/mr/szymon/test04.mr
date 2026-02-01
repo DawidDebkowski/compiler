@@ -1,32 +1,4 @@
-# Błażej Pawluk, 279738
-# Kod wygenerowany przez kompilator
-
-
-# === MAIN PROGRAM ===
-# start ASSIGN
-# begin -
-# begin load 5
-RST a
-INC a
-SHL a
-SHL a
-INC a
-# end load 5
-SWP c
-# begin load 4
-RST a
-INC a
-SHL a
-SHL a
-# end load 4
-SUB c
-# end -
-STORE 0
-# end ASSIGN
-# start WRITE
-# begin load variable v
-LOAD 0
-# end load variable v
+RST a # Folded constant expression
+STORE 5 # Optimized: Skip LOAD v
 WRITE
-# end WRITE
 HALT

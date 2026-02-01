@@ -1,0 +1,15 @@
+# Test 06: Subtraction underflow (natural numbers can't go negative)
+PROGRAM IS
+  a, b, c
+IN
+  a := 5;
+  b := 10;
+  c := a - b;
+  WRITE c;
+  c := 0 - 1;
+  WRITE c;
+  c := 1 - 1;
+  WRITE c;
+  c := 0 - 0;
+  WRITE c;
+END

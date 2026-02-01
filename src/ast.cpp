@@ -62,6 +62,23 @@ void NumberNode::codegen_to_reg(int reg) {
     gen_const(reg, value);
 }
 
+void IdentifierNode::validate() {
+    Symbol* s = get_variable(name);
+    if (!s) {
+        std::string msg = "Undefined variable " + name;
+        yyerror(msg.c_str());
+        exit(1);
+    }
+    if (is_array && !is_index_const) {
+        Symbol* idx = get_variable(index_name);
+        if (!idx) {
+             std::string msg = "Undefined variable " + index_name + " in array index";
+             yyerror(msg.c_str());
+             exit(1);
+        }
+    } 
+}
+
 // uses 0-2 regs
 void IdentifierNode::codegen_address(int reg) {
     Symbol* s = get_variable(name);
@@ -94,6 +111,7 @@ void IdentifierNode::codegen_address(int reg) {
                      gen_const(2, index_val);
                      emit("ADD", 2);
                  } else {
+                     // Index - Header + 1 + Base
                      emit("LOAD", s->address, "Array param with const index");
                      emit("RLOAD", 0);         
                      emit("SWP", 2);           
@@ -130,15 +148,18 @@ void IdentifierNode::codegen_address(int reg) {
                      emit("LOAD", s->address); 
                      emit("ADD", 2); 
                  } else {
-                     emit("SWP", 2, "Array param with variable index");
-                     emit("LOAD", s->address);
-                     emit("RLOAD", 0);
-                     emit("SWP", 2);
-                     emit("SUB", 2);
-                     emit("INC", 0);
-                     emit("SWP", 2);
-                     emit("LOAD", s->address); 
-                     emit("ADD", 2, "loaded");
+                     emit("SWP", 2, "Array param with variable index"); // r2 = Index
+                     
+                     emit("LOAD", s->address); // r0 = Base
+                     emit("SWP", 1);           // r1 = Base
+                     
+                     emit("RLOAD", 1);         // r0 = Header (M[Base])
+                     
+                     emit("SWP", 2);           // r2 = Header, r0 = Index
+                     emit("SUB", 2);           // r0 = Index - Header
+                     emit("INC", 0);           // r0 = Index - Header + 1
+                     
+                     emit("ADD", 1);           // r0 = Base + Offset
                  }
              } else {
                  // Global Array
@@ -787,53 +808,109 @@ void ForNode::codegen() {
     // Standard Loop Implementation
     // Init: iter := start
     start_val->codegen_to_reg(0);
-    emit("STORE", iter->address);
+    emit("STORE", iter->address, "BEGIN FOR LOOP - STORE ITERATOR ADDR");
     
-    // Calculate Count / Limit Logic
-    // TO: count = end - start + 1
-    // DOWNTO: count = start - end + 1
+    end_val->codegen_to_reg(0); // r1 = end
     
-    end_val->codegen_to_reg(1); // r1 = end
-    emit("LOAD", iter->address); // r0 = start
-    
+    long long bound_addr = memory_offset++;
+
     if (!downto) {
-        // TO: r1 - r0 + 1
-        emit("SWP", 1); // r1=start, r0=end
-        emit("SUB", 1); // end - start
+        // TO: Use Limit comparison
+        emit("STORE", bound_addr);
+        
+        long long loop_start = code.size();
+        reset_acc_tracker(); // Barrier (Loop Header)
+        
+        // Loop Condition: iter <= limit
+        // Exit if iter > limit => iter - limit > 0
+        emit("LOAD", bound_addr);
+        emit("SWP", 1);
+        emit("LOAD", iter->address);
+        emit("SUB", 1);
+        emit("JPOS", 0);
+        
+        reset_acc_tracker(); // Barrier
+        long long jump_out = code.size()-1;
+        
+        // Body
+        for(auto s : body) s->codegen();
+        reset_param_cache();
+        
+        // Step Iterator
+        emit("LOAD", iter->address);
+        emit("INC", 0);
+        emit("STORE", iter->address);
+        
+        emit("JUMP", loop_start, "END FOR LOOP");
+        code[jump_out].arg = code.size();
+        
     } else {
-        // DOWNTO: r0 - r1 + 1
-        emit("SUB", 1); // start - end
+         // DOWNTO: Use Count logic
+         // We need to handle start < end case (count should be 0)
+         // Logic: if end > start then count = 0 else count = start - end + 1
+         
+         // r1 currently has end
+         // iter->address has start
+         
+         emit("STORE", bound_addr); // Store 'end' temporarily in bound_addr
+         
+         // Check if end > start
+         emit("SWP", 1);              // r1 = end
+         emit("LOAD", iter->address); // r0 = start
+         
+         // Result = end - start
+         emit("SWP", 1); // r0 = end, r1 = start
+         emit("SUB", 1); // r0 = end - start
+         
+         emit("JPOS", 0);
+         long long jump_bad_range = code.size() - 1;
+
+         // Good Range (start >= end): Calculate start - end + 1
+         emit("LOAD", iter->address); // r0 = start
+         emit("SWP", 1);              // r1 = start
+         emit("LOAD", bound_addr);    // r0 = end
+         
+         emit("SWP", 1); // r0=start, r1=end
+         emit("SUB", 1); // start - end
+         emit("INC", 0); // +1
+         
+         emit("JUMP", 0); // Jump over 'else'
+         long long jump_ready = code.size() - 1;
+         
+         // Bad Range (start < end): Count = 0
+         code[jump_bad_range].arg = code.size();
+         emit("RST", 0); 
+         
+         code[jump_ready].arg = code.size();
+         // Now r0 contains valid count
+         emit("STORE", bound_addr); // Store COUNT in bound_addr
+        
+        long long loop_start = code.size();
+        reset_acc_tracker(); // Barrier (Loop Header)
+        
+        // Check Count
+        emit("LOAD", bound_addr);
+        emit("JZERO", 0);
+        reset_acc_tracker(); // Barrier
+        long long jump_out = code.size()-1;
+        
+        // Body
+        for(auto s : body) s->codegen();
+        reset_param_cache();
+        
+        // Decrement Count
+        emit("LOAD", bound_addr);
+        emit("DEC", 0);
+        emit("STORE", bound_addr);
+        
+        // Step Iterator
+        emit("LOAD", iter->address);
+        emit("DEC", 0);
+        emit("STORE", iter->address);
+        
+        emit("JUMP", loop_start, "END DOWNTO FOR LOOP");
+        code[jump_out].arg = code.size();
     }
-    emit("INC", 0);
-    
-    long long count_addr = memory_offset++;
-    emit("STORE", count_addr);
-    
-    long long loop_start = code.size();
-    reset_acc_tracker(); // Barrier (Loop Header)
-    
-    // Check Count
-    emit("LOAD", count_addr);
-    emit("JZERO", 0);
-    reset_acc_tracker(); // Barrier (Branch side 1)
-    long long jump_out = code.size()-1;
-    
-    // Body
-    for(auto s : body) s->codegen();
-    reset_param_cache();
-    
-    // Decrement Count
-    emit("LOAD", count_addr);
-    emit("DEC", 0);
-    emit("STORE", count_addr);
-    
-    // Step Iterator
-    emit("LOAD", iter->address);
-    if (!downto) emit("INC", 0); else emit("DEC", 0);
-    emit("STORE", iter->address);
-    
-    emit("JUMP", loop_start);
-    code[jump_out].arg = code.size();
     
     current_for_stack.pop_back();
     reset_param_cache();
@@ -844,7 +921,7 @@ void ForNode::validate() {
     for_id = ++for_id_counter;
     current_for_stack.push_back(for_id);
     
-    string iter_key = "for_" + std::to_string(for_id) + "_" + iterator;
+    string iter_key = "for_" + std::to_string(for_id) + "@" + iterator;
     Symbol s;
     s.address = memory_offset++;
     s.is_array = false;
@@ -874,7 +951,7 @@ void ProcCallNode::codegen() {
         // 1. Argument Resolution & Substitution
         for (size_t i=0; i < args.size(); i++) {
             string param_name = info.param_names[i];
-            string sub_key = proc_name + "_" + param_name;
+            string sub_key = proc_name + "@" + param_name;
             
             if (auto* arg = dynamic_cast<IdentifierNode*>(args[i])) {
                  Symbol* src = get_variable(arg->name);
@@ -913,7 +990,7 @@ void ProcCallNode::codegen() {
         
         // 3. Cleanup
         for (size_t i=0; i < args.size(); i++) {
-             string sub_key = proc_name + "_" + info.param_names[i];
+             string sub_key = proc_name + "@" + info.param_names[i];
              remove_substitution(sub_key);
         }
         

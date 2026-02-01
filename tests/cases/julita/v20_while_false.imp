@@ -1,0 +1,10 @@
+# Test 20: WHILE with false condition (should not execute)
+PROGRAM IS
+  x
+IN
+  x := 100;
+  WHILE 0 > 1 DO
+    x := 0;
+  ENDWHILE
+  WRITE x;
+END

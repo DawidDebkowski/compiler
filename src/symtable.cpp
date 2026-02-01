@@ -81,7 +81,7 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
         exit(1);
     }
 
-    string key = (current_procedure == "") ? name : current_procedure + "_" + name;
+    string key = (current_procedure == "") ? name : current_procedure + "@" + name;
     if (symbol_table.count(key)) {
         yyerror(("Redeclaration: " + name).c_str());
         exit(1);
@@ -96,19 +96,18 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
     s.mod = mod;
     s.is_iterator = false;
     
-    // Point 5: O means undefined value.
     if (mod == "O") s.is_initialized = false;
     else s.is_initialized = true; 
 
     // Allocation Logic
     long long alloc_size = 1;
     if (is_array && !is_param) {
-         alloc_size = (end - start + 1) + 1; // +1 for Header
+         alloc_size = (end - start + 1) + 1; // +1 for Header for unsafe arrays
     }
 
     long long addr = -1;
 
-    // Step A: Try Holes
+    // Try Holes
     if (is_array && !is_param) {
          // Arrays need base >= start
          addr = find_hole(alloc_size, start);
@@ -117,17 +116,17 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
          addr = find_hole(alloc_size, 0);
     }
     
-    // Step B: Append if no hole
+    // Append if no hole
     if (addr == -1) {
         if (is_array && !is_param) {
-            // Strategy 2: Alignment
+            // Alignment
             if (memory_offset >= start) {
                 // Natural fit
                 addr = memory_offset;
                 memory_offset += alloc_size;
             } else {
                 long long gap = start - memory_offset;
-                if (gap < 1000) {
+                if (gap < 100000) {
                     // Fill gap with hole
                     add_hole(memory_offset, gap);
                     addr = start;
@@ -167,24 +166,25 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
 }
 
 Symbol* get_variable(string name) {
+    // Try current FOR scope (Iterate from innermost to outermost)
+    // Local Loop shadows everything
+    for (int i = current_for_stack.size() - 1; i >= 0; i--) {
+        string for_key = "for_" + std::to_string(current_for_stack[i]) + "@" + name;
+        if (symbol_table.find(for_key) != symbol_table.end()) {
+            return &symbol_table[for_key];
+        }
+    }
+
     // Check substitution (Inlining)
-    string sub_key = current_procedure + "_" + name;
+    string sub_key = current_procedure + "@" + name;
     if (substitution_map.count(sub_key)) {
         return substitution_map[sub_key];
     }
 
-    // Try local proc first
-    string key = current_procedure + "_" + name;
+    // Try local proc
+    string key = current_procedure + "@" + name;
     if (symbol_table.find(key) != symbol_table.end()) {
         return &symbol_table[key];
-    }
-    
-    // Try current FOR scope (Iterate from innermost to outermost)
-    for (int i = current_for_stack.size() - 1; i >= 0; i--) {
-        string for_key = "for_" + std::to_string(current_for_stack[i]) + "_" + name;
-        if (symbol_table.find(for_key) != symbol_table.end()) {
-            return &symbol_table[for_key];
-        }
     }
     
     // Global

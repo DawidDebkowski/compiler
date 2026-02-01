@@ -1,0 +1,11 @@
+Program
+  Procedures:
+    Procedure printit
+      Write
+        Identifier(val)
+  Main:
+    Assignment
+      Identifier(x)
+      Number(42)
+    ProcCall(printit)
+      Identifier(x)

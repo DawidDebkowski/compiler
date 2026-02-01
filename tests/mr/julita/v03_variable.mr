@@ -1,0 +1,13 @@
+RST a
+INC a
+SHL a
+INC a
+SHL a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+STORE 5 # Optimized: Skip LOAD x
+WRITE
+HALT

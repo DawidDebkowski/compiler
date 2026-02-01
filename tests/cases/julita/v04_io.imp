@@ -1,0 +1,7 @@
+# Test 04: Basic input/output
+PROGRAM IS
+  a
+IN
+  READ a;
+  WRITE a;
+END

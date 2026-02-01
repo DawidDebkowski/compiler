@@ -1,0 +1,18 @@
+Program
+  Main:
+    Assignment
+      Identifier(x)
+      Number(0)
+    For(i DOWNTO)
+      From:
+        Number(3)
+      To:
+        Number(0)
+    Do
+      Assignment
+        Identifier(x)
+        BinaryOp(+)
+          Identifier(x)
+          Number(1)
+    Write
+      Identifier(x)

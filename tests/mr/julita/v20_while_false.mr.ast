@@ -1,0 +1,15 @@
+Program
+  Main:
+    Assignment
+      Identifier(x)
+      Number(100)
+    While
+      Condition(>)
+        Number(0)
+        Number(1)
+    Do
+      Assignment
+        Identifier(x)
+        Number(0)
+    Write
+      Identifier(x)

@@ -1,0 +1,19 @@
+# Test 18: Nested procedure calls (A calls B)
+PROCEDURE inner(x) IS
+IN
+  x := x * 2;
+END
+
+PROCEDURE outer(y) IS
+IN
+  inner(y);
+  y := y + 1;
+END
+
+PROGRAM IS
+  a
+IN
+  a := 5;
+  outer(a);
+  WRITE a;
+END

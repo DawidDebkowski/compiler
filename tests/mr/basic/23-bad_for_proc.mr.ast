@@ -1,0 +1,113 @@
+Program
+  Procedures:
+    Procedure a
+      For(i TO)
+        From:
+          Identifier(n)
+        To:
+          Identifier(m)
+      Do
+        Write
+          Identifier(i)
+        Write
+          Identifier(a)
+      For(idx TO)
+        From:
+          Identifier(n)
+        To:
+          Identifier(m)
+      Do
+        Assignment
+          Identifier(a)
+          Number(1)
+      For(i DOWNTO)
+        From:
+          Identifier(m)
+        To:
+          Identifier(n)
+      Do
+        Assignment
+          Identifier(a)
+          Number(5)
+      For(i TO)
+        From:
+          Identifier(n)
+        To:
+          Identifier(m)
+      Do
+        Assignment
+          Identifier(a)
+          Number(5)
+      For(i DOWNTO)
+        From:
+          Number(3)
+        To:
+          Identifier(n)
+      Do
+        Assignment
+          Identifier(a)
+          Number(6)
+      For(i TO)
+        From:
+          Number(6)
+        To:
+          Identifier(m)
+      Do
+        Assignment
+          Identifier(a)
+          Number(7)
+      For(i DOWNTO)
+        From:
+          Identifier(m)
+        To:
+          Number(12)
+      Do
+        Assignment
+          Identifier(a)
+          Number(8)
+      For(i TO)
+        From:
+          Identifier(n)
+        To:
+          Number(0)
+      Do
+        Assignment
+          Identifier(a)
+          Number(9)
+    Procedure i
+      For(i TO)
+        From:
+          Identifier(n)
+        To:
+          Identifier(m)
+      Do
+        Write
+          Identifier(i)
+        Write
+          Identifier(a)
+  Main:
+    Assignment
+      Identifier(a)
+      Number(111)
+    Assignment
+      Identifier(n)
+      Number(5)
+    Assignment
+      Identifier(m)
+      Number(2)
+    Assignment
+      Identifier(e)
+      Number(404)
+    ProcCall(a)
+      Identifier(n)
+      Identifier(m)
+      Identifier(a)
+      Identifier(e)
+      Identifier(e)
+    Write
+      Identifier(a)
+    ProcCall(i)
+      Identifier(m)
+      Identifier(n)
+      Identifier(a)
+      Identifier(e)

@@ -1,0 +1,26 @@
+Program
+  Main:
+    Assignment
+      Identifier(n)
+      Number(5)
+    Assignment
+      Identifier(count)
+      Number(0)
+    For(i TO)
+      From:
+        Number(1)
+      To:
+        Identifier(n)
+    Do
+      Assignment
+        Identifier(n)
+        Number(100)
+      Assignment
+        Identifier(count)
+        BinaryOp(+)
+          Identifier(count)
+          Number(1)
+    Write
+      Identifier(count)
+    Write
+      Identifier(n)

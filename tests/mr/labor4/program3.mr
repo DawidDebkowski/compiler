@@ -1,354 +1,193 @@
-# Błażej Pawluk, 279738
-# Kod wygenerowany przez kompilator
-
-JUMP 68 # skip to main
-
-
-# ===== BEGIN EXPRESSIONS =====
-
-
-# BEGIN %: ra - return address, rb - left, rc - right, rd,re,rf - helpers
-SWP f
-SWP c
-JPOS 6 # non-zero - calculate, skip 2
-RST b
-JUMP 45 # mode by 0, return 0, skip to end, skip 39
-SWP d
-SWP b
-SWP c
-RST b
-RST e
-INC e
-RST a
-ADD c
-INC a
-SUB d
-JZERO 20 # skip 3
-SHL d
-SHL e
-JUMP 12 # go back 7
-SHR d
-SHR e
-SWP e
-JZERO 43 # skip to end - skip 20
-SWP e
-RST a
-ADD c
-INC a
-SUB d
-JZERO 38
-RST a
-ADD c
-SUB d
-SWP c
-SWP b
-ADD e
-SWP b
-JUMP 40 # skip 2
-RST a
-ADD c
-SHR d
-SHR e
-JUMP 22 # go back 20
-SWP c
-SWP b
-SWP f
-RTRN # go back to call
-# END %: ra - return line, rb - result
-
-
-# BEGIN *: ra - return address, rb - left, rc - right, rd,re - helpers
-SWP e
-RST d
-SWP c
-JZERO 64 # skip to end - skip 14
-SWP c
-RST a
-ADD c
-SHR c
-SHL c
-SUB c
-JZERO 61 # skip 3
-SWP d
-ADD b
-SWP d
-SHL b
-SHR c
-JUMP 49 # go back 14
-SWP d
-SWP b
-SWP e
-RTRN # go back to call
-# END *: ra - return line, rb - result
-
-
-# ====== END EXPRESSIONS ======
-
-
-# === MAIN PROGRAM ===
-# start READ
 READ
-STORE 3
-# end READ
-# start ASSIGN
-# begin load 2
+STORE 9
 RST a
 INC a
 SHL a
-# end load 2
-STORE 0
-# end ASSIGN
-# start ASSIGN
-# begin *
-# begin load variable dzielnik
-LOAD 0
-# end load variable dzielnik
-SWP c
-# begin load variable dzielnik
-LOAD 0
-# end load variable dzielnik
+STORE 12
 SWP b
-CALL 47
-SWP b
-# end *
-STORE 2
-# end ASSIGN
-# begin WHILE
-# begin >=
-# begin load variable n
-LOAD 3
-# end load variable n
+LOAD 12
 SWP c
-# begin load variable m
-LOAD 2
-# end load variable m
-SUB c
-# end >=
-JPOS 192 # go to end of while
-# begin DO (WHILE)
-# begin check
-# start ASSIGN
-# begin load 0
+CALL 84
+SWP b
+STORE 10
+LOAD 9
+SWP b
+LOAD 10
+SUB b
+JPOS 64 # >=next line inlining check
 RST a
-# end load 0
-STORE 1
-# end ASSIGN
-# start ASSIGN
-# begin %
-# begin load variable d
-LOAD 0
-# end load variable d
+STORE 11
+LOAD 9
+SWP b
+LOAD 12
 SWP c
-# begin load variable n
-LOAD 3
-# end load variable n
+CALL 156
 SWP b
-CALL 1
+STORE 8
+LOAD 8
+JPOS 46
+LOAD 9
 SWP b
-# end %
-STORE 4
-# end ASSIGN
-# begin WHILE
-# begin =
-# begin load 0
+LOAD 12
+SWP c
+CALL 113
+SWP b
+STORE 9
+LOAD 11
+INC a
+STORE 11
+LOAD 9
+SWP b
+LOAD 12
+SWP c
+CALL 156
+SWP b
+STORE 8
+JUMP 26
+RST b
+LOAD 11
+SUB b # >
+JZERO 54
+LOAD 12
+WRITE
+LOAD 11
+WRITE
+LOAD 12
+INC a
+STORE 12
+SWP b
+LOAD 12
+SWP c
+CALL 84
+SWP b
+STORE 10
+JUMP 12
+LOAD 9
+SWP b
 RST a
-# end load 0
+INC a
 SWP c
-# begin load variable r
-LOAD 4
-# end load variable r
-SWP b
 RST a
 ADD b
 SUB c
-SWP c
+SWP d
+RST a
+ADD c
 SUB b
-ADD c
-# end =
-JPOS 165 # go to end of while
-# begin DO (WHILE)
-# start ASSIGN
-# begin /
-# begin load variable d
-LOAD 0
-# end load variable d
-SWP d
-# begin load variable n
-LOAD 3
-# end load variable n
-SWP c
-SWP d
-JPOS 114 # div by non-0, skip 2
-RST a
-JUMP 150 # div by 0, result=0, skip to end, skip 37
-SWP d
-RST b
-RST e
-INC e
-RST a
-ADD c
-INC a
-SUB d
-JZERO 126 # skip 3
-SHL d
-SHL e
-JUMP 118 # go back 7
-SHR d
-SHR e
-SWP e
-JZERO 149 # skip to end - skip 20
-SWP e
-RST a
-ADD c
-INC a
-SUB d
-JZERO 144
-RST a
-ADD c
-SUB d
-SWP c
-SWP b
-ADD e
-SWP b
-JUMP 146 # skip 2
-RST a
-ADD c
-SHR d
-SHR e
-JUMP 128 # go back 20
-SWP b
-# end /
-STORE 3
-# end ASSIGN
-# start ASSIGN
-# begin +
-# begin load 1
-RST a
-INC a
-# end load 1
-SWP c
-# begin load variable p
-LOAD 1
-# end load variable p
-ADD c
-# end +
-STORE 1
-# end ASSIGN
-# start ASSIGN
-# begin %
-# begin load variable d
-LOAD 0
-# end load variable d
-SWP c
-# begin load variable n
-LOAD 3
-# end load variable n
-SWP b
-CALL 1
-SWP b
-# end %
-STORE 4
-# end ASSIGN
-JUMP 95 # go back to start of while
-# end WHILE
-# end check
-# begin IF
-# begin >
-# begin load 0
-RST a
-# end load 0
-SWP c
-# begin load variable potega
-LOAD 1
-# end load variable potega
-SUB c
-RST c
-JPOS 172 # skip 1
-INC c
-SWP c
-# end >
-JPOS 178 # skip to end of if
-# begin THEN
-# start WRITE
-# begin load variable dzielnik
-LOAD 0
-# end load variable dzielnik
+ADD d
+JZERO 83
+LOAD 9
 WRITE
-# end WRITE
-# start WRITE
-# begin load variable potega
-LOAD 1
-# end load variable potega
-WRITE
-# end WRITE
-# end IF
-# start ASSIGN
-# begin +
-# begin load 1
 RST a
 INC a
-# end load 1
-SWP c
-# begin load variable dzielnik
-LOAD 0
-# end load variable dzielnik
-ADD c
-# end +
-STORE 0
-# end ASSIGN
-# start ASSIGN
-# begin *
-# begin load variable dzielnik
-LOAD 0
-# end load variable dzielnik
-SWP c
-# begin load variable dzielnik
-LOAD 0
-# end load variable dzielnik
-SWP b
-CALL 47
-SWP b
-# end *
-STORE 2
-# end ASSIGN
-JUMP 81 # go back to start of while
-# end WHILE
-# begin IF
-# begin !=
-# begin load 1
-RST a
-INC a
-# end load 1
-SWP c
-# begin load variable n
-LOAD 3
-# end load variable n
-SWP b
-RST a
-ADD b
-SUB c
-SWP c
-SUB b
-ADD c
-RST b
-JPOS 206 # skip 1
-INC b
-SWP b
-# end !=
-JPOS 213 # skip to end of if
-# begin THEN
-# start WRITE
-# begin load variable n
-LOAD 3
-# end load variable n
 WRITE
-# end WRITE
-# start WRITE
-# begin load 1
-RST a
-INC a
-# end load 1
-WRITE
-# end WRITE
-# end IF
 HALT
+SWP e
+RST d
+RST a # IF C > B <=> B - C == 0
+ADD c
+SUB b
+JZERO 93 # SWAP THEM
+SWP c
+SWP b
+SWP c
+RST a
+ADD c
+JZERO 107
+SHR c
+SHL c
+SUB c
+JZERO 104
+RST a
+ADD d
+ADD b
+SWP d
+SHR c
+SHL b
+JUMP 93
+RST a
+ADD d
+SWP b
+RST a
+ADD e
+RTRN
+SWP d
+SWP c
+JPOS 119 # DIV 0 CHECK
+RST b
+SWP d
+RTRN
+SWP c
+RST g
+RST f
+INC f
+RST a
+ADD c
+SWP e
+RST a
+ADD e
+SUB b
+JPOS 133
+SHL e
+SHL f
+JUMP 126
+SHR e
+SHR f
+RST a
+ADD f
+JZERO 150
+SHL g
+RST a
+ADD e
+SUB b
+JPOS 147
+SWP b
+SUB e
+SWP b
+INC g
+SHR e
+SHR f
+JUMP 135
+RST a
+ADD g
+SWP b
+RST a
+ADD d
+RTRN
+SWP d
+SWP c
+JPOS 162 # DIV 0 CHECK
+RST b
+SWP d
+RTRN
+SWP c
+RST f
+INC f
+RST a
+ADD c
+SWP e
+RST a
+ADD e
+SUB b
+JPOS 175
+SHL e
+SHL f
+JUMP 168
+SHR e
+SHR f
+RST a
+ADD f
+JZERO 190
+RST a
+ADD e
+SUB b
+JPOS 187
+SWP b
+SUB e
+SWP b
+SHR e
+SHR f
+JUMP 177
+RST a
+ADD d
+RTRN

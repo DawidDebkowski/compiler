@@ -1,0 +1,5 @@
+# Test 01: Simplest possible program - one WRITE
+PROGRAM IS
+IN
+  WRITE 0;
+END

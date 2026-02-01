@@ -1,0 +1,24 @@
+Program
+  Procedures:
+    Procedure inc
+      Assignment
+        Identifier(x)
+        BinaryOp(+)
+          Identifier(x)
+          Number(1)
+  Main:
+    Assignment
+      Identifier(a)
+      Number(0)
+    ProcCall(inc)
+      Identifier(a)
+    Write
+      Identifier(a)
+    ProcCall(inc)
+      Identifier(a)
+    Write
+      Identifier(a)
+    ProcCall(inc)
+      Identifier(a)
+    Write
+      Identifier(a)

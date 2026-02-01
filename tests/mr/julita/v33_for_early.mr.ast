@@ -1,0 +1,36 @@
+Program
+  Main:
+    Assignment
+      Identifier(sum)
+      Number(0)
+    Assignment
+      Identifier(found)
+      Number(0)
+    For(i TO)
+      From:
+        Number(1)
+      To:
+        Number(100)
+    Do
+      Assignment
+        Identifier(sum)
+        BinaryOp(+)
+          Identifier(sum)
+          Identifier(i)
+      If
+        Condition(>)
+          Identifier(sum)
+          Number(500)
+      Then
+        If
+          Condition(=)
+            Identifier(found)
+            Number(0)
+        Then
+          Write
+            Identifier(i)
+          Assignment
+            Identifier(found)
+            Number(1)
+    Write
+      Identifier(sum)

@@ -1,0 +1,22 @@
+# Test 05: Zero handling - all operations with zero
+PROGRAM IS
+  a, b
+IN
+  a := 0;
+  b := a + 0;
+  WRITE b;
+  b := 0 - 0;
+  WRITE b;
+  b := 0 * 100;
+  WRITE b;
+  b := 100 * 0;
+  WRITE b;
+  b := 0 / 5;
+  WRITE b;
+  b := 5 / 0;
+  WRITE b;
+  b := 0 % 5;
+  WRITE b;
+  b := 5 % 0;
+  WRITE b;
+END

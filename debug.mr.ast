@@ -1,0 +1,28 @@
+Program
+  Procedures:
+    Procedure set
+      Assignment
+        Identifier(minus)
+        Identifier(idx)
+      For(idx TO)
+        From:
+          Identifier(minus)
+        To:
+          Identifier(idx)
+      Do
+        Assignment
+          Identifier(arr[idx])
+          Identifier(val)
+  Main:
+    Assignment
+      Identifier(maxint)
+      Number(10)
+    Assignment
+      Identifier(val)
+      Number(999)
+    ProcCall(set)
+      Identifier(tab)
+      Identifier(maxint)
+      Identifier(val)
+    Write
+      Identifier(tab[10])

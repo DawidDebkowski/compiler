@@ -1,0 +1,17 @@
+Program
+  Main:
+    Assignment
+      Identifier(x)
+      Number(0)
+    Repeat
+      Assignment
+        Identifier(x)
+        BinaryOp(+)
+          Identifier(x)
+          Number(1)
+    Until
+      Condition(=)
+        Number(1)
+        Number(1)
+    Write
+      Identifier(x)

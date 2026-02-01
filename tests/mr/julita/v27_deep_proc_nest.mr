@@ -1,0 +1,21 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+STORE 8 # next line inlining level_anext line inlining level_bnext line inlining level_c
+INC a
+STORE 8
+SHL a # mul by 2^k
+STORE 8
+SWP b
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+ADD b
+STORE 8
+WRITE
+HALT

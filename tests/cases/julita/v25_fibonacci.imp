@@ -1,0 +1,16 @@
+# Test 25: Fibonacci - comprehensive algorithm test
+PROGRAM IS
+  n, a, b, temp
+IN
+  n := 10;
+  a := 0;
+  b := 1;
+  WRITE a;
+  WRITE b;
+  FOR i FROM 2 TO n DO
+    temp := a + b;
+    a := b;
+    b := temp;
+    WRITE b;
+  ENDFOR
+END
