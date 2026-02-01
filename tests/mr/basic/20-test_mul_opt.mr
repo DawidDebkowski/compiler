@@ -156,7 +156,7 @@ INC c
 SHL c
 INC c
 CALL 330
-SWP b
+SWP d
 STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
@@ -178,7 +178,7 @@ SHL c
 SHL c
 INC c
 CALL 330
-SWP b
+SWP d
 STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
@@ -236,8 +236,8 @@ SHL c
 SHL c
 SHL c
 INC c
-CALL 359
-SWP b
+CALL 356
+SWP g
 STORE 7 # Optimized: Skip LOAD c
 WRITE
 RST a
@@ -352,15 +352,12 @@ SHR c
 SHL b
 JUMP 339
 RST a
-ADD d
-SWP b
-RST a
 ADD e
 RTRN
 SWP d
 SWP c
-JPOS 365 # DIV 0 CHECK
-RST b
+JPOS 362 # DIV 0 CHECK
+RST g
 SWP d
 RTRN
 SWP c
@@ -373,30 +370,27 @@ SWP e
 RST a
 ADD e
 SUB b
-JPOS 379
+JPOS 376
 SHL e
 SHL f
-JUMP 372
+JUMP 369
 SHR e
 SHR f
 RST a
 ADD f
-JZERO 396
+JZERO 393
 SHL g
 RST a
 ADD e
 SUB b
-JPOS 393
+JPOS 390
 SWP b
 SUB e
 SWP b
 INC g
 SHR e
 SHR f
-JUMP 381
-RST a
-ADD g
-SWP b
+JUMP 378
 RST a
 ADD d
 RTRN

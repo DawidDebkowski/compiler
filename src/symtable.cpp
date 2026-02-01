@@ -1,3 +1,4 @@
+// Dawid Dębkowski 279714
 #include "symtable.hpp"
 #include <iostream>
 #include <stdlib.h>
@@ -7,10 +8,15 @@
 map<string, Symbol> symbol_table;
 map<string, ProcedureInfo> procedures_map;
 
-long long memory_offset = 5; // Start at 2. 0 unused. 1 reserved for LHS hold.
-long long lhs_hold_addr = 1;
+long long memory_offset = 5; // Start at 2. 0 unused. 1 reserved for LHS hold. ()
+long long lhs_hold_addr = 1; // not used but what if everything breaks? 5h left.
 bool unsafety_detected = false;
 
+// its all just for tab[2^62:2^62+1] and whole unsafety
+// because LOAD SUB for manual base + (index - start) + 1 is too costly than just a compile time passing of base - start
+// and make sure base >= start (less lines, less cost)
+// and it should be safe for too large arrays
+// In that time I should've probably implemented TAC and variables in registers
 struct FreeBlock {
     long long start;
     long long size;
@@ -21,6 +27,9 @@ string current_procedure = "";
 string current_call_proc = "";
 int current_arg_idx = 0;
 
+// for i 
+//   for i
+//      for i
 std::vector<int> current_for_stack;
 int for_id_counter = 0;
 
@@ -126,7 +135,7 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
                 memory_offset += alloc_size;
             } else {
                 long long gap = start - memory_offset;
-                if (gap < 100000) {
+                if (gap < 10000000) {
                     // Fill gap with hole
                     add_hole(memory_offset, gap);
                     addr = start;
@@ -154,12 +163,10 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
         procedures_map[current_procedure].param_is_array.push_back(is_array);
         procedures_map[current_procedure].param_names.push_back(name);
         
-        // Spec Check: T must be array
          if (mod == "T" && !is_array) {
             yyerror(("Parameter " + name + " marked T must be an array").c_str());
          }
          if (mod != "T" && is_array) {
-             // Spec point 3: "nazwa tablicy ... powinna być poprzedzona literą T"
              yyerror(("Array parameter " + name + " must be marked with T").c_str());
          }
     }

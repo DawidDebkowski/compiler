@@ -33,7 +33,7 @@ SWP b
 LOAD 11
 SWP c
 CALL 39
-SWP b
+SWP d
 STORE 10
 WRITE
 HALT
@@ -60,9 +60,6 @@ SWP d
 SHR c
 SHL b
 JUMP 48
-RST a
-ADD d
-SWP b
 RST a
 ADD e
 RTRN

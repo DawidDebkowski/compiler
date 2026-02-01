@@ -15,14 +15,14 @@ SWP b
 LOAD 6
 SWP c
 CALL 21
-SWP b
+SWP g
 STORE 7 # Optimized: Skip LOAD c
 WRITE
 HALT
 SWP d
 SWP c
 JPOS 27 # DIV 0 CHECK
-RST b
+RST g
 SWP d
 RTRN
 SWP c
@@ -56,9 +56,6 @@ INC g
 SHR e
 SHR f
 JUMP 43
-RST a
-ADD g
-SWP b
 RST a
 ADD d
 RTRN

@@ -1,7 +1,6 @@
+// Dawid Dębkowski 279714
 #include "math_kernel.hpp"
 #include "codegen.hpp"
-#include <vector>
-#include <string>
 
 using namespace std;
 
@@ -59,7 +58,7 @@ void generate_mul() {
     emit("JZERO", 0); // If LSB is 0, Skip Addition
     long long jump_even = code.size() - 1;
 
-    // Odd Case: Result (r3) += Multiplicand (r1)
+    // Odd: Result (r3) += Multiplicand (r1)
     emit("RST", 0);
     emit("ADD", 3); // r0 = Result
     emit("ADD", 1); // r0 = Result + Multiplicand
@@ -68,21 +67,15 @@ void generate_mul() {
     // Label: jump_even
     code[jump_even].arg = code.size();
 
-    // Prepare Multiplier (r2) for next iteration
-    //    Actually do the division by 2
     emit("SHR", 2); 
-
-    // Double the Multiplicand (r1)
     emit("SHL", 1);
 
     // Loop
     emit("JUMP", loop_start);
-
-    // --- END ---
     code[jump_end].arg = code.size();
     
-    // Move Result (r3) to Output (r1)
-    emit("RST", 0); emit("ADD", 3); emit("SWP", 1);
+    // // Move Result (r3) to Output (r1)
+    // emit("RST", 0); emit("ADD", 3); emit("SWP", 1);
     
     // Restore RA from r4
     emit("RST", 0); emit("ADD", 4);
@@ -114,7 +107,7 @@ void generate_div() {
 
     emit("SWP", 2);
     emit("JPOS", code.size() + 4, "DIV 0 CHECK");
-    emit("RST", 1);
+    emit("RST", 6);
     emit("SWP", 3);
     emit("RTRN");
     
@@ -137,7 +130,7 @@ void generate_div() {
     emit("SHL", 5); // rf << 1
     emit("JUMP", loop_up);
 
-    // Correction (Overshoot)
+    // Correction
     code[jump_peak].arg = code.size();
     emit("SHR", 4);
     emit("SHR", 5);
@@ -173,8 +166,8 @@ void generate_div() {
     // Finalize
     code[jump_end].arg = code.size();
     
-    // Result: Quotient in r6 -> r1
-    emit("RST", 0); emit("ADD", 6); emit("SWP", 1); 
+    // // Result: Quotient in r6 -> r1
+    // emit("RST", 0); emit("ADD", 6); emit("SWP", 1); 
     
     // Restore RA from r3
     emit("RST", 0); emit("ADD", 3);

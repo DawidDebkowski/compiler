@@ -1,3 +1,4 @@
+// Dawid Dębkowski 279714
 #include "ast.hpp"
 #include "codegen.hpp"
 #include "symtable.hpp"
@@ -12,6 +13,7 @@ static std::map<std::string, int> proc_usage_count;
 static std::map<std::string, bool> proc_has_array_params;
 
 // Cache: Maps "Parameter Slot Address" -> "Symbol currently stored there"
+// for multiple procedure calls after one another
 static std::map<long long, Symbol*> param_cache;
 
 void reset_param_cache() {
@@ -124,7 +126,6 @@ void IdentifierNode::codegen_address(int reg) {
                  }
              } else {
                  // Global Array: Base + 1 + (Index - Start)
-                 // Optimized: We know Start.
                  long long offset = index_val - s->start;
                  gen_const(0, s->address + 1 + offset); 
              }
@@ -165,7 +166,7 @@ void IdentifierNode::codegen_address(int reg) {
                  // Global Array
                  // Index in r0
                  
-                 // We need: (Base + 1) + (Index - Start)
+                 // Base + 1) + (Index - Start)
                  
                  if (s->start > 0) {
                      gen_const(2, s->start);
@@ -187,13 +188,9 @@ void IdentifierNode::codegen_to_reg(int reg) {
     
     if (!is_array) {
         if (s->is_param) {
-             // Optimization: If r0 wants it and r0 already has it... 
-             // But params are pointers, so we need to reload to be safe unless we track param slot addresses?
-             // Not implementing unsafe param caching yet.
              emit("LOAD", s->address); // Load Address
              emit("RLOAD", 0); // Load Value
         } else {
-             // Optimization for Global Scalar
              if (reg == 0 && acc_tracker.valid && !acc_tracker.is_const && acc_tracker.variable == name) {
                  // Hit!
                  add_comment("Optimized: Skip LOAD " + name);
@@ -261,7 +258,7 @@ void BinaryOpNode::codegen_to_reg(int reg) {
                  return;
              }
              
-             // Small Constants Optimizations (limited to small values to avoid huge code explotion)
+             // Small Constants Optimizations (limited to small values to avoid huge code explosion)
              if (val > 0 && val <= 10) {
                  long long v_small = cln::cl_I_to_long(val);
                  operand->codegen_to_reg(0);
@@ -383,8 +380,7 @@ void BinaryOpNode::codegen_to_reg(int reg) {
             if (val == 1) { left->codegen_to_reg(reg); emit("DEC", reg); return; }
         }
 
-        // 0 - x is 0 in natural numbers? Specification say: "result of subtracting larger from smaller is 0".
-        // so 0 - x (if x>=0) is 0.
+        // 0 - x = 0.
         if (left->is_constant() && left->evaluate() == 0) {
              gen_const(reg, 0);
              return;
@@ -405,12 +401,12 @@ void BinaryOpNode::codegen_to_reg(int reg) {
         case BinaryOp::MULT:
             left->codegen_to_reg(1);
             right->codegen_to_reg(2);    
-            emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 1);
+            emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 3);
             break;
         case BinaryOp::DIV:
             left->codegen_to_reg(1);
             right->codegen_to_reg(2);    
-            emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 1);
+            emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 6);
             break;
         case BinaryOp::MOD:
             left->codegen_to_reg(1);
@@ -462,16 +458,11 @@ void AssignmentNode::validate() {
 }
 
 void AssignmentNode::codegen() {
-    // Safe way: Evaluate Expr first
+    // Evaluate Expr first
     // If Assign: A[i] := B + C.
     // Calc B+C -> Result in r0.
-    // SWP 1 (Save result).
-    // Calc Address of A[i] -> r0.
-    // SWP 1 (Addr in r1, Result in r0).
-    // STORE/RSTORE. 
     
     if (target->is_array || (get_variable(target->name)->is_param)) {
-        // Compute Address of Target
         expr->codegen_to_reg(0);
 
         emit("SWP", 3);
@@ -663,14 +654,11 @@ void IfNode::codegen() {
         return;
     }
 
-    reset_acc_tracker(); // Barrier entry
+    reset_acc_tracker();
     // Condition
     long long jump_idx_pos;
     condition->codegen_jump_false(0);
     reset_param_cache();
-    // Barrier: We just jumped. Or fell through.
-    // Actually condition->codegen_jump_false ends with a JUMP instruction so emit() resets it.
-    // But let's be safe.
     reset_acc_tracker(); 
     jump_idx_pos = code.size() - 1;
     
@@ -686,14 +674,14 @@ void IfNode::codegen() {
     
     // Backpatch False Jump
     code[jump_idx_pos].arg = code.size();
-    reset_acc_tracker(); // Barrier: Join point (Else start or End)
+    reset_acc_tracker(); // Join point (Else start or End)
     
     // Else
     if (!else_block.empty()) {
         for(auto s : else_block) s->codegen();
         reset_param_cache();
         code[jump_over_else].arg = code.size();
-        reset_acc_tracker(); // Barrier: Join point
+        reset_acc_tracker(); // Join point
     }
 }
 
@@ -1101,7 +1089,7 @@ void ProcedureNode::validate() {
 void RootNode::codegen() {
     emit("JUMP", 0);
     reset_param_cache();
-    reset_acc_tracker(); // Critical: Reset state before generating bodies
+    reset_acc_tracker();
     
     // Analyze Usage
     std::set<std::string> used_procs;
@@ -1347,7 +1335,7 @@ void WhileNode::collect_reachable_procedures(std::set<std::string>& used_procs) 
     bool res;
     if (condition->try_evaluate(res)) {
         if (!res) {
-             // Condition False -> Loop never runs (Dead)
+             // Condition False -> Loop never runs
              return; 
         }
     }

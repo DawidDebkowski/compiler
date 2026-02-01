@@ -196,7 +196,7 @@ ADD c
 RLOAD a
 SWP c
 CALL 244
-SWP b
+SWP d
 SWP d
 LOAD 314
 RST c
@@ -265,9 +265,6 @@ SWP d
 SHR c
 SHL b
 JUMP 253
-RST a
-ADD d
-SWP b
 RST a
 ADD e
 RTRN

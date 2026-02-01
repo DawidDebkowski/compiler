@@ -1,0 +1,123 @@
+==========================================
+Test Run Report - 01194543
+==========================================
+
+
+### Category: basic ###
+==========================================
+  01-test_io...                  PASS (Cost: 276, Instructions: 30)
+  02-test2_vars...               PASS (Cost: 439, Instructions: 46)
+  03-test3_mul...                PASS (Cost: 540, Instructions: 75)
+  04-test4_div...                PASS (Cost: 644, Instructions: 87)
+  05-test5_mod...                PASS (Cost: 563, Instructions: 84)
+  06-test6_arr...                PASS (Cost: 481, Instructions: 72)
+  07-test7_arr_range...          PASS (Cost: 494, Instructions: 85)
+  08-test8_proc...               PASS (Cost: 399, Instructions: 48)
+  09-0test9_0_proc_arr...        PASS (Cost: 952, Instructions: 94)
+  09-1test9_1_proc_arr...        PASS (Cost: 9 093, Instructions: 1955)
+  09-2test9_1_proc_arr...        PASS (Cost: 4 135, Instructions: 876)
+  10-test10_proc_arr_range...    PASS (Cost: 981, Instructions: 148)
+  11-test11_CLN_folding...       SKIP (no answer file)
+  12-test_if_conditions...       PASS (Cost: 5 344, Instructions: 473)
+  13-test_if_nested...           PASS (Cost: 1 387, Instructions: 222)
+  14-rafal...                    PASS (Cost: 1 815, Instructions: 162)
+  15-div_0...                    PASS (Cost: 703, Instructions: 107)
+  16-test_nested_for...          PASS (Cost: 760 417, Instructions: 194)
+  17-test_read_array...          PASS (Cost: 959, Instructions: 98)
+  18-test_simple_for...          PASS (Cost: 1 176, Instructions: 56)
+  19-test_mul_simple...          PASS (Cost: 498, Instructions: 70)
+  20-test_mul_opt...             PASS (Cost: 5 088, Instructions: 422)
+  21-zero_loops...               PASS (Cost: 5 066, Instructions: 69)
+  22-bad_for...                  PASS (Cost: 3 197, Instructions: 351)
+  23-bad_for_proc...             PASS (Cost: 5 248, Instructions: 287)
+  24-naming...                   PASS (Cost: 1 497, Instructions: 81)
+  Category results: 25 passed, 0 failed
+
+### Category: custom ###
+==========================================
+  downto_zero...                 SKIP (no answer file)
+  example4_small...              SKIP (no answer file)
+  hard01_loop_clobber...         PASS (Cost: 4 574, Instructions: 68)
+  hard02_proc_safety...          PASS (Cost: 702, Instructions: 89)
+  hard03_complex_flow...         PASS (Cost: 706, Instructions: 55)
+  test...                        SKIP (no answer file)
+  to_ten...                      SKIP (no answer file)
+  unsafe_proc...                 SKIP (no answer file)
+  Category results: 3 passed, 0 failed
+
+### Category: example ###
+==========================================
+  example1...                    PASS (Cost: 7 184, Instructions: 251)
+  example2...                    PASS (Cost: 23 381, Instructions: 98)
+  example3...                    PASS (Cost: 2 966, Instructions: 127)
+  example4...                    PASS (Cost: 36 190, Instructions: 250)
+  example5...                    PASS (Cost: 220 203, Instructions: 165)
+  example6...                    PASS (Cost: 29 234, Instructions: 296)
+  example7...                    PASS (Cost: 751 404, Instructions: 168)
+  example8...                    PASS (Cost: 159 626, Instructions: 377)
+  example9-big...                PASS (Cost: 19 198, Instructions: 200)
+  example9...                    PASS (Cost: 19 198, Instructions: 200)
+  exampleA...                    PASS (Cost: 46 592, Instructions: 308)
+  Category results: 11 passed, 0 failed
+
+### Category: julita ###
+==========================================
+  v01_empty...                   PASS (Cost: 127, Instructions: 29)
+  v02_constant...                PASS (Cost: 135, Instructions: 37)
+  v03_variable...                PASS (Cost: 186, Instructions: 39)
+  v04_io...                      PASS (Cost: 276, Instructions: 30)
+  v05_zero_ops...                PASS (Cost: 1 284, Instructions: 52)
+  v06_underflow...               PASS (Cost: 800, Instructions: 54)
+  v07_large_numbers...           PASS (Cost: 950, Instructions: 254)
+  v08_for_same...                PASS (Cost: 762, Instructions: 55)
+  v09_for_empty...               PASS (Cost: 449, Instructions: 56)
+  v10_downto_zero...             PASS (Cost: 2 036, Instructions: 64)
+  v11_downto_empty...            PASS (Cost: 515, Instructions: 79)
+  v12_array_offset...            PASS (Cost: 905, Instructions: 204)
+  v13_nested_three...            PASS (Cost: 14 082, Instructions: 85)
+  v14_comparisons...             PASS (Cost: 1 607, Instructions: 145)
+  v15_proc_noparams...           PASS (Cost: 185, Instructions: 38)
+  v16_proc_allparams...          PASS (Cost: 607, Instructions: 59)
+  v17_multi_call...              PASS (Cost: 1 522, Instructions: 55)
+  v18_nested_proc...             PASS (Cost: 283, Instructions: 38)
+  v20_while_false...             PASS (Cost: 186, Instructions: 39)
+  v21_repeat_once...             PASS (Cost: 228, Instructions: 32)
+  v22_complex_expr...            PASS (Cost: 1 999, Instructions: 192)
+  v23_nested_if...               PASS (Cost: 636, Instructions: 96)
+  v24_array_bounds...            PASS (Cost: 4 716, Instructions: 95)
+  v25_fibonacci...               PASS (Cost: 6 806, Instructions: 68)
+  v26_for_fixed_count...         PASS (Cost: 2 565, Instructions: 67)
+  v27_deep_proc_nest...          PASS (Cost: 349, Instructions: 47)
+  v28_input_param...             PASS (Cost: 436, Instructions: 43)
+  v29_ref_param...               PASS (Cost: 1 064, Instructions: 57)
+  v30_binary_search...           PASS (Cost: 8 013, Instructions: 153)
+  v31_gcd...                     PASS (Cost: 8 055, Instructions: 194)
+  v32_power...                   PASS (Cost: 11 096, Instructions: 180)
+  v33_for_early...               PASS (Cost: 48 622, Instructions: 86)
+  Category results: 32 passed, 0 failed
+
+### Category: labor4 ###
+==========================================
+  program0...                    PASS (Cost: 2 262, Instructions: 48)
+  program1...                    PASS (Cost: 12 020, Instructions: 156)
+  program2...                    PASS (Cost: 174 030, Instructions: 178)
+  program3 (input#1)...          PASS (Cost: 12 155, Instructions: 213)
+  program3 (input#2)...          PASS (Cost: 5 972 319, Instructions: 213)
+  program3 (input#3)...          PASS (Cost: 6 647 859, Instructions: 213)
+  program3 (input#4)...          PASS (Cost: 124 562 567, Instructions: 213)
+  Category results: 7 passed, 0 failed
+
+### Category: szymon ###
+==========================================
+  err02_copy...                  SKIP (no answer file)
+  test01...                      PASS (Cost: 332 640, Instructions: 53)
+  test02...                      PASS (Cost: 119 887 060, Instructions: 187)
+  test03...                      PASS (Cost: 295, Instructions: 42)
+  test04...                      PASS (Cost: 177, Instructions: 30)
+  test05...                      SKIP (no answer file)
+  test06_proc_names...           PASS (Cost: 343, Instructions: 49)
+  Category results: 5 passed, 0 failed
+
+==========================================
+TOTAL RESULTS: 83 passed, 0 failed
+==========================================

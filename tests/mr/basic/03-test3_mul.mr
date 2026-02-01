@@ -17,7 +17,7 @@ SWP b
 LOAD 6
 SWP c
 CALL 23
-SWP b
+SWP d
 STORE 7 # Optimized: Skip LOAD c
 WRITE
 HALT
@@ -44,9 +44,6 @@ SWP d
 SHR c
 SHL b
 JUMP 32
-RST a
-ADD d
-SWP b
 RST a
 ADD e
 RTRN
