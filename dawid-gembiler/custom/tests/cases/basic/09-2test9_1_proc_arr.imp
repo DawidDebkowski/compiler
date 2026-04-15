@@ -1,0 +1,29 @@
+PROCEDURE set(T arr, idx, val) IS
+minus
+IN
+    arr[idx] := val;
+END
+
+# Jest input b
+
+# 2^62 =           4611686018427387904
+# long long size = 9223372036854775807
+
+PROGRAM IS
+    e, far, maxint, tab[4611686018427387904:4611686018427387905], a[4611686018427387910:4611686018427387920], b, c, d
+IN
+    maxint := 4611686018427387904;
+    e := 4611686018427387904 + 1;
+    c := 111;
+    d := 222;
+    READ b;
+    set(tab, maxint, c);
+    set(tab, e, d);
+    WRITE tab[maxint];
+    WRITE tab[e];
+    far := 4611686018427387911;
+    a[far] := 333;
+    WRITE a[far];
+    set(a, far, b);
+    WRITE a[far];
+END

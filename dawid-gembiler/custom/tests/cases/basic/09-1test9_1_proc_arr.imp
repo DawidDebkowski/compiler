@@ -1,0 +1,75 @@
+PROCEDURE set(T arr, idx, val) IS
+minus
+IN
+    minus := idx;
+    FOR i FROM minus TO minus DO
+        arr[i] := val;
+    ENDFOR
+END
+
+PROCEDURE add(T arr, idx, val) IS
+    tmp
+IN
+    tmp := arr[idx];
+    tmp := tmp + val;
+    arr[idx] := tmp;
+END
+
+PROCEDURE copy(T src, s_idx, T dst, d_idx) IS
+IN
+    dst[d_idx] := src[s_idx];
+END
+
+# Jest input b
+
+# 2^62 =           4611686018427387904
+# long long size = 9223372036854775807
+
+PROGRAM IS
+    e, far, maxint, tab[4611686018427387904:4611686018427387905], a[4611686018427387910:4611686018427387920], b, c, d, f
+IN
+    maxint := 4611686018427387904;
+    e := 4611686018427387904 + 1;
+    c := 111;
+    d := 222;
+    READ b;
+    set(tab, maxint, c);
+    set(tab, e, d);
+    WRITE tab[maxint];
+    WRITE tab[e];
+    
+    far := 4611686018427387911;
+    a[far] := 333;
+    WRITE a[far];
+    
+    set(a, far, b);
+    WRITE a[far];
+
+    # New Tests
+    f := 888;
+    add(tab, maxint, f);
+    WRITE tab[maxint];
+
+    copy(tab, maxint, a, far);
+    WRITE a[far];
+    
+    # Check that copy really copied value 999
+    f := 1;
+    add(a, far, f);
+    WRITE a[far];
+
+    far := far + 1;
+    a[far] := 777;
+    copy(a, far, tab, e);
+    WRITE tab[e];
+END
+
+# Expected Output (assuming input 444):
+# > 111
+# > 222
+# > 333
+# > 444
+# > 999    (111 + 888)
+# > 999    (Copy from tab)
+# > 1000   (999 + 1)
+# > 777    (Copy from a[far+1])

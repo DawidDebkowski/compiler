@@ -1,0 +1,17 @@
+# Test 16: Procedure with all parameter types
+PROCEDURE allparams(I input, O output, ref) IS
+  temp
+IN
+  temp := input + 10;
+  output := temp;
+  WRITE ref;
+END
+
+PROGRAM IS
+  a, b, c
+IN
+  a := 5;
+  c := 100;
+  allparams(a, b, c);
+  WRITE b;
+END

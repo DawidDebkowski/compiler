@@ -1,0 +1,11 @@
+RST a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+SHL a
+INC a
+SHL a
+WRITE
+HALT

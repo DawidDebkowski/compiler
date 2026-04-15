@@ -1,0 +1,12 @@
+# Test 15: Simple procedure with one parameter
+PROCEDURE printit(I val) IS
+IN
+  WRITE val;
+END
+
+PROGRAM IS
+  x
+IN
+  x := 42;
+  printit(x);
+END

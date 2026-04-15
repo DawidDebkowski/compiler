@@ -1,0 +1,7 @@
+# Test 03: Simple variable assignment
+PROGRAM IS
+  x
+IN
+  x := 100;
+  WRITE x;
+END

@@ -1,0 +1,69 @@
+PROGRAM IS
+    a, b, c
+IN
+    a := 3;
+    c := a * 2;
+    WRITE c;
+    c := a * 32;
+    WRITE c;
+        a := 10;
+    c := a * 1;
+    WRITE c;
+    a := 10;
+    c := a * 3;
+    WRITE c;
+    a := 10;
+    c := a * 4;
+    WRITE c;
+        a := 10;
+    c := a * 5;
+    WRITE c;
+        a := 10;
+    c := a * 6;
+    WRITE c;
+        a := 10;
+    c := a * 7;
+    WRITE c;
+        a := 10;
+    c := a * 8;
+    WRITE c;
+        a := 10;
+    c := a * 9;
+    WRITE c;
+        a := 10;
+    c := a * 10;
+    WRITE c;
+        a := 10;
+    c := a * 27;
+    WRITE c;
+        a := 10;
+    c := a * 81;
+    WRITE c;
+
+
+    a := 1;
+    c := a / 0;
+    WRITE c;
+    a := 1234;
+    c := a / 1;
+    WRITE c;
+    a := 30;
+    c := a / 2;
+    WRITE c;
+    a := 34;
+    c := a / 17;
+    WRITE c;
+
+    a := 34;
+    c := a % 2;
+    WRITE c;
+    a := 35;
+    c := a % 2;
+    WRITE c;
+    a := 66;
+    c := a % 4;
+    WRITE c;
+    a := 270;
+    c := a % 64;
+    WRITE c;
+END

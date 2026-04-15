@@ -1,0 +1,56 @@
+# Test 14: All comparison operators edge cases
+PROGRAM IS
+  a
+IN
+  a := 5;
+  # Equal comparisons
+  IF a = 5 THEN
+    WRITE 1;
+  ELSE
+    WRITE 0;
+  ENDIF
+  IF 0 = 0 THEN
+    WRITE 1;
+  ELSE
+    WRITE 0;
+  ENDIF
+  # Not equal
+  IF a != 5 THEN
+    WRITE 1;
+  ELSE
+    WRITE 0;
+  ENDIF
+  # Less than with 0
+  IF 0 < a THEN
+    WRITE 1;
+  ELSE
+    WRITE 0;
+  ENDIF
+  IF a < 0 THEN
+    WRITE 1;
+  ELSE
+    WRITE 0;
+  ENDIF
+  # Greater than with 0
+  IF a > 0 THEN
+    WRITE 1;
+  ELSE
+    WRITE 0;
+  ENDIF
+  IF 0 > a THEN
+    WRITE 1;
+  ELSE
+    WRITE 0;
+  ENDIF
+  # Same value comparisons
+  IF a >= a THEN
+    WRITE 1;
+  ELSE
+    WRITE 0;
+  ENDIF
+  IF a <= a THEN
+    WRITE 1;
+  ELSE
+    WRITE 0;
+  ENDIF
+END

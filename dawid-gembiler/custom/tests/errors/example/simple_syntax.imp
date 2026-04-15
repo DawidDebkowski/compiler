@@ -1,0 +1,18 @@
+# 8: syntax
+
+PROGRAM IS
+    a, b
+IN
+    a := 5;
+    b := 10;
+    WRITE a;
+
+    a = 5;
+
+    WRITE b;
+    IF a < b THEN
+        WRITE 111;
+    ELSE
+        WRITE 0;
+    ENDIF
+END

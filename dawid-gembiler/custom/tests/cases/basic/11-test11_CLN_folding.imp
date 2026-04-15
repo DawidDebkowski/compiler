@@ -1,0 +1,13 @@
+PROCEDURE mult(I a, I b, O o) IS
+IN
+    o := a * b;
+END
+
+PROGRAM IS
+    a, b, c, sixseven
+IN
+    a := 123 * 124;
+    sixseven := 16;
+    mult(a, sixseven, c);
+    WRITE c;
+END

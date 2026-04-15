@@ -1,0 +1,41 @@
+PROGRAM IS
+    a, n, m
+IN
+    a := 111;
+    n := 5;
+    m := 2;
+    FOR i FROM 10 DOWNTO 20 DO
+        a := 1;
+    ENDFOR
+    FOR i FROM 5 TO 2 DO
+        a := 2;
+    ENDFOR
+    FOR i FROM 5 TO 4 DO
+        a := 3;
+    ENDFOR
+    FOR i FROM 4 DOWNTO 5 DO
+        a := 4;
+    ENDFOR
+
+    FOR i FROM m DOWNTO n DO
+        a := 5;
+    ENDFOR
+    FOR i FROM n TO m DO
+        a := 5;
+    ENDFOR
+
+    FOR i FROM 3 DOWNTO n DO
+        a := 6;
+    ENDFOR
+    FOR i FROM 6 TO m DO
+        a := 7;
+    ENDFOR
+
+    FOR i FROM m DOWNTO 12 DO
+        a := 8;
+    ENDFOR
+    FOR i FROM n TO 0 DO
+        a := 9;
+    ENDFOR
+    WRITE a; # > 111
+END

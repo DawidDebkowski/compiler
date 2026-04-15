@@ -1,0 +1,26 @@
+# Advanced Test 27: Deep nested procedure calls (A calls B calls C)
+# Tests return address stack handling
+PROCEDURE level_c(x) IS
+IN
+  x := x + 1;
+END
+
+PROCEDURE level_b(y) IS
+IN
+  level_c(y);
+  y := y * 2;
+END
+
+PROCEDURE level_a(z) IS
+IN
+  level_b(z);
+  z := z + 10;
+END
+
+PROGRAM IS
+  val
+IN
+  val := 5;
+  level_a(val);
+  WRITE val;
+END

@@ -1,0 +1,14 @@
+# 8: syntax
+
+PROGRAM IS
+    a, b
+IN
+    a := 5;
+    b := 10;
+    WRITE a;
+
+    a = 5;
+
+    WRITE b;
+    FOR i 
+END

@@ -1,0 +1,11 @@
+PROCEDURE dummy(a) IS tt IN
+    a := 5;
+END
+
+PROGRAM IS dummy, v, dummy_a IN
+    dummy_a := 10; 
+    dummy(v);
+    dummy_a := 10; 
+
+    WRITE v;
+END

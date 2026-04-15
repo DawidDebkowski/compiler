@@ -1,0 +1,13 @@
+READ
+SWP b       # n do rb
+RST a       # ra = 0
+ADD b       # ra = n
+SHR b
+SHL b
+SUB b
+WRITE
+SHR b
+RST a
+ADD b
+JPOS 4
+HALT

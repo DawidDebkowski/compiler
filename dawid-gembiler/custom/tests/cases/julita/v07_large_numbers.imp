@@ -1,0 +1,13 @@
+# Test 07: Large numbers - test 64-bit handling
+PROGRAM IS
+  a, b, c
+IN
+  a := 1000000000;
+  b := 2000000000;
+  c := a + b;
+  WRITE c;
+  c := a * 2;
+  WRITE c;
+  a := 18446744073709551615;
+  WRITE a;
+END

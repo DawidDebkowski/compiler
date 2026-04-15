@@ -1,0 +1,63 @@
+PROCEDURE a(I n, m, a, e, i) IS
+    idx
+IN
+    FOR i FROM n TO m DO
+        WRITE i;
+        WRITE a;
+    ENDFOR
+
+    FOR idx FROM n TO m DO
+        a := 1;
+    ENDFOR
+
+    FOR i FROM m DOWNTO n DO
+        a := 5;
+    ENDFOR
+    FOR i FROM n TO m DO
+        a := 5;
+    ENDFOR
+
+    FOR i FROM 3 DOWNTO n DO
+        a := 6;
+    ENDFOR
+    FOR i FROM 6 TO m DO
+        a := 7;
+    ENDFOR
+
+    FOR i FROM m DOWNTO 12 DO
+        a := 8;
+    ENDFOR
+    FOR i FROM n TO 0 DO
+        a := 9;
+    ENDFOR
+END
+
+PROCEDURE i(I n, m, a, e) IS
+    idx
+IN
+    FOR i FROM n TO m DO
+        WRITE i;
+        WRITE a;
+    ENDFOR
+# > 2
+# > 111
+# > 3
+# > 111
+# > 4
+# > 111
+# > 5
+# > 111
+
+END
+
+PROGRAM IS
+    a, n, m, e
+IN
+    a := 111;
+    n := 5;
+    m := 2;
+    e := 404;
+    a(n, m, a, e, e); # > nothing, a = 111
+    WRITE a; # > 111
+    i(m, n, a, e);
+END

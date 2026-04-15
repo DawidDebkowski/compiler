@@ -1,0 +1,16 @@
+# Advanced Test 29: Reference parameter modifies caller's variable
+# Regular parameter (no prefix) - pass by reference, modifiable
+PROCEDURE double_ref(x) IS
+IN
+  x := x * 2;
+END
+
+PROGRAM IS
+  a
+IN
+  a := 7;
+  double_ref(a);
+  WRITE a;
+  double_ref(a);
+  WRITE a;
+END

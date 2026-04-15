@@ -1,0 +1,14 @@
+# Test 24: Array access with variable index at boundaries
+PROGRAM IS
+  arr[0:9], idx
+IN
+  FOR j FROM 0 TO 9 DO
+    arr[j] := j;
+  ENDFOR
+  idx := 0;
+  WRITE arr[idx];
+  idx := 9;
+  WRITE arr[idx];
+  idx := 5;
+  WRITE arr[idx];
+END

@@ -1,0 +1,16 @@
+# Advanced Test 26: FOR loop iteration count fixed at start
+# Spec says: FOR loop count is determined at the beginning
+# and does not change even if the boundary variables change during execution
+PROGRAM IS
+  n, count
+IN
+  n := 5;
+  count := 0;
+  FOR i FROM 1 TO n DO
+    # Modifying n inside the loop should NOT affect iteration count
+    n := 100;
+    count := count + 1;
+  ENDFOR
+  WRITE count;
+  WRITE n;
+END

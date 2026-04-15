@@ -1,0 +1,16 @@
+PROGRAM IS
+    x, y
+IN
+    x := 10;
+    y := 5;
+    WHILE x > 0 DO
+        WRITE x; 
+        IF x > 5 THEN
+            y := 1;
+        ELSE
+            y := 2;
+        ENDIF
+        x := x - 1; 
+    ENDWHILE
+    WRITE y;
+END

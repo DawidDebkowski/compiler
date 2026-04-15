@@ -1,0 +1,13 @@
+PROCEDURE sum(a, b, out) IS
+IN
+    out := a + b;
+END
+
+PROGRAM IS
+    x, y, z
+IN
+    x := 10;
+    y := 20;
+    sum(x, y, z);
+    WRITE z;
+END

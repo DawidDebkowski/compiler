@@ -1,0 +1,29 @@
+# Test 23: Deep nested IF statements
+PROGRAM IS
+  a, result
+IN
+  a := 5;
+  result := 0;
+  IF a > 0 THEN
+    IF a > 1 THEN
+      IF a > 2 THEN
+        IF a > 3 THEN
+          IF a > 4 THEN
+            result := 5;
+          ELSE
+            result := 4;
+          ENDIF
+        ELSE
+          result := 3;
+        ENDIF
+      ELSE
+        result := 2;
+      ENDIF
+    ELSE
+      result := 1;
+    ENDIF
+  ELSE
+    result := 0;
+  ENDIF
+  WRITE result;
+END

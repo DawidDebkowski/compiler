@@ -1,0 +1,17 @@
+# Test 17: Multiple procedure calls (test return address handling)
+PROCEDURE inc(x) IS
+IN
+  x := x + 1;
+END
+
+PROGRAM IS
+  a
+IN
+  a := 0;
+  inc(a);
+  WRITE a;
+  inc(a);
+  WRITE a;
+  inc(a);
+  WRITE a;
+END

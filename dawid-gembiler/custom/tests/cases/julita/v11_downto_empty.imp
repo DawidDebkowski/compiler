@@ -1,0 +1,10 @@
+# Test 11: DOWNTO start < end (should not execute)
+PROGRAM IS
+  x
+IN
+  x := 100;
+  FOR i FROM 5 DOWNTO 10 DO
+    x := x + 1;
+  ENDFOR
+  WRITE x;
+END

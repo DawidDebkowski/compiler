@@ -1,0 +1,22 @@
+# Test 22: Complex expressions (done in steps)
+PROGRAM IS
+  a, b, c, d, temp
+IN
+  a := 10;
+  b := 3;
+  # c = a + b * 2 -> need to do b*2 first
+  temp := b * 2;
+  c := a + temp;
+  WRITE c;
+  # d = a * b + a / b + a % b -> break into steps
+  temp := a * b;
+  d := a / b;
+  temp := temp + d;
+  d := a % b;
+  d := temp + d;
+  WRITE d;
+  # 100 / 10 / 2 = 5
+  temp := 100 / 10;
+  d := temp / 2;
+  WRITE d;
+END

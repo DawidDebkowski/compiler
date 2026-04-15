@@ -1,0 +1,24 @@
+PROCEDURE a(a) IS
+IN
+    WRITE a; # > 111
+END
+
+PROCEDURE b(b) IS
+IN
+    FOR b FROM 2 TO 3 DO
+        WRITE b;
+    ENDFOR
+    # > 2
+    # > 3
+END
+
+PROGRAM IS
+    a, n, m, e, b
+IN
+    a := 111;
+    b := 222;
+    a(a);
+    WRITE a; # > 111
+    b(b);
+    WRITE b; # > 222
+END

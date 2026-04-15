@@ -1,0 +1,5 @@
+# Test 02: Simple constant output
+PROGRAM IS
+IN
+  WRITE 42;
+END

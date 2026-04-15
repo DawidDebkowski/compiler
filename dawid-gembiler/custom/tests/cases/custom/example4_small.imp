@@ -1,0 +1,33 @@
+PROCEDURE s(I n, O m) IS
+    o
+IN
+    m:=1;
+    FOR i FROM n DOWNTO 2 DO
+        o:=i%2;
+        IF o=1 THEN
+            m:=m*i;
+        ELSE
+            m:=i*m;
+        ENDIF
+    ENDFOR
+END
+
+PROCEDURE bc(I n,I k,O m) IS
+   p,a,b,c
+IN
+   s(n,a);
+   p:=n-k;
+   s(p,b);
+   s(k,c);
+   m:=a/b;
+   m:=m/c;
+END
+
+PROGRAM IS
+    n,k,res
+IN
+    n:=5;
+    k:=2;
+    bc(n, k, res);
+    WRITE res;
+END

@@ -1,0 +1,35 @@
+# Advanced Test 32: Power function with large numbers
+# Tests multiplication of large numbers (logarithmic algorithm)
+PROCEDURE power(I base, I exp, O result) IS
+  b, e, r, emod
+IN
+  b := base;
+  e := exp;
+  r := 1;
+  WHILE e > 0 DO
+    emod := e % 2;
+    IF emod = 1 THEN
+      r := r * b;
+    ENDIF
+    b := b * b;
+    e := e / 2;
+  ENDWHILE
+  result := r;
+END
+
+PROGRAM IS
+  p, ba, ex
+IN
+  ba := 2;
+  ex := 10;
+  power(ba, ex, p);
+  WRITE p;
+  ba := 3;
+  ex := 7;
+  power(ba, ex, p);
+  WRITE p;
+  ba := 5;
+  ex := 4;
+  power(ba, ex, p);
+  WRITE p;
+END
