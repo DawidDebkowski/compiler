@@ -1,39 +1,25 @@
-/*
- * Kod kompilatora na Języki Formalne i Techniki Translacji
- *
- * Autor: Dawid Dębkowski 
- * Numer Indeksu: 279714
- * 2026-02-01
-*/
+# Kompilator na Języki Formalne i Techniki Translacji
+Autor: Dawid Dębkowski 
 
-Narzędzia:
+## Narzędzia:
 ----------------------------------------
-bison (GNU Bison) 3.8.2
-flex 2.6.4
-GNU Make 4.4.1
-g++ 15.2.1 20260103
+- bison (GNU Bison) 3.8.2
+- flex 2.6.4
+- GNU Make 4.4.1
+- g++ 15.2.1 20260103
 
 
-Biblioteki:
+## Biblioteki:
 ----------------------------------------
 cln 1.3.7
 
-Uruchomienie:
+## Uruchomienie:
 ----------------------------------------
-kompilator <plik_wejsciowy> <plik_wyjsciowy>
+make
+make test
+### ręczne
+./compiler <input_file> <output_assembly_file>
+./mw2025/maszyna-wirtualna-cln <assembly_file>
 
-Pliki:
-----------------------------------------
-ReadMe.txt
-Makefile
-src/ast.cpp
-src/ast.hpp
-src/codegen.cpp
-src/codegen.hpp
-src/lexer.l
-src/math_kernel.cpp
-src/math_kernel.hpp
-src/parser.y
-src/symtable.cpp
-src/symtable.hpp
-src/types.hpp
+## Opis języka
+Opis języka oraz asemblera znajduje się w labor4.pdf
