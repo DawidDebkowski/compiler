@@ -1,7 +1,0 @@
-RST a
-INC a
-SWP b
-SWP b
-STORE 2
-WRITE
-HALT

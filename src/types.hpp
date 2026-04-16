@@ -1,3 +1,4 @@
+// Dawid Dębkowski 279714
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
@@ -9,7 +10,6 @@
 using namespace std;
 using BigInt = cln::cl_I;
 
-// Forward declaration if needed, or included here
 struct Symbol {
     long long address;
     bool is_array;
@@ -23,7 +23,7 @@ struct Symbol {
     bool is_iterator = false;
     bool is_initialized = false;
     
-    // Register Allocation
+    // Register Allocation (not used)
     int reg_in_use = -1; // -1 if in memory, 0-7 if in register
 };
 

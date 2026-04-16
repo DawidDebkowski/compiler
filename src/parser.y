@@ -14,7 +14,6 @@
 #include "symtable.hpp"
 #include "math_kernel.hpp"
 #include "ast.hpp"
-#include "tac_backend.hpp"
 
 using namespace std;
 
@@ -95,9 +94,6 @@ proc_head : pidentifier LPAREN {
         }
         ProcedureInfo info;
         info.address = -1; 
-        // Allocate RA Slot
-        info.ra_address = memory_offset++;
-        printf("%lld\n", info.ra_address);
         procedures_map[current_procedure] = info;
     } args_decl RPAREN {
     }
@@ -253,7 +249,8 @@ int main(int argc, char* argv[]) {
     if (yyparse() == 0 && parsed_root) {
         parsed_root->validate();
         
-        if (argc > 2) {
+        // printing ast
+        /* if (argc > 2) {
              string out_name = argv[2];
              string ast_name = out_name + ".ast";
              ofstream ast_file(ast_name);
@@ -262,27 +259,10 @@ int main(int argc, char* argv[]) {
                  ast_file.close();
                  // cout << "AST written to " << ast_name << endl;
              }
-        }
+        } */
         
-        TACBackend backend;
-        cerr << "GenTAC..." << endl;
-        parsed_root->genTAC();
-
-        if (argc > 2) {
-             string out_name = argv[2];
-             string tac_name = out_name + ".tac";
-             ofstream tac_file(tac_name);
-             if (tac_file.is_open()) {
-                 printTAC(tac_file);
-                 tac_file.close();
-             }
-        }
-
-        cerr << "Backend Processing..." << endl;
-        backend.process();
-        cerr << "Optimizing..." << endl;
+        parsed_root->codegen();
         optimize_code();
-        cerr << "Clean..." << endl;
         
         FILE* out = stdout;
         if (argc > 2) {

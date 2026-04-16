@@ -1,9 +1,8 @@
+// Dawid Dębkowski 279714
 #include "codegen.hpp"
 #include <iostream>
 
 vector<Instruction> code;
-vector<long long> loop_stack;
-vector<long long> if_stack;
 
 long long addr_mul = -1;
 long long addr_div = -1;
@@ -14,27 +13,54 @@ vector<long long> calls_div;
 vector<long long> calls_mod;
 
 Symbol* reg_descriptors[8] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+AccState acc_tracker = {false, "", 0, false};
 
-// I
+void reset_acc_tracker() {
+    acc_tracker.valid = false;
+    acc_tracker.variable = "";
+    acc_tracker.is_const = false;
+}
+
+void opcodeCheck(string opcode, long long arg) {
+    // reset_acc_tracker();
+    // 1. Instructions that preserve r0
+    if (opcode == "WRITE" || opcode == "STORE" || 
+        opcode == "JUMP" || opcode == "JPOS" || opcode == "JZERO" || opcode == "RSTORE") {
+        return;
+    } 
+    
+    // 2. Instructions that preserve r0 ONLY if they operate on other registers
+    if (opcode == "RST" || opcode == "INC" || opcode == "DEC" || opcode == "SHL" || opcode == "SHR") {
+        if(arg != 0) {
+            return;
+        }
+    }
+
+    reset_acc_tracker();
+}
+
 void emit(string opcode) {
+    opcodeCheck(opcode, 10);
     code.push_back({opcode, 0, false, ""});
 }
-// hate
+
 void emit(string opcode, long long arg) {
+    opcodeCheck(opcode, arg);
     code.push_back({opcode, arg, true, ""});
 }
-// C
+
 void emit(string opcode, string comment) {
+    opcodeCheck(opcode, 10); // Default to 0
     code.push_back({opcode, 0, false, comment});
 }
-// ++
+
 void emit(string opcode, long long arg, string comment) {
+    opcodeCheck(opcode, arg);
     code.push_back({opcode, arg, true, comment});
 }
 
-// I
+// adds comment line before
 void add_comment(string comment) {
-    if (code.empty()) return;
     if(code[code.size()-1].comment == "") {
         code[code.size()-1].comment = comment;
     } else {
@@ -46,8 +72,21 @@ void add_comment(string comment) {
 void gen_const(int reg, BigInt value) {
     if (value < 0) value = 0; 
     
+    // Check if r0 already has this constant (optimization)
+    if (reg == 0 && acc_tracker.valid && acc_tracker.is_const && acc_tracker.value_const == cln::cl_I_to_long(value)) {
+        return;
+    }
+
     emit("RST", reg);
-    if (value == 0) return;
+    if (value == 0) {
+        if (reg == 0) {
+            acc_tracker.valid = true;
+            acc_tracker.is_const = true;
+            acc_tracker.value_const = 0;
+            acc_tracker.variable = "";
+        }
+        return;
+    }
     
     unsigned int len = cln::integer_length(value);
     

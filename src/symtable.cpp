@@ -1,3 +1,4 @@
+// Dawid Dębkowski 279714
 #include "symtable.hpp"
 #include <iostream>
 #include <stdlib.h>
@@ -7,10 +8,15 @@
 map<string, Symbol> symbol_table;
 map<string, ProcedureInfo> procedures_map;
 
-long long memory_offset = 5; // Start at 2. 0 unused. 1 reserved for LHS hold.
-long long lhs_hold_addr = 1;
+long long memory_offset = 5; // Start at 2. 0 unused. 1 reserved for LHS hold. ()
+long long lhs_hold_addr = 1; // not used but what if everything breaks? 5h left.
 bool unsafety_detected = false;
 
+// its all just for tab[2^62:2^62+1] and whole unsafety
+// because LOAD SUB for manual base + (index - start) + 1 is too costly than just a compile time passing of base - start
+// and make sure base >= start (less lines, less cost)
+// and it should be safe for too large arrays
+// In that time I should've probably implemented TAC and variables in registers
 struct FreeBlock {
     long long start;
     long long size;
@@ -21,6 +27,9 @@ string current_procedure = "";
 string current_call_proc = "";
 int current_arg_idx = 0;
 
+// for i 
+//   for i
+//      for i
 std::vector<int> current_for_stack;
 int for_id_counter = 0;
 
@@ -81,7 +90,7 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
         exit(1);
     }
 
-    string key = (current_procedure == "") ? name : current_procedure + "_" + name;
+    string key = (current_procedure == "") ? name : current_procedure + "@" + name;
     if (symbol_table.count(key)) {
         yyerror(("Redeclaration: " + name).c_str());
         exit(1);
@@ -96,19 +105,18 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
     s.mod = mod;
     s.is_iterator = false;
     
-    // Point 5: O means undefined value.
     if (mod == "O") s.is_initialized = false;
     else s.is_initialized = true; 
 
     // Allocation Logic
     long long alloc_size = 1;
     if (is_array && !is_param) {
-         alloc_size = (end - start + 1) + 1; // +1 for Header
+         alloc_size = (end - start + 1) + 1; // +1 for Header for unsafe arrays
     }
 
     long long addr = -1;
 
-    // Step A: Try Holes
+    // Try Holes
     if (is_array && !is_param) {
          // Arrays need base >= start
          addr = find_hole(alloc_size, start);
@@ -117,17 +125,17 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
          addr = find_hole(alloc_size, 0);
     }
     
-    // Step B: Append if no hole
+    // Append if no hole
     if (addr == -1) {
         if (is_array && !is_param) {
-            // Strategy 2: Alignment
+            // Alignment
             if (memory_offset >= start) {
                 // Natural fit
                 addr = memory_offset;
                 memory_offset += alloc_size;
             } else {
                 long long gap = start - memory_offset;
-                if (gap < 1000) {
+                if (gap < 10000000) {
                     // Fill gap with hole
                     add_hole(memory_offset, gap);
                     addr = start;
@@ -155,36 +163,35 @@ void add_symbol(string name, bool is_array, bool is_param, string mod, long long
         procedures_map[current_procedure].param_is_array.push_back(is_array);
         procedures_map[current_procedure].param_names.push_back(name);
         
-        // Spec Check: T must be array
          if (mod == "T" && !is_array) {
             yyerror(("Parameter " + name + " marked T must be an array").c_str());
          }
          if (mod != "T" && is_array) {
-             // Spec point 3: "nazwa tablicy ... powinna być poprzedzona literą T"
              yyerror(("Array parameter " + name + " must be marked with T").c_str());
          }
     }
 }
 
 Symbol* get_variable(string name) {
+    // Try current FOR scope (Iterate from innermost to outermost)
+    // Local Loop shadows everything
+    for (int i = current_for_stack.size() - 1; i >= 0; i--) {
+        string for_key = "for_" + std::to_string(current_for_stack[i]) + "@" + name;
+        if (symbol_table.find(for_key) != symbol_table.end()) {
+            return &symbol_table[for_key];
+        }
+    }
+
     // Check substitution (Inlining)
-    string sub_key = current_procedure + "_" + name;
+    string sub_key = current_procedure + "@" + name;
     if (substitution_map.count(sub_key)) {
         return substitution_map[sub_key];
     }
 
-    // Try local proc first
-    string key = current_procedure + "_" + name;
+    // Try local proc
+    string key = current_procedure + "@" + name;
     if (symbol_table.find(key) != symbol_table.end()) {
         return &symbol_table[key];
-    }
-    
-    // Try current FOR scope (Iterate from innermost to outermost)
-    for (int i = current_for_stack.size() - 1; i >= 0; i--) {
-        string for_key = "for_" + std::to_string(current_for_stack[i]) + "_" + name;
-        if (symbol_table.find(for_key) != symbol_table.end()) {
-            return &symbol_table[for_key];
-        }
     }
     
     // Global

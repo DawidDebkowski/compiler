@@ -1,3 +1,4 @@
+// Dawid Dębkowski 279714
 #include "ast.hpp"
 #include "codegen.hpp"
 #include "symtable.hpp"
@@ -12,10 +13,12 @@ static std::map<std::string, int> proc_usage_count;
 static std::map<std::string, bool> proc_has_array_params;
 
 // Cache: Maps "Parameter Slot Address" -> "Symbol currently stored there"
+// for multiple procedure calls after one another
 static std::map<long long, Symbol*> param_cache;
 
 void reset_param_cache() {
     param_cache.clear();
+    reset_acc_tracker();
 }
 
 bool should_inline(std::string name) {
@@ -61,6 +64,23 @@ void NumberNode::codegen_to_reg(int reg) {
     gen_const(reg, value);
 }
 
+void IdentifierNode::validate() {
+    Symbol* s = get_variable(name);
+    if (!s) {
+        std::string msg = "Undefined variable " + name;
+        yyerror(msg.c_str());
+        exit(1);
+    }
+    if (is_array && !is_index_const) {
+        Symbol* idx = get_variable(index_name);
+        if (!idx) {
+             std::string msg = "Undefined variable " + index_name + " in array index";
+             yyerror(msg.c_str());
+             exit(1);
+        }
+    } 
+}
+
 // uses 0-2 regs
 void IdentifierNode::codegen_address(int reg) {
     Symbol* s = get_variable(name);
@@ -69,7 +89,7 @@ void IdentifierNode::codegen_address(int reg) {
         yyerror(msg.c_str());
         exit(1);
     }
-
+    
     if (!is_array) {
         if (s->is_param) {
             // Parameter passed by reference (address is at s->address)
@@ -93,6 +113,7 @@ void IdentifierNode::codegen_address(int reg) {
                      gen_const(2, index_val);
                      emit("ADD", 2);
                  } else {
+                     // Index - Header + 1 + Base
                      emit("LOAD", s->address, "Array param with const index");
                      emit("RLOAD", 0);         
                      emit("SWP", 2);           
@@ -105,7 +126,6 @@ void IdentifierNode::codegen_address(int reg) {
                  }
              } else {
                  // Global Array: Base + 1 + (Index - Start)
-                 // Optimized: We know Start.
                  long long offset = index_val - s->start;
                  gen_const(0, s->address + 1 + offset); 
              }
@@ -129,21 +149,24 @@ void IdentifierNode::codegen_address(int reg) {
                      emit("LOAD", s->address); 
                      emit("ADD", 2); 
                  } else {
-                     emit("SWP", 2, "Array param with variable index");
-                     emit("LOAD", s->address);
-                     emit("RLOAD", 0);
-                     emit("SWP", 2);
-                     emit("SUB", 2);
-                     emit("INC", 0);
-                     emit("SWP", 2);
-                     emit("LOAD", s->address); 
-                     emit("ADD", 2, "loaded");
+                     emit("SWP", 2, "Array param with variable index"); // r2 = Index
+                     
+                     emit("LOAD", s->address); // r0 = Base
+                     emit("SWP", 1);           // r1 = Base
+                     
+                     emit("RLOAD", 1);         // r0 = Header (M[Base])
+                     
+                     emit("SWP", 2);           // r2 = Header, r0 = Index
+                     emit("SUB", 2);           // r0 = Index - Header
+                     emit("INC", 0);           // r0 = Index - Header + 1
+                     
+                     emit("ADD", 1);           // r0 = Base + Offset
                  }
              } else {
                  // Global Array
                  // Index in r0
                  
-                 // We need: (Base + 1) + (Index - Start)
+                 // Base + 1) + (Index - Start)
                  
                  if (s->start > 0) {
                      gen_const(2, s->start);
@@ -168,14 +191,26 @@ void IdentifierNode::codegen_to_reg(int reg) {
              emit("LOAD", s->address); // Load Address
              emit("RLOAD", 0); // Load Value
         } else {
-             emit("LOAD", s->address);
+             if (reg == 0 && acc_tracker.valid && !acc_tracker.is_const && acc_tracker.variable == name) {
+                 // Hit!
+                 add_comment("Optimized: Skip LOAD " + name);
+             } else {
+                emit("LOAD", s->address);
+                if (reg == 0) {
+                     acc_tracker.valid = true;
+                     acc_tracker.is_const = false;
+                     acc_tracker.variable = name;
+                }
+             }
         }
     } else {
         codegen_address(0); // Address in r0
         emit("RLOAD", 0);   // Value in r0
     }
     
-    if (reg != 0) emit("SWP", reg);
+    if (reg != 0) {
+        emit("SWP", reg);
+    }
 }
 
 // --- BinaryOpNode ---
@@ -223,7 +258,7 @@ void BinaryOpNode::codegen_to_reg(int reg) {
                  return;
              }
              
-             // Small Constants Optimizations (limited to small values to avoid huge code explotion)
+             // Small Constants Optimizations (limited to small values to avoid huge code explosion)
              if (val > 0 && val <= 10) {
                  long long v_small = cln::cl_I_to_long(val);
                  operand->codegen_to_reg(0);
@@ -297,6 +332,61 @@ void BinaryOpNode::codegen_to_reg(int reg) {
         }
     }
     
+    if (op == BinaryOp::PLUS) {
+        // Optimization: x + x = x << 1
+        auto* id1 = dynamic_cast<IdentifierNode*>(left);
+        auto* id2 = dynamic_cast<IdentifierNode*>(right);
+        
+        if (id1 && id2) {
+             bool match = false;
+             if (!id1->is_array && !id2->is_array) {
+                 if (id1->name == id2->name) match = true;
+             }
+             else if (id1->is_array && id2->is_array) {
+                 if (id1->name == id2->name) {
+                     if (id1->is_index_const && id2->is_index_const) {
+                         if (id1->index_val == id2->index_val) match = true;
+                     } 
+                     else if (!id1->is_index_const && !id2->is_index_const) {
+                         if (id1->index_name == id2->index_name) match = true;
+                     }
+                 }
+             }
+
+             if (match) {
+                 // x + x => x << 1
+                 left->codegen_to_reg(reg);
+                 emit("SHL", reg);
+                 return;
+             }
+        }
+
+        if (right->is_constant()) {
+             BigInt val = right->evaluate();
+             if (val == 0) { left->codegen_to_reg(reg); return; }
+             if (val == 1) { left->codegen_to_reg(reg); emit("INC", reg); return; }
+        }
+        if (left->is_constant()) {
+             BigInt val = left->evaluate();
+             if (val == 0) { right->codegen_to_reg(reg); return; }
+             if (val == 1) { right->codegen_to_reg(reg); emit("INC", reg); return; }
+        }
+    }
+    
+    if (op == BinaryOp::MINUS) {
+        if (right->is_constant()) {
+            BigInt val = right->evaluate();
+            if (val == 0) { left->codegen_to_reg(reg); return; }
+            if (val == 1) { left->codegen_to_reg(reg); emit("DEC", reg); return; }
+        }
+
+        // 0 - x = 0.
+        if (left->is_constant() && left->evaluate() == 0) {
+             gen_const(reg, 0);
+             return;
+        }
+    }
+
     switch(op) {
         case BinaryOp::PLUS:
             left->codegen_to_reg(1);
@@ -311,12 +401,12 @@ void BinaryOpNode::codegen_to_reg(int reg) {
         case BinaryOp::MULT:
             left->codegen_to_reg(1);
             right->codegen_to_reg(2);    
-            emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 1);
+            emit("CALL", 0); calls_mul.push_back(code.size()-1); emit("SWP", 3);
             break;
         case BinaryOp::DIV:
             left->codegen_to_reg(1);
             right->codegen_to_reg(2);    
-            emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 1);
+            emit("CALL", 0); calls_div.push_back(code.size()-1); emit("SWP", 6);
             break;
         case BinaryOp::MOD:
             left->codegen_to_reg(1);
@@ -368,16 +458,11 @@ void AssignmentNode::validate() {
 }
 
 void AssignmentNode::codegen() {
-    // Safe way: Evaluate Expr first
+    // Evaluate Expr first
     // If Assign: A[i] := B + C.
     // Calc B+C -> Result in r0.
-    // SWP 1 (Save result).
-    // Calc Address of A[i] -> r0.
-    // SWP 1 (Addr in r1, Result in r0).
-    // STORE/RSTORE. 
     
     if (target->is_array || (get_variable(target->name)->is_param)) {
-        // Compute Address of Target
         expr->codegen_to_reg(0);
 
         emit("SWP", 3);
@@ -394,6 +479,12 @@ void AssignmentNode::codegen() {
         expr->codegen_to_reg(0);
         Symbol* s = get_variable(target->name);
         emit("STORE", s->address);
+        
+        // After STORE, r0 still holds the value.
+        // We can mark it as being 'target->name'
+        acc_tracker.valid = true;
+        acc_tracker.is_const = false;
+        acc_tracker.variable = target->name;
     }
 }
 
@@ -563,11 +654,12 @@ void IfNode::codegen() {
         return;
     }
 
-    reset_param_cache();
+    reset_acc_tracker();
     // Condition
     long long jump_idx_pos;
     condition->codegen_jump_false(0);
     reset_param_cache();
+    reset_acc_tracker(); 
     jump_idx_pos = code.size() - 1;
     
     // Then Block
@@ -582,12 +674,14 @@ void IfNode::codegen() {
     
     // Backpatch False Jump
     code[jump_idx_pos].arg = code.size();
+    reset_acc_tracker(); // Join point (Else start or End)
     
     // Else
     if (!else_block.empty()) {
         for(auto s : else_block) s->codegen();
         reset_param_cache();
         code[jump_over_else].arg = code.size();
+        reset_acc_tracker(); // Join point
     }
 }
 
@@ -609,20 +703,24 @@ void WhileNode::codegen() {
          // Infinite Loop
          add_comment("Infinite WHILE loop (condition true)");
          reset_param_cache();
+         reset_acc_tracker(); // Barrier
          long long start = code.size();
          // No condition check
          reset_param_cache();
          for(auto s : body) s->codegen();
          emit("JUMP", start);
          reset_param_cache();
+         reset_acc_tracker(); // Barrier
          return;
     }
 
     reset_param_cache();
+    reset_acc_tracker(); // Barrier
     long long start = code.size();
     
     condition->codegen_jump_false(0);
     reset_param_cache();
+    reset_acc_tracker(); // Barrier (Jump Target/Fallthrough)
     long long jump_out = code.size()-1;
     
     for(auto s : body) s->codegen();
@@ -630,6 +728,7 @@ void WhileNode::codegen() {
     
     emit("JUMP", start);
     code[jump_out].arg = code.size();
+    reset_acc_tracker(); // Barrier (Loop exit)
 }
 
 void WhileNode::validate() {
@@ -643,30 +742,39 @@ void RepeatNode::codegen() {
          if (cond_val) { // REPEAT ... UNTIL TRUE -> Runs once
              add_comment("REPEAT UNTIL TRUE (runs once)");
              reset_param_cache();
+             reset_acc_tracker(); // Barrier
              for(auto s : body) s->codegen();
              reset_param_cache();
+             reset_acc_tracker(); // Barrier
              return;
          }
          // REPEAT ... UNTIL FALSE -> Infinite Loop
          add_comment("REPEAT UNTIL FALSE (infinite loop)");
          reset_param_cache();
+         reset_acc_tracker(); // Barrier
          long long start = code.size();
-         
+         // No condition check
          reset_param_cache();
+         reset_acc_tracker(); // Barrier (Loop Header)
          for(auto s : body) s->codegen();
          
          emit("JUMP", start);
          reset_param_cache();
+         reset_acc_tracker(); // Barrier
          return;
     }
 
      reset_param_cache();
+     reset_acc_tracker(); // Barrier
      long long start = code.size();
+     reset_acc_tracker(); // Barrier (Loop Header)
+
      for(auto s : body) s->codegen();
      reset_param_cache();
      
      condition->codegen_jump_false(0);
      reset_param_cache();
+     reset_acc_tracker(); // Barrier (Jump Target/Fallthrough)
      long long jump_instr = code.size()-1;
      code[jump_instr].arg = start;
 }
@@ -681,91 +789,126 @@ void RepeatNode::validate() {
 // FOR i FROM start DOWNTO end DO ...
 void ForNode::codegen() {
     reset_param_cache();
+    reset_acc_tracker(); // Barrier
     current_for_stack.push_back(for_id);
     
     Symbol* iter = get_variable(iterator);
-    
+    // Standard Loop Implementation
     // Init: iter := start
     start_val->codegen_to_reg(0);
-    emit("STORE", iter->address, "FOR LOOP");
+    emit("STORE", iter->address, "BEGIN FOR LOOP - STORE ITERATOR ADDR");
     
-    // Calculate Count / Limit Logic
-    // TO: count = end - start + 1
-    // DOWNTO: count = start - end + 1
+    end_val->codegen_to_reg(0); // r1 = end
     
-    end_val->codegen_to_reg(1); // r1 = end
-    emit("LOAD", iter->address); // r0 = start
-    
-    // Guard: Check if loop range ensures 0 iterations
-    long long jump_skip_guard = -1;
-    emit("SWP", 2); // r2 = start
-    
+    long long bound_addr = memory_offset++;
+
     if (!downto) {
-        // TO: Exit if start > end
-        emit("RST", 2); // r0 = start
-        emit("SUB", 1); // start - end
-        emit("JPOS", 0); 
-        jump_skip_guard = code.size() - 1;
-    } else {
-        // DOWNTO: Exit if end > start
-        emit("RST", 1); // r0 = end
-        emit("SUB", 2); // end - start
+        // TO: Limit comparison
+        emit("STORE", bound_addr);
+        
+        long long loop_start = code.size();
+        reset_acc_tracker(); // Barrier (Loop Header)
+        
+        // Loop Condition: iter <= limit
+        // Exit if iter > limit => iter - limit > 0
+        emit("LOAD", bound_addr);
+        emit("SWP", 1);
+        emit("LOAD", iter->address);
+        emit("SUB", 1);
         emit("JPOS", 0);
-        jump_skip_guard = code.size() - 1;
-    }
-    
-    // Calculate Count
-    emit("RST", 1); emit("SWP", 1); // r1 = end
-    emit("RST", 2); // r0 = start
-    
-    if (!downto) {
-        // TO: r1 - r0 + 1
-        emit("SWP", 1); // r1=start, r0=end
-        emit("SUB", 1); // end - start
+        
+        reset_acc_tracker(); // Barrier
+        long long jump_out = code.size()-1;
+        
+        // Body
+        for(auto s : body) s->codegen();
+        reset_param_cache();
+        
+        // Step Iterator
+        emit("LOAD", iter->address);
+        emit("INC", 0);
+        emit("STORE", iter->address);
+        
+        emit("JUMP", loop_start, "END FOR LOOP");
+        code[jump_out].arg = code.size();
+        
     } else {
-        // DOWNTO: r0 - r1 + 1
-        emit("SUB", 1); // start - end
+         // DOWNTO: Count logic
+         // if end > start then count = 0 else count = start - end + 1
+         
+         // r1 currently has end
+         // iter->address has start
+         
+         emit("STORE", bound_addr); // Store 'end' temporarily in bound_addr
+         
+         // Check if end > start
+         emit("SWP", 1);              // r1 = end
+         emit("LOAD", iter->address); // r0 = start
+         
+         // Result = end - start
+         emit("SWP", 1); // r0 = end, r1 = start
+         emit("SUB", 1); // r0 = end - start
+         
+         emit("JPOS", 0);
+         long long jump_bad_range = code.size() - 1;
+
+         // Good Range (start >= end): Calculate start - end + 1
+         emit("LOAD", iter->address); // r0 = start
+         emit("SWP", 1);              // r1 = start
+         emit("LOAD", bound_addr);    // r0 = end
+         
+         emit("SWP", 1); // r0=start, r1=end
+         emit("SUB", 1); // start - end
+         emit("INC", 0); // +1
+         
+         emit("JUMP", 0); // Jump over 'else'
+         long long jump_ready = code.size() - 1;
+         
+         // Bad Range (start < end): Count = 0
+         code[jump_bad_range].arg = code.size();
+         emit("RST", 0); 
+         
+         code[jump_ready].arg = code.size();
+         // Now r0 contains valid count
+         emit("STORE", bound_addr); // Store COUNT in bound_addr
+        
+        long long loop_start = code.size();
+        reset_acc_tracker(); // Barrier (Loop Header)
+        
+        // Check Count
+        emit("LOAD", bound_addr);
+        emit("JZERO", 0);
+        reset_acc_tracker(); // Barrier
+        long long jump_out = code.size()-1;
+        
+        // Body
+        for(auto s : body) s->codegen();
+        reset_param_cache();
+        
+        // Decrement Count
+        emit("LOAD", bound_addr);
+        emit("DEC", 0);
+        emit("STORE", bound_addr);
+        
+        // Step Iterator
+        emit("LOAD", iter->address);
+        emit("DEC", 0);
+        emit("STORE", iter->address);
+        
+        emit("JUMP", loop_start, "END DOWNTO FOR LOOP");
+        code[jump_out].arg = code.size();
     }
-    emit("INC", 0);
-    
-    long long count_addr = memory_offset++;
-    emit("STORE", count_addr);
-    
-    long long loop_start = code.size();
-    
-    // Check Count
-    emit("LOAD", count_addr);
-    emit("JZERO", 0);
-    long long jump_out = code.size()-1;
-    
-    // Body
-    for(auto s : body) s->codegen();
-    reset_param_cache();
-    
-    // Decrement Count
-    emit("LOAD", count_addr);
-    emit("DEC", 0);
-    emit("STORE", count_addr);
-    
-    // Step Iterator
-    emit("LOAD", iter->address);
-    if (!downto) emit("INC", 0); else emit("DEC", 0);
-    emit("STORE", iter->address);
-    
-    emit("JUMP", loop_start);
-    long long end_label = code.size();
-    code[jump_out].arg = end_label;
-    if (jump_skip_guard != -1) code[jump_skip_guard].arg = end_label;
     
     current_for_stack.pop_back();
     reset_param_cache();
+    reset_acc_tracker(); // Barrier (Loop Exit)
 }
 
 void ForNode::validate() {
     for_id = ++for_id_counter;
     current_for_stack.push_back(for_id);
     
-    string iter_key = "for_" + std::to_string(for_id) + "_" + iterator;
+    string iter_key = "for_" + std::to_string(for_id) + "@" + iterator;
     Symbol s;
     s.address = memory_offset++;
     s.is_array = false;
@@ -792,10 +935,10 @@ void ProcCallNode::codegen() {
         add_comment("next line inlining " + proc_name);
         ProcedureInfo& info = procedures_map[proc_name];
         
-        // 1. Argument Resolution & Substitution
+        // Argument Resolution & Substitution
         for (size_t i=0; i < args.size(); i++) {
             string param_name = info.param_names[i];
-            string sub_key = proc_name + "_" + param_name;
+            string sub_key = proc_name + "@" + param_name;
             
             if (auto* arg = dynamic_cast<IdentifierNode*>(args[i])) {
                  Symbol* src = get_variable(arg->name);
@@ -806,8 +949,6 @@ void ProcCallNode::codegen() {
                  gen_const(0, num->value);
                  emit("STORE", temp_addr);
                  
-                 // Create temp symbol
-                 // We intentionally leak this for now as it persists for compilation
                  Symbol* s = new Symbol();
                  s->address = temp_addr;
                  s->is_array = false;
@@ -819,22 +960,21 @@ void ProcCallNode::codegen() {
             }
         }
         
-        // 2. Generate Body
+        // Generate Body
         string old_proc = current_procedure;
         current_procedure = proc_name;
         
         ProcedureNode* p_node = procedure_defs[proc_name];
         
-        // We need to iterate body. p_node->body is visible due to friend/public update.
         for(auto s : p_node->body) {
             s->codegen();
         }
         
         current_procedure = old_proc;
         
-        // 3. Cleanup
+        // Cleanup
         for (size_t i=0; i < args.size(); i++) {
-             string sub_key = proc_name + "_" + info.param_names[i];
+             string sub_key = proc_name + "@" + info.param_names[i];
              remove_substitution(sub_key);
         }
         
@@ -852,6 +992,7 @@ void ProcCallNode::codegen() {
 
             // Check Cache
             if (param_cache.count(param_addr) && param_cache[param_addr] == s) {
+                add_comment("not loading cached parameter " + arg->name + " in reg " + std::to_string(param_addr));
                 continue; // Optimized
             }
             param_cache[param_addr] = s;
@@ -920,6 +1061,7 @@ void ProcCallNode::validate() {
 
 void ProcedureNode::codegen() {
     reset_param_cache();
+    reset_acc_tracker();
     current_procedure = name;
     procedures_map[name].address = code.size();
     long long ra = memory_offset++;
@@ -943,6 +1085,7 @@ void ProcedureNode::validate() {
 void RootNode::codegen() {
     emit("JUMP", 0);
     reset_param_cache();
+    reset_acc_tracker();
     
     // Analyze Usage
     std::set<std::string> used_procs;
@@ -1004,7 +1147,7 @@ void RootNode::codegen() {
     }
     for(auto s : main_block) s->codegen();
     
-    // emit("HALT");
+    emit("HALT");
     
     // Kernel Gen
     if (!calls_mul.empty()) {
@@ -1055,9 +1198,7 @@ void IdentifierNode::print(std::ostream& out, int indent) const {
     out << indent_str(indent) << "Identifier(" << name;
     if(is_array) {
         if(is_index_const) out << "[" << index_val << "]";
-        else if (index_expr) {
-            out << "[Expr]"; 
-        } else {
+        else {
              out << "[" << index_name << "]";
         }
     }
@@ -1190,7 +1331,7 @@ void WhileNode::collect_reachable_procedures(std::set<std::string>& used_procs) 
     bool res;
     if (condition->try_evaluate(res)) {
         if (!res) {
-             // Condition False -> Loop never runs (Dead)
+             // Condition False -> Loop never runs
              return; 
         }
     }
@@ -1242,488 +1383,3 @@ void RootNode::collect_reachable_procedures(std::set<std::string>& used_procs) {
         }
     }
 }
-
-// --- TAC Generation Implementation ---
-
-void RootNode::genTAC(Operand dest) {
-    // Jump to Main
-    emitTAC(TACOp::JUMP, Operand::makeLabel("main"), Operand(), Operand(), "Entry Jump");
-
-    for (auto* proc : procedures) {
-        proc->genTAC();
-    }
-
-    emitTAC(TACOp::LABEL, Operand::makeLabel("main"), Operand(), Operand(), "Main Program");
-    
-    if (unsafety_detected) {
-         for(auto const& [name, sym] : symbol_table) {
-             if (sym.is_array && sym.is_passed_to_proc && !sym.is_param) {
-                  Operand startVal = makeTemp();
-                  emitTAC(TACOp::COPY, startVal, Operand::makeConst(sym.start), Operand());
-                  
-                  Operand addrReg = makeTemp();
-                  emitTAC(TACOp::COPY, addrReg, Operand::makeConst(sym.address), Operand());
-                  
-                  emitTAC(TACOp::STORE, addrReg, startVal, Operand(), "init unsafe header " + name);
-             }
-         }
-    }
-    
-    for (auto* stmt : main_block) {
-        stmt->genTAC();
-    }
-    
-    emitTAC(TACOp::HALT, Operand(), Operand(), Operand(), "HALT");
-}
-
-void ProcedureNode::genTAC(Operand dest) {
-    current_procedure = name;
-    emitTAC(TACOp::LABEL, Operand::makeLabel("proc_" + name), Operand(), Operand(), "Procedure " + name);
-    
-    long long ra_slot = procedures_map[name].ra_address;
-    emitTAC(TACOp::PROLOGUE, Operand::makeConst(ra_slot), Operand(), Operand());
-    
-    for (auto* stmt : body) {
-        stmt->genTAC();
-    }
-    emitTAC(TACOp::RETURN, Operand::makeConst(ra_slot), Operand(), Operand());
-    current_procedure = "";
-}
-
-void AssignmentNode::genTAC(Operand dest) {
-    Operand rhs = makeTemp();
-    expr->genTAC(rhs);
-    
-    Symbol* s = get_variable(target->name);
-    Operand lhsVar = Operand::makeVar(target->name, s);
-    
-    if (!target->is_array) {
-        if (s->is_param) {
-            // Write to Scalar Parameter (Pass-by-reference)
-            // 'lhsVar' holds the address (pointer)
-            // We store 'rhs' into the address pointed to by 'lhsVar'
-            emitTAC(TACOp::STORE, lhsVar, rhs, Operand());
-        } else {
-            // Write to Global Variable
-            // 'lhsVar' holds the val (symbol address logic handled in backend)
-            emitTAC(TACOp::COPY, lhsVar, rhs, Operand());
-        }
-    } else {
-        Operand idx;
-        if (target->is_index_const) {
-            idx = Operand::makeConst(target->index_val);
-        } else {
-            Symbol* idxSym = get_variable(target->index_name);
-            Operand idxVar = Operand::makeVar(target->index_name, idxSym);
-            
-            if (idxSym->is_param) {
-                idx = makeTemp();
-                emitTAC(TACOp::LOAD, idx, idxVar, Operand());
-            } else {
-                idx = idxVar;
-            }
-        }
-        
-         Operand base = makeTemp();
-         Operand addr = makeTemp();
-         
-         if (s->is_param) {
-              if (unsafety_detected) {
-                   // Unsafe: params have RealBase
-                   // Addr = RealBase + 1 + Index - M[RealBase]
-                   Operand rBase = makeTemp();
-                   emitTAC(TACOp::COPY, rBase, lhsVar, Operand());
-                   Operand hStart = makeTemp();
-                   emitTAC(TACOp::LOAD, hStart, rBase, Operand());
-                   
-                   emitTAC(TACOp::COPY, base, rBase, Operand());
-                   emitTAC(TACOp::ADD, base, base, Operand::makeConst(1));
-                   emitTAC(TACOp::ADD, base, base, idx);
-                   emitTAC(TACOp::SUB, addr, base, hStart, "unsafe assign");
-              } else {
-                   // Safe: params have VirtualBase
-                   emitTAC(TACOp::COPY, base, lhsVar, Operand());
-                   emitTAC(TACOp::ADD, addr, base, idx);
-              }
-         } else {
-              // Global Array: Constant Virtual Base
-              long long vb = s->address - s->start;
-              emitTAC(TACOp::COPY, base, Operand::makeConst(vb), Operand());
-              emitTAC(TACOp::ADD, addr, base, idx);
-         }
-         // Note: Global logic included +1 for header if handled via sym address.
-         // Here we construct manually.
-         // If s->is_param, we trust caller provided correct VB.
-         // But wait, global arrays s->address includes header offset?
-         // symtable allocates size+1. s->address is start of data? No, usually s->address is base.
-         // Let's assume s->address IS the location of index 'start'.
-         
-         emitTAC(TACOp::STORE, addr, rhs, Operand());
-    }
-}
-
-void IfNode::genTAC(Operand dest) {
-    if (else_block.empty()) {
-         std::string labelEnd = makeLabel();
-         
-         // If False -> Jump to End
-         condition->genTAC_cond(labelEnd, false); 
-         
-         for(auto* s : then_block) s->genTAC();
-         
-         emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand());
-    } else {
-         std::string labelElse = makeLabel();
-         std::string labelEnd = makeLabel();
-         
-         // If False -> Jump to Else
-         condition->genTAC_cond(labelElse, false);
-         
-         for(auto* s : then_block) s->genTAC();
-         
-         // Jump over Else
-         emitTAC(TACOp::JUMP, Operand::makeLabel(labelEnd), Operand(), Operand());
-         
-         emitTAC(TACOp::LABEL, Operand::makeLabel(labelElse), Operand(), Operand());
-         for(auto* s : else_block) s->genTAC();
-         
-         emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand());
-    }
-}
-
-void WhileNode::genTAC(Operand dest) {
-    std::string labelStart = makeLabel();
-    std::string labelEnd = makeLabel();
-    
-    emitTAC(TACOp::LABEL, Operand::makeLabel(labelStart), Operand(), Operand(), "While Start");
-    
-    condition->genTAC_cond(labelEnd, false);
-    
-    for(auto* s : body) s->genTAC();
-    
-    emitTAC(TACOp::JUMP, Operand::makeLabel(labelStart), Operand(), Operand());
-    emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand(), "While End");
-}
-
-void RepeatNode::genTAC(Operand dest) {
-    std::string labelStart = makeLabel();
-    
-    emitTAC(TACOp::LABEL, Operand::makeLabel(labelStart), Operand(), Operand(), "Repeat Start");
-    
-    for(auto* s : body) s->genTAC();
-    
-    condition->genTAC_cond(labelStart, false);
-}
-
-void ForNode::genTAC(Operand dest) {
-    current_for_stack.push_back(for_id); // PUSH stack
-    Symbol* s = get_variable(iterator);
-    Operand iter = Operand::makeVar(iterator, s);
-    
-    Operand startOp = makeTemp();
-    start_val->genTAC(startOp);
-    
-    Operand endOp = makeTemp();
-    end_val->genTAC(endOp);
-    
-    // Init: iter = start
-    emitTAC(TACOp::COPY, iter, startOp, Operand(), "For Init");
-    
-    // Calculate Count: (TO ? end - start : start - end) + 1
-    Operand count = makeTemp();
-    if (!downto) {
-         emitTAC(TACOp::SUB, count, endOp, startOp);
-    } else {
-         emitTAC(TACOp::SUB, count, startOp, endOp);
-    }
-    emitTAC(TACOp::ADD, count, count, Operand::makeConst(1));
-    
-    std::string labelLoop = makeLabel();
-    std::string labelEnd = makeLabel();
-    
-    emitTAC(TACOp::LABEL, Operand::makeLabel(labelLoop), Operand(), Operand());
-    
-    // Check Count > 0
-    emitTAC(TACOp::JUMP_LEQ, Operand::makeLabel(labelEnd), count, Operand::makeConst(0));
-    
-    for(auto* s : body) s->genTAC();
-    
-    // count--
-    emitTAC(TACOp::SUB, count, count, Operand::makeConst(1), "Dec count");
-    
-    // iter step
-    if (downto) {
-        emitTAC(TACOp::SUB, iter, iter, Operand::makeConst(1), "Dec iter");
-    } else {
-        emitTAC(TACOp::ADD, iter, iter, Operand::makeConst(1), "Inc iter");
-    }
-    
-    emitTAC(TACOp::JUMP, Operand::makeLabel(labelLoop), Operand(), Operand());
-    emitTAC(TACOp::LABEL, Operand::makeLabel(labelEnd), Operand(), Operand(), "For End");
-    
-    current_for_stack.pop_back(); // POP stack
-}
-
-void ReadNode::genTAC(Operand dest) {
-    Symbol* s = get_variable(target->name);
-    Operand var = Operand::makeVar(target->name, s);
-    
-    Operand val = makeTemp();
-    
-    emitTAC(TACOp::READ, val, Operand(), Operand());
-    
-    if (!target->is_array) {
-        if (s->is_param) {
-            emitTAC(TACOp::STORE, var, val, Operand());
-        } else {
-             emitTAC(TACOp::COPY, var, val, Operand());
-        }
-    } else {
-         Operand idx;
-         if (target->is_index_const) {
-             idx = Operand::makeConst(target->index_val);
-         } else {
-             Symbol* idxSym = get_variable(target->index_name);
-             Operand idxVar = Operand::makeVar(target->index_name, idxSym);
-             if (idxSym->is_param) {
-                 idx = makeTemp();
-                 emitTAC(TACOp::LOAD, idx, idxVar, Operand());
-             } else {
-                 idx = idxVar;
-             }
-         }
-         
-         Operand base = makeTemp();
-         Operand addr = makeTemp();
-         
-         if (s->is_param) {
-              if (unsafety_detected) {
-                   Operand rBase = makeTemp();
-                   emitTAC(TACOp::COPY, rBase, var, Operand());
-                   Operand hStart = makeTemp();
-                   emitTAC(TACOp::LOAD, hStart, rBase, Operand());
-                   
-                   emitTAC(TACOp::COPY, base, rBase, Operand());
-                   emitTAC(TACOp::ADD, base, base, Operand::makeConst(1));
-                   emitTAC(TACOp::ADD, base, base, idx);
-                   emitTAC(TACOp::SUB, addr, base, hStart, "unsafe read");
-              } else {
-                   emitTAC(TACOp::COPY, base, var, Operand());
-                   emitTAC(TACOp::ADD, addr, base, idx);
-              }
-         } else {
-              long long vb = s->address - s->start;
-              emitTAC(TACOp::COPY, base, Operand::makeConst(vb), Operand());
-              emitTAC(TACOp::ADD, addr, base, idx);
-         }
-         
-         emitTAC(TACOp::STORE, addr, val, Operand());
-    }
-}
-
-void WriteNode::genTAC(Operand dest) {
-    Operand val = makeTemp();
-    expr->genTAC(val);
-    
-    emitTAC(TACOp::WRITE, Operand(), val, Operand());
-}
-
-void ProcCallNode::genTAC(Operand dest) {
-    for (auto* arg : args) {
-         IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg);
-         if (!id) continue;
-         
-         Symbol* s = get_variable(id->name);
-         Operand argOp = Operand::makeVar(id->name, s);
-         
-         if (id->is_array) {
-             // Passing Array Element by Reference
-             Operand idx;
-             if (id->is_index_const) {
-                 idx = Operand::makeConst(id->index_val);
-             } else {
-                 Symbol* idxSym = get_variable(id->index_name);
-                 Operand idxVar = Operand::makeVar(id->index_name, idxSym);
-                 if (idxSym->is_param) {
-                     idx = makeTemp();
-                     emitTAC(TACOp::LOAD, idx, idxVar, Operand());
-                     emitTAC(TACOp::LOAD, idx, idx, Operand()); 
-                 } else {
-                     idx = idxVar;
-                 }
-             }
-             
-             Operand base = makeTemp();
-             Operand addr = makeTemp();
-
-             if (s->is_param) {
-                 if (unsafety_detected) {
-                      Operand rBase = makeTemp();
-                      emitTAC(TACOp::COPY, rBase, argOp, Operand());
-                      Operand hStart = makeTemp();
-                      emitTAC(TACOp::LOAD, hStart, rBase, Operand());
-                      
-                      emitTAC(TACOp::COPY, base, rBase, Operand());
-                      emitTAC(TACOp::ADD, base, base, Operand::makeConst(1));
-                      emitTAC(TACOp::ADD, base, base, idx);
-                      emitTAC(TACOp::SUB, addr, base, hStart, "unsafe param");
-                 } else {
-                      emitTAC(TACOp::COPY, base, argOp, Operand());
-                      emitTAC(TACOp::ADD, addr, base, idx);
-                 }
-             } else {
-                  // Global Array
-                  emitTAC(TACOp::COPY, base, Operand::makeConst(s->address), Operand());
-                  emitTAC(TACOp::COPY, addr, base, Operand());
-                  emitTAC(TACOp::ADD, addr, addr, idx);
-                  emitTAC(TACOp::SUB, addr, addr, Operand::makeConst(s->start), "safe global param");
-             }
-             
-             emitTAC(TACOp::PARAM, Operand(), addr, Operand());
-             
-         } else {
-             // Passing Variable/Array
-             if (s->is_array) {
-                 // Passing whole array
-                 Operand val = makeTemp();
-                 if (s->is_param) {
-                      emitTAC(TACOp::COPY, val, argOp, Operand());
-                 } else {
-                      // Global Array
-                      long long vbase = s->address - s->start; // Virtual
-                      long long rbase = s->address; // Real
-                      if (!unsafety_detected) {
-                           emitTAC(TACOp::COPY, val, Operand::makeConst(vbase), Operand());
-                      } else {
-                           emitTAC(TACOp::COPY, val, Operand::makeConst(rbase), Operand());
-                      }
-                 }
-                 emitTAC(TACOp::PARAM, Operand(), val, Operand());
-             } else {
-                 // Passing Scalar Variable
-                 if (s->is_param) {
-                     // Pass the pointer (Pass-through)
-                     Operand p = makeTemp();
-                     emitTAC(TACOp::COPY, p, argOp, Operand());
-                     emitTAC(TACOp::PARAM, Operand(), p, Operand());
-                 } else {
-                     // Pass address of global
-                     Operand addr = Operand::makeConst(s->address);
-                     emitTAC(TACOp::PARAM, Operand(), addr, Operand());
-                 }
-             }
-         }
-    }
-    
-    emitTAC(TACOp::CALL, Operand(), Operand::makeLabel("proc_" + proc_name), Operand());
-}
-
-void NumberNode::genTAC(Operand dest) {
-    emitTAC(TACOp::COPY, dest, Operand::makeConst(value), Operand());
-}
-
-void IdentifierNode::genTAC(Operand dest) {
-    Symbol* s = get_variable(name);
-    Operand var = Operand::makeVar(name, s);
-    
-    if (!is_array) {
-        if (s->is_param) {
-             emitTAC(TACOp::LOAD, dest, var, Operand());
-        } else {
-             emitTAC(TACOp::COPY, dest, var, Operand());
-        }
-    } else {
-        Operand idx;
-         if (is_index_const) {
-             idx = Operand::makeConst(index_val);
-         } else {
-             Symbol* idxSym = get_variable(index_name);
-             Operand idxVar = Operand::makeVar(index_name, idxSym);
-             if (idxSym->is_param) {
-                 idx = makeTemp();
-                 emitTAC(TACOp::LOAD, idx, idxVar, Operand());
-             } else {
-                 idx = idxVar;
-             }
-         }
-         
-         Operand base = makeTemp();
-         Operand addr = makeTemp();
-
-         if (s->is_param) {
-              if (unsafety_detected) {
-                   Operand rBase = makeTemp();
-                   emitTAC(TACOp::COPY, rBase, var, Operand());
-                   Operand hStart = makeTemp();
-                   emitTAC(TACOp::LOAD, hStart, rBase, Operand());
-                   
-                   emitTAC(TACOp::COPY, base, rBase, Operand());
-                   emitTAC(TACOp::ADD, base, base, Operand::makeConst(1));
-                   emitTAC(TACOp::ADD, base, base, idx);
-                   emitTAC(TACOp::SUB, addr, base, hStart, "unsafe access");
-              } else {
-                   emitTAC(TACOp::COPY, base, var, Operand());
-                   emitTAC(TACOp::ADD, addr, base, idx);
-              }
-         } else {
-              long long vb = s->address - s->start;
-              emitTAC(TACOp::COPY, base, Operand::makeConst(vb), Operand());
-              emitTAC(TACOp::ADD, addr, base, idx);
-         }
-         
-         emitTAC(TACOp::LOAD, dest, addr, Operand());
-    }
-}
-
-void BinaryOpNode::genTAC(Operand dest) {
-    Operand l = makeTemp();
-    Operand r = makeTemp();
-    
-    left->genTAC(l);
-    right->genTAC(r);
-    
-    TACOp opc = TACOp::NOPE;
-    switch(op) {
-        case BinaryOp::PLUS: opc = TACOp::ADD; break;
-        case BinaryOp::MINUS: opc = TACOp::SUB; break;
-        case BinaryOp::MULT: opc = TACOp::MUL; break;
-        case BinaryOp::DIV: opc = TACOp::DIV; break;
-        case BinaryOp::MOD: opc = TACOp::MOD; break;
-    }
-    
-    emitTAC(opc, dest, l, r);
-}
-
-void ConditionNode::genTAC_cond(std::string labelTarget, bool jumpIfTrue) {
-    Operand l = makeTemp();
-    Operand r = makeTemp();
-    
-    left->genTAC(l);
-    right->genTAC(r);
-    
-    TACOp jumpOp = TACOp::NOPE;
-    
-    if (jumpIfTrue) {
-        switch(op) {
-            case ConditionOp::EQ: jumpOp = TACOp::JUMP_EQ; break; // JUMP IF EQ
-            case ConditionOp::NEQ: jumpOp = TACOp::JUMP_NEQ; break; // JUMP IF NEQ
-            case ConditionOp::LT: jumpOp = TACOp::JUMP_LT; break; // JUMP IF LT
-            case ConditionOp::GT: jumpOp = TACOp::JUMP_GT; break; // JUMP IF GT
-            case ConditionOp::LEQ: jumpOp = TACOp::JUMP_LEQ; break; // JUMP IF LEQ
-            case ConditionOp::GEQ: jumpOp = TACOp::JUMP_GEQ; break; // JUMP IF GEQ
-        }
-    } else {
-        // Jump if FALSE
-        switch(op) {
-            case ConditionOp::EQ: jumpOp = TACOp::JUMP_NEQ; break; // FALSE: NEQ
-            case ConditionOp::NEQ: jumpOp = TACOp::JUMP_EQ; break; // FALSE: EQ
-            case ConditionOp::LT: jumpOp = TACOp::JUMP_GEQ; break; // FALSE: GEQ
-            case ConditionOp::GT: jumpOp = TACOp::JUMP_LEQ; break; // FALSE: LEQ
-            case ConditionOp::LEQ: jumpOp = TACOp::JUMP_GT; break; // FALSE: GT
-            case ConditionOp::GEQ: jumpOp = TACOp::JUMP_LT; break; // FALSE: LT
-        }
-    }
-    
-    emitTAC(jumpOp, Operand::makeLabel(labelTarget), l, r);
-}
-

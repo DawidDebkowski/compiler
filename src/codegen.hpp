@@ -1,3 +1,4 @@
+// Dawid Dębkowski 279714
 #ifndef CODEGEN_HPP
 #define CODEGEN_HPP
 
@@ -9,8 +10,6 @@ using namespace std;
 
 // Code Buffer
 extern vector<Instruction> code;
-extern vector<long long> loop_stack;
-extern vector<long long> if_stack;
 
 // Math Lib Addresses
 extern long long addr_mul;
@@ -22,10 +21,20 @@ extern vector<long long> calls_div;
 extern vector<long long> calls_mod;
 
 // Register Allocation (Simple Tracker)
-// Maps Register ID (0-7) to a Symbol or NULL if free/trash.
-// Used to decide if we need to spill before Math Kernel calls.
-struct Symbol; // Forward declaration
+// I didn't finally implement this, but I'm leaving it here
+struct Symbol;
 extern Symbol* reg_descriptors[8];
+
+// Simple ra tracker
+// It turned out almost useless
+struct AccState {
+    bool valid;
+    string variable; // Name of variable currently held in r0
+    long long value_const; // For constant tracking
+    bool is_const;
+};
+extern AccState acc_tracker;
+void reset_acc_tracker();
 
 void emit(string opcode, string comment);
 void emit(string opcode, long long arg, string comment);
