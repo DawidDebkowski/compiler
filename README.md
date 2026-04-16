@@ -2,7 +2,6 @@
 Autor: Dawid Dębkowski 
 
 ## Narzędzia:
-----------------------------------------
 - bison (GNU Bison) 3.8.2
 - flex 2.6.4
 - GNU Make 4.4.1
@@ -10,16 +9,14 @@ Autor: Dawid Dębkowski
 
 
 ## Biblioteki:
-----------------------------------------
 cln 1.3.7
 
 ## Uruchomienie:
-----------------------------------------
-make
-make test
+- make
+- make test
 ### ręczne
-./compiler <input_file> <output_assembly_file>
-./mw2025/maszyna-wirtualna-cln <assembly_file>
+- ./compiler <input_file> <output_assembly_file>
+- ./mw2025/maszyna-wirtualna-cln <assembly_file>
 
 ## Opis języka
 Opis języka oraz asemblera znajduje się w labor4.pdf
